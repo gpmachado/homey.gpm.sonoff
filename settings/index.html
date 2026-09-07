@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="settings.title">Rejoins</title>
+  <script src="/homey.js" data-origin="settings"></script>
+  <style>
+    :root {
+      --ink: #102a43;
+      --muted: #627d98;
+      --paper: #f4f8fb;
+      --panel: #fff;
+      --line: #d9e5ef;
+      --blue: #0099cc;
+      --blue-dark: #007399;
+      --bad: #c45151;
+      --shadow: 0 12px 32px rgba(16, 42, 67, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      line-height: 1.45;
+    }
+
+    button { font: inherit; }
+    .shell { width: min(1080px, 100%); margin: 0 auto; }
+    .masthead {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--blue-dark);
+      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(28px, 5vw, 40px); font-weight: 650; letter-spacing: -0.045em; }
+    .intro { max-width: 650px; margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+    .refresh {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--blue);
+      border-radius: 8px;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .refresh:hover { background: var(--blue-dark); }
+    .reset {
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--bad);
+      border-radius: 8px;
+      color: var(--bad);
+      background: transparent;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .reset:hover { color: #fff; background: var(--bad); }
+    .refresh[disabled], .reset[disabled] { cursor: wait; opacity: 0.65; }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      overflow: hidden;
+      margin-bottom: 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .summary-item { min-width: 0; padding: 16px 18px; border-right: 1px solid var(--line); }
+    .summary-item:last-child { border-right: 0; }
+    .summary-label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .summary-value {
+      display: block;
+      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .toolbar-note { color: var(--muted); font-size: 12px; }
+
+    .table-shell {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      background: #f9fbfd;
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.065em;
+      text-transform: uppercase;
+      text-align: right;
+      white-space: nowrap;
+    }
+    th:first-child { text-align: left; }
+    td {
+      padding: 14px;
+      border-bottom: 1px solid #edf3f7;
+      text-align: right;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: 0; }
+    td:first-child { width: 50%; min-width: 220px; text-align: left; white-space: normal; }
+    .device-meta {
+      color: var(--muted);
+      font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+      font-size: 10px;
+    }
+    .number { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-variant-numeric: tabular-nums; font-weight: 650; }
+    .rejoin-count-badge {
+      display: inline-block;
+      min-width: 22px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(196, 81, 81, 0.12);
+      color: var(--bad);
+      font-weight: 700;
+    }
+    .state { padding: 40px 18px; color: var(--muted); text-align: center; }
+    .footnote { margin: 12px 2px 0; color: var(--muted); font-size: 11px; }
+
+    @media (max-width: 720px) {
+      body { padding: 14px 10px; font-size: 13px; }
+      .masthead { grid-template-columns: 1fr; gap: 12px; }
+      h1 { font-size: 24px; }
+      .summary { grid-template-columns: 1fr; }
+      .summary-item { border-right: 0; border-bottom: 1px solid var(--line); }
+      .summary-item:last-child { border-bottom: 0; }
+      .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow" data-i18n="settings.eyebrow">Sonoff Devices</p>
+        <h1 data-i18n="settings.title">Rejoins</h1>
+        <p class="intro" data-i18n="settings.intro">Tracks power-cycle / rejoin events for devices with rejoin detection (MINI-ZBD, ZBMINI-R2).</p>
+      </div>
+      <div>
+        <button id="refresh" class="refresh" type="button" data-i18n="settings.refresh">Refresh now</button>
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Rejoin summary">
+      <div class="summary-item">
+        <span class="summary-label" data-i18n="settings.total_rejoins">Total rejoins</span>
+        <strong id="rejoin-total" class="summary-value">—</strong>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label" data-i18n="settings.devices_with_rejoins">Devices affected</span>
+        <strong id="rejoin-device-count" class="summary-value">—</strong>
+      </div>
+      <div class="summary-item">
+        <span class="summary-label" data-i18n="settings.rejoins_since">Tracked since</span>
+        <strong id="rejoin-since" class="summary-value">—</strong>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <span id="updated-at" class="toolbar-note" data-i18n="settings.waiting_for_data">Waiting for data…</span>
+      <button id="reset-rejoins" class="reset" type="button" data-i18n="settings.reset_rejoins">Reset rejoins</button>
+    </div>
+
+    <section class="table-shell" aria-live="polite">
+      <table>
+        <thead>
+          <tr>
+            <th data-i18n="settings.device">Device</th>
+            <th data-i18n="settings.rejoins">Rejoins</th>
+            <th data-i18n="settings.last_rejoin">Last rejoin</th>
+          </tr>
+        </thead>
+        <tbody id="rejoin-rows">
+          <tr><td colspan="3" class="state" data-i18n="settings.loading">Loading…</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p class="footnote" data-i18n="settings.footnote">A rejoin is detected from a paired 0xFC11 + 0x0006 boot-dump pattern right after the device reconnects — see MINI-ZBD/ZBMINIR2 device.js.</p>
+  </main>
+
+  <script>
+    var homeyApi = null;
+    var devices = [];
+    var latestRequest = 0;
+    var resetInFlight = false;
+
+    function translate(key) {
+      if (homeyApi && typeof homeyApi.__ === 'function') return homeyApi.__(key);
+      return key;
+    }
+
+    function userLocale() {
+      return navigator.language || 'en';
+    }
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatNumber(value) {
+      return new Intl.NumberFormat(userLocale()).format(Number(value) || 0);
+    }
+
+    function formatTime(timestamp) {
+      if (!timestamp) return '—';
+      return new Intl.DateTimeFormat(userLocale(), {
+        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(new Date(timestamp));
+    }
+
+    function formatDate(timestamp) {
+      if (!timestamp) return '—';
+      return new Intl.DateTimeFormat(userLocale(), {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      }).format(new Date(timestamp));
+    }
+
+    function render() {
+      var affected = devices
+        .filter(function(device) { return device.rejoinCount; })
+        .sort(function(a, b) { return (b.rejoinCount || 0) - (a.rejoinCount || 0); });
+
+      var rows = document.getElementById('rejoin-rows');
+      if (affected.length === 0) {
+        rows.innerHTML = '<tr><td colspan="3" class="state">' + escapeHtml(translate('settings.no_rejoins')) + '</td></tr>';
+      } else {
+        rows.innerHTML = affected.map(function(device) {
+          return '<tr>' +
+            '<td><div>' + escapeHtml(device.name) + '</div><div class="device-meta">' + escapeHtml(device.driverId) + '</div></td>' +
+            '<td class="number"><span class="rejoin-count-badge">' + formatNumber(device.rejoinCount) + '</span></td>' +
+            '<td class="number">' + escapeHtml(formatTime(device.rejoinLastAt)) + '</td>' +
+          '</tr>';
+        }).join('');
+      }
+
+      var totalRejoins = affected.reduce(function(sum, device) { return sum + (device.rejoinCount || 0); }, 0);
+      var since = devices.length ? devices[0].rejoinSince : null;
+      document.getElementById('rejoin-total').textContent = formatNumber(totalRejoins);
+      document.getElementById('rejoin-device-count').textContent = formatNumber(affected.length);
+      document.getElementById('rejoin-since').textContent = formatDate(since);
+    }
+
+    function loadStats() {
+      if (!homeyApi || resetInFlight) return;
+      var requestId = ++latestRequest;
+      var refreshButton = document.getElementById('refresh');
+      var resetButton = document.getElementById('reset-rejoins');
+      refreshButton.disabled = true;
+      resetButton.disabled = true;
+      refreshButton.textContent = translate('settings.refreshing');
+
+      homeyApi.api('GET', '/rejoin-stats?t=' + Date.now(), {}, function(error, result) {
+        if (requestId !== latestRequest) return;
+        refreshButton.disabled = false;
+        resetButton.disabled = false;
+        refreshButton.textContent = translate('settings.refresh');
+        if (error) {
+          document.getElementById('rejoin-rows').innerHTML =
+            '<tr><td colspan="3" class="state">' + escapeHtml(translate('settings.failed_load')) + ' ' +
+            escapeHtml(error.message || error) + '</td></tr>';
+          return;
+        }
+        devices = Array.isArray(result) ? result : [];
+        document.getElementById('updated-at').textContent =
+          translate('settings.updated_at') + ' ' + new Intl.DateTimeFormat(userLocale(), {
+            hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+          }).format(new Date());
+        render();
+      });
+    }
+
+    function performResetRejoins() {
+      latestRequest += 1;
+      var refreshButton = document.getElementById('refresh');
+      var resetButton = document.getElementById('reset-rejoins');
+      refreshButton.disabled = true;
+      resetButton.disabled = true;
+      resetButton.textContent = translate('settings.resetting_rejoins');
+
+      homeyApi.api('POST', '/rejoin-stats/reset', {}, function(error) {
+        resetInFlight = false;
+        refreshButton.disabled = false;
+        resetButton.disabled = false;
+        resetButton.textContent = translate('settings.reset_rejoins');
+
+        if (error) {
+          document.getElementById('updated-at').textContent =
+            translate('settings.reset_rejoins_failed') + ' ' + (error.message || error);
+          return;
+        }
+        loadStats();
+      });
+    }
+
+    function resetRejoinsStats() {
+      if (!homeyApi || resetInFlight) return;
+
+      var message = translate('settings.reset_rejoins_confirmation');
+      var resetButton = document.getElementById('reset-rejoins');
+      resetInFlight = true;
+      resetButton.disabled = true;
+
+      function handleConfirmation(error, confirmed) {
+        if (error || !confirmed) {
+          resetInFlight = false;
+          resetButton.disabled = false;
+          return;
+        }
+        performResetRejoins();
+      }
+
+      if (typeof homeyApi.confirm === 'function') {
+        homeyApi.confirm(message, 'warning', handleConfirmation);
+      } else {
+        handleConfirmation(null, window.confirm(message));
+      }
+    }
+
+    document.getElementById('refresh').addEventListener('click', loadStats);
+    document.getElementById('reset-rejoins').addEventListener('click', resetRejoinsStats);
+
+    function onHomeyReady(Homey) {
+      homeyApi = Homey;
+      Homey.ready();
+      loadStats();
+      setInterval(loadStats, 60 * 1000);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+{
+  "id": "com.gpm.sonoff",
+  "version": "1.0.0",
+  "compatibility": ">=12.4.0",
+  "sdk": 3,
+  "runtime": "nodejs",
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Sonoff Devices"
+  },
+  "description": {
+    "en": "Sonoff Devices"
+  },
+  "category": [
+    "appliances"
+  ],
+  "permissions": [],
+  "brandColor": "#0099CC",
+  "api": {
+    "getRejoinStats": {
+      "method": "GET",
+      "path": "/rejoin-stats"
+    },
+    "resetRejoinStats": {
+      "method": "POST",
+      "path": "/rejoin-stats/reset"
+    }
+  },
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Gabriel Pedrosa Machado",
+    "email": "g.machado@me.com"
+  },
+  "source": "https://github.com/gpmachado/homey.gpm.sonoff"
+}

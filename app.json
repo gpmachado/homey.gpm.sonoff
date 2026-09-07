@@ -1,0 +1,1263 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.gpm.sonoff",
+  "version": "1.0.0",
+  "compatibility": ">=12.4.0",
+  "sdk": 3,
+  "runtime": "nodejs",
+  "platforms": [
+    "local"
+  ],
+  "name": {
+    "en": "Sonoff Devices"
+  },
+  "description": {
+    "en": "Sonoff Devices"
+  },
+  "category": [
+    "appliances"
+  ],
+  "permissions": [],
+  "brandColor": "#0099CC",
+  "api": {
+    "getRejoinStats": {
+      "method": "GET",
+      "path": "/rejoin-stats"
+    },
+    "resetRejoinStats": {
+      "method": "POST",
+      "path": "/rejoin-stats/reset"
+    }
+  },
+  "images": {
+    "small": "/assets/images/small.png",
+    "large": "/assets/images/large.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Gabriel Pedrosa Machado",
+    "email": "g.machado@me.com"
+  },
+  "source": "https://github.com/gpmachado/homey.gpm.sonoff",
+  "flow": {
+    "actions": [
+      {
+        "id": "mini_zb1gp_reset_consumption",
+        "title": {
+          "en": "Reset accumulated consumption",
+          "es": "Restablecer consumo acumulado",
+          "it": "Reimposta il consumo accumulato",
+          "de": "Akkumulierten Verbrauch zurücksetzen"
+        },
+        "hint": {
+          "en": "Sends the energy meter reset command, identified via sniffer analysis and confirmed working on real hardware.",
+          "es": "Envía el comando de reinicio del medidor de energía, identificado mediante análisis con sniffer y confirmado en hardware real.",
+          "it": "Invia il comando di reset del contatore di energia, identificato tramite analisi con sniffer e confermato su hardware reale.",
+          "de": "Sendet den Reset-Befehl für den Energiezähler, ermittelt durch Sniffer-Analyse und auf echter Hardware bestätigt."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=MINI-ZB1GP"
+          }
+        ]
+      },
+      {
+        "id": "set_ui_onoff",
+        "title": {
+          "en": "Set switch status (UI only)"
+        },
+        "titleFormatted": {
+          "en": "Set to [[status]]"
+        },
+        "hint": {
+          "en": "Updates the switch's on/off status in the Homey app without actually physically toggling the relay via Zigbee."
+        },
+        "args": [
+          {
+            "name": "device",
+            "type": "device",
+            "filter": "driver_id=MINI-ZBD|ZBMINIR2"
+          },
+          {
+            "name": "status",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "on",
+                "label": {
+                  "en": "On"
+                }
+              },
+              {
+                "id": "off",
+                "label": {
+                  "en": "Off"
+                }
+              },
+              {
+                "id": "toggle",
+                "label": {
+                  "en": "Toggle"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      {
+        "id": "MINI-ZBD_device_rejoined",
+        "title": {
+          "en": "Reconnected after power cut",
+          "de": "Nach Stromausfall wieder verbunden",
+          "es": "Reconectado tras un corte de energía",
+          "it": "Riconnesso dopo un'interruzione di corrente"
+        },
+        "hint": {
+          "en": "Fires when this device reconnects to the Zigbee network after a power cut.",
+          "de": "Wird ausgelöst, wenn sich dieses Gerät nach einem Stromausfall erneut mit dem Zigbee-Netzwerk verbindet.",
+          "es": "Se activa cuando este dispositivo se reconecta a la red Zigbee tras un corte de energía.",
+          "it": "Si attiva quando questo dispositivo si riconnette alla rete Zigbee dopo un'interruzione di corrente."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=MINI-ZBD"
+          }
+        ]
+      },
+      {
+        "id": "MINI-ZBD:click",
+        "title": {
+          "en": "Single click",
+          "de": "Einzelklick",
+          "es": "Pulsación única",
+          "it": "Pressione singola"
+        },
+        "hint": {
+          "en": "This trigger fires when the physical switch is pressed and the 'Detach Relay' setting is enabled.",
+          "de": "Dieser Auslöser wird aktiviert, wenn der physische Schalter gedrückt wird und die Einstellung 'Relais trennen' aktiviert ist.",
+          "es": "Este disparador se activa cuando se pulsa el interruptor físico y la opción 'Separar relé' está activada.",
+          "it": "Questo trigger si attiva quando l'interruttore fisico viene premuto e l'impostazione 'Scollega relè' è abilitata."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=MINI-ZBD"
+          }
+        ]
+      },
+      {
+        "id": "ZBMINIR2_device_rejoined",
+        "title": {
+          "en": "Reconnected after power cut",
+          "de": "Nach Stromausfall wieder verbunden",
+          "es": "Reconectado tras un corte de energía",
+          "it": "Riconnesso dopo un'interruzione di corrente"
+        },
+        "hint": {
+          "en": "Fires when this device reconnects to the Zigbee network after a power cut.",
+          "de": "Wird ausgelöst, wenn sich dieses Gerät nach einem Stromausfall erneut mit dem Zigbee-Netzwerk verbindet.",
+          "es": "Se activa cuando este dispositivo se reconecta a la red Zigbee tras un corte de energía.",
+          "it": "Si attiva quando questo dispositivo si riconnette alla rete Zigbee dopo un'interruzione di corrente."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ZBMINIR2"
+          }
+        ]
+      },
+      {
+        "id": "ZBMINIR2:click",
+        "title": {
+          "en": "Single click",
+          "de": "Einzelklick",
+          "es": "Pulsación única",
+          "it": "Pressione singola"
+        },
+        "hint": {
+          "en": "This trigger fires when the physical switch is pressed and the 'Detach Relay' setting is enabled.",
+          "de": "Dieser Auslöser wird aktiviert, wenn der physische Schalter gedrückt wird und die Einstellung 'Relais trennen' aktiviert ist.",
+          "es": "Este disparador se activa cuando se pulsa el interruptor físico y la opción 'Separar relé' está activada.",
+          "it": "Questo trigger si attiva quando l'interruttore fisico viene premuto e l'impostazione 'Scollega relè' è abilitata."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=ZBMINIR2"
+          }
+        ]
+      }
+    ]
+  },
+  "drivers": [
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/BASICZBR3/assets/images/xlarge.png",
+        "large": "/drivers/BASICZBR3/assets/images/large.png",
+        "small": "/drivers/BASICZBR3/assets/images/small.png"
+      },
+      "id": "BASICZBR3",
+      "name": {
+        "en": "Switch (Basic ZBR3)",
+        "es": "Interruptor (Basic ZBR3)",
+        "it": "Interruttore (Basic ZBR3)",
+        "de": "Schalter (Basic ZBR3)"
+      },
+      "class": "socket",
+      "capabilities": [
+        "onoff"
+      ],
+      "energy": {
+        "approximation": {
+          "usageOn": 1,
+          "usageOff": 1
+        }
+      },
+      "icon": "/drivers/BASICZBR3/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": "SONOFF",
+        "productId": [
+          "BASICZBR3"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              3,
+              4,
+              5,
+              6
+            ],
+            "bindings": [
+              6
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/BASICZBR3/assets/learn.svg",
+          "instruction": {
+            "en": "Push the button for approx 8 seconds until the LED blinks rapidly.",
+            "es": "Pulsa el botón durante aprox. 8 segundos hasta que el LED parpadee rápidamente.",
+            "it": "Premi il pulsante per circa 8 secondi fino a quando il LED lampeggia rapidamente.",
+            "de": "Drücke die Taste ca. 8 Sekunden, bis die LED schnell blinkt."
+          }
+        }
+      },
+      "settings": []
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/MINI-ZB1GP/assets/images/xlarge.png",
+        "large": "/drivers/MINI-ZB1GP/assets/images/large.png",
+        "small": "/drivers/MINI-ZB1GP/assets/images/small.png"
+      },
+      "id": "MINI-ZB1GP",
+      "name": {
+        "en": "Sonoff Energy Meter",
+        "es": "Medidor de Energía Sonoff",
+        "it": "Misuratore di Energia Sonoff",
+        "de": "Sonoff Energiezähler"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "measure_power",
+        "meter_power",
+        "measure_current",
+        "measure_voltage"
+      ],
+      "energy": {
+        "meterPowerImportedCapability": "meter_power"
+      },
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "MINI-ZB1GP"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              3,
+              4,
+              5,
+              6,
+              1794,
+              2820,
+              64529,
+              64599
+            ],
+            "bindings": [
+              1794,
+              2820,
+              64529
+            ]
+          }
+        },
+        "learnmode": {
+          "instruction": {
+            "en": "Press and hold the button on the device until the LED starts blinking rapidly.",
+            "es": "Mantén pulsado el botón del dispositivo hasta que el LED empiece a parpadear rápidamente.",
+            "it": "Tieni premuto il pulsante del dispositivo finché il LED non inizia a lampeggiare rapidamente.",
+            "de": "Halte die Taste am Gerät gedrückt, bis die LED schnell zu blinken beginnt."
+          }
+        }
+      },
+      "settings": [
+        {
+          "id": "network_led",
+          "type": "checkbox",
+          "label": {
+            "en": "Network indicator",
+            "es": "Indicador de red",
+            "it": "Indicatore di rete",
+            "de": "Netzwerkanzeige"
+          },
+          "value": false
+        },
+        {
+          "id": "TurboMode",
+          "type": "checkbox",
+          "label": {
+            "en": "Turbo mode",
+            "es": "Modo turbo",
+            "it": "Modalità turbo",
+            "de": "Turbo-Modus"
+          },
+          "value": false
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/MINI-ZBD/assets/images/xlarge.png",
+        "large": "/drivers/MINI-ZBD/assets/images/large.png",
+        "small": "/drivers/MINI-ZBD/assets/images/small.png"
+      },
+      "id": "MINI-ZBD",
+      "name": {
+        "en": "MINI-ZBD Dry Contact",
+        "es": "Contacto seco MINI-ZBD",
+        "it": "Contatto secco MINI-ZBD",
+        "de": "MINI-ZBD Trockenkontakt"
+      },
+      "class": "socket",
+      "capabilities": [
+        "onoff"
+      ],
+      "icon": "/drivers/MINI-ZBD/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "MINI-ZBD"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              3,
+              4,
+              6,
+              2821,
+              64529,
+              64599
+            ],
+            "bindings": [
+              6
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/MINI-ZBD/assets/learn.svg",
+          "instruction": {
+            "en": "Press the button on the top for approx 10 seconds until the green LED blinks rapidly.",
+            "es": "Pulsa el botón de la parte superior durante aprox. 10 segundos hasta que el LED verde parpadee rápidamente.",
+            "it": "Premi il pulsante nella parte superiore per circa 10 secondi fino a quando il LED verde lampeggia rapidamente.",
+            "de": "Drücke die Taste oben ca. 10 Sekunden, bis die grüne LED schnell blinkt."
+          }
+        }
+      },
+      "settings": [
+        {
+          "id": "TurboMode",
+          "type": "checkbox",
+          "value": false,
+          "label": {
+            "en": "Turbo Mode",
+            "de": "Turbomodus",
+            "es": "Modo turbo",
+            "it": "Modalità Turbo"
+          },
+          "hint": {
+            "en": "Enhancing the signal strength.",
+            "de": "Verbessert die Signalstärke.",
+            "es": "Mejora la intensidad de la señal.",
+            "it": "Migliora la forza del segnale."
+          }
+        },
+        {
+          "id": "network_led",
+          "type": "checkbox",
+          "value": true,
+          "label": {
+            "en": "Network Indicator",
+            "de": "Netzwerkanzeige",
+            "es": "Indicador de red",
+            "it": "Indicatore di rete"
+          }
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Switch Mode",
+            "it": "Cambia Modalità",
+            "de": "Schaltmodus",
+            "es": "Modo del interruptor"
+          },
+          "children": [
+            {
+              "id": "switch_mode",
+              "type": "dropdown",
+              "label": {
+                "en": "Mode",
+                "it": "Modalità",
+                "de": "Modus",
+                "es": "Modo"
+              },
+              "value": "0",
+              "values": [
+                {
+                  "id": "0",
+                  "label": {
+                    "en": "Edge Mode",
+                    "de": "Flankenmodus",
+                    "es": "Modo por flanco",
+                    "it": "Modalità Edge"
+                  }
+                },
+                {
+                  "id": "1",
+                  "label": {
+                    "en": "Pulse Mode",
+                    "de": "Impulsmodus",
+                    "es": "Modo pulso",
+                    "it": "Modalità Impulso"
+                  }
+                },
+                {
+                  "id": "2",
+                  "label": {
+                    "en": "Following Mode",
+                    "de": "Folgemodus",
+                    "es": "Modo seguimiento",
+                    "it": "Modalità Inseguimento"
+                  }
+                },
+                {
+                  "id": "130",
+                  "label": {
+                    "en": "Following Mode (Reverse)",
+                    "de": "Folgemodus (umgekehrt)",
+                    "es": "Modo seguimiento (inverso)",
+                    "it": "Modalità Inseguimento (Inverti)"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "detach_mode",
+              "type": "checkbox",
+              "value": false,
+              "label": {
+                "en": "Detach Relay",
+                "de": "Relais trennen",
+                "es": "Separar relé",
+                "it": "Stacca Relè"
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Power-on",
+            "de": "Einschalten",
+            "es": "Encendido",
+            "it": "Accensione"
+          },
+          "children": [
+            {
+              "id": "power_on_behavior",
+              "type": "dropdown",
+              "label": {
+                "en": "Power-on State",
+                "de": "Einschaltzustand",
+                "es": "Estado al encender",
+                "it": "Stato all'Accensione"
+              },
+              "hint": {
+                "en": "The state of the device when the power restores from a power outage or being turned off physically.",
+                "de": "Der Gerätezustand, wenn die Stromversorgung nach einem Stromausfall wiederhergestellt wird oder das Gerät physisch ausgeschaltet wurde.",
+                "es": "El estado del dispositivo cuando la alimentación se restablece tras un corte de energía o al apagarlo físicamente.",
+                "it": "Stato del dispositivo al momento dell'interruzione dell'alimentazione o dello spegnimento dell'interruttore."
+              },
+              "value": "last_state",
+              "values": [
+                {
+                  "id": "on",
+                  "label": {
+                    "en": "Always On",
+                    "it": "Sempre acceso",
+                    "de": "Immer ein",
+                    "es": "Siempre encendido"
+                  }
+                },
+                {
+                  "id": "off",
+                  "label": {
+                    "en": "Always Off",
+                    "it": "Sempre spento",
+                    "de": "Immer aus",
+                    "es": "Siempre apagado"
+                  }
+                },
+                {
+                  "id": "last_state",
+                  "label": {
+                    "en": "Last State",
+                    "it": "Ultimo stato",
+                    "de": "Letzter Zustand",
+                    "es": "Último estado"
+                  }
+                },
+                {
+                  "id": "toggle",
+                  "label": {
+                    "en": "Toggle",
+                    "de": "Umschalten",
+                    "es": "Alternar",
+                    "it": "Alterna"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "power_on_delay_state",
+              "type": "checkbox",
+              "value": false,
+              "hint": {
+                "en": "Power-on state will be delayed for the time you set.",
+                "de": "Der Einschaltzustand wird um die von dir eingestellte Zeit verzögert.",
+                "es": "El estado al encender se retrasará durante el tiempo que configures.",
+                "it": "Lo stato all'accensione sarà ritardato per il tempo impostato."
+              },
+              "label": {
+                "en": "Delay",
+                "it": "Ritardo",
+                "de": "Verzögerung",
+                "es": "Retraso"
+              }
+            },
+            {
+              "id": "power_on_delay_time",
+              "type": "number",
+              "label": {
+                "en": "Duration (seconds)",
+                "de": "Dauer (Sekunden)",
+                "es": "Duración (segundos)",
+                "it": "Durata (secondi)"
+              },
+              "value": 28,
+              "min": 0.5,
+              "max": 3599.5,
+              "step": 0.5
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Inching Settings",
+            "de": "Inching-Einstellungen",
+            "es": "Ajustes de inching",
+            "it": "Impostazioni di Inching"
+          },
+          "children": [
+            {
+              "id": "inching_enabled",
+              "type": "checkbox",
+              "value": false,
+              "label": {
+                "en": "Enable Inching",
+                "de": "Inching aktivieren",
+                "es": "Activar inching",
+                "it": "Abilita Inching"
+              },
+              "hint": {
+                "en": "Automatically turn off/on after a set time.",
+                "de": "Schaltet nach einer festgelegten Zeit automatisch aus/ein.",
+                "es": "Apaga/enciende automáticamente tras un tiempo establecido.",
+                "it": "Spegne/accende automaticamente dopo un tempo impostato."
+              }
+            },
+            {
+              "id": "inching_time",
+              "type": "number",
+              "label": {
+                "en": "Inching time (seconds)",
+                "de": "Inching-Zeit (Sekunden)",
+                "es": "Tiempo de inching (segundos)",
+                "it": "Tempo di Inching (secondi)"
+              },
+              "value": 1,
+              "min": 0.5,
+              "max": 3599.5,
+              "step": 0.5
+            },
+            {
+              "id": "inching_mode",
+              "type": "dropdown",
+              "label": {
+                "en": "Status",
+                "de": "Status",
+                "es": "Estado",
+                "it": "Stato"
+              },
+              "hint": {
+                "en": "Choose whether to turn on or off after the set time.",
+                "de": "Wähle, ob nach der festgelegten Zeit ein- oder ausgeschaltet werden soll.",
+                "es": "Elige si encender o apagar después del tiempo establecido.",
+                "it": "Scegli se accendere o spegnere dopo il tempo impostato."
+              },
+              "value": "on",
+              "values": [
+                {
+                  "id": "on",
+                  "label": {
+                    "en": "Auto-On",
+                    "de": "Auto-Ein",
+                    "es": "Autoencendido",
+                    "it": "Auto-acceso"
+                  }
+                },
+                {
+                  "id": "off",
+                  "label": {
+                    "en": "Auto-Off",
+                    "de": "Auto-Aus",
+                    "es": "Autoapagado",
+                    "it": "Auto-spento"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/SNZB-03/assets/images/xlarge.png",
+        "large": "/drivers/SNZB-03/assets/images/large.png",
+        "small": "/drivers/SNZB-03/assets/images/small.png"
+      },
+      "id": "SNZB-03",
+      "name": {
+        "en": "Motion Sensor SNZB-03",
+        "es": "Sensor de movimiento SNZB-03",
+        "it": "Sensore di movimento SNZB-03",
+        "de": "Bewegungssensor SNZB-03"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "alarm_motion",
+        "measure_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "CR2450"
+        ]
+      },
+      "icon": "/drivers/SNZB-03/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "eWeLink"
+        ],
+        "productId": [
+          "MS01"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              1,
+              1280
+            ],
+            "bindings": [
+              1,
+              1280
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/SNZB-03/assets/learn.svg",
+          "instruction": {
+            "en": "Press reset on bottom with a pin for approx 10 seconds until the red LED blinks rapidly.",
+            "es": "Pulsa el botón de reinicio de la parte inferior con un alfiler durante aprox. 10 segundos hasta que el LED rojo parpadee rápidamente.",
+            "it": "Premi il reset nella parte inferiore con un ago per circa 10 secondi fino a quando il LED rosso lampeggia rapidamente.",
+            "de": "Reset-Taste unten mit einer Nadel ca. 10 Sekunden drücken, bis die rote LED schnell blinkt."
+          }
+        }
+      }
+    },
+    {
+      "id": "SNZB-06P",
+      "name": {
+        "en": "Presence Sensor SNZB-06P",
+        "sv": "Närvarosensor SNZB-06P",
+        "nl": "Aanwezigheidssensor SNZB-06P",
+        "da": "Tilstedeværelsessensor SNZB-06P",
+        "de": "Präsenzsensor SNZB-06P",
+        "es": "Sensor de Presencia SNZB-06P",
+        "fr": "Capteur de Présence SNZB-06P",
+        "it": "Sensore di Presenza SNZB-06P",
+        "no": "Nærværsensor SNZB-06P",
+        "pl": "Czujnik Obecności SNZB-06P",
+        "ru": "Датчик присутствия SNZB-06P",
+        "ko": "존재 센서 SNZB-06P"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "alarm_motion"
+      ],
+      "images": {
+        "small": "/drivers/SNZB-06P/assets/images/small.png",
+        "large": "/drivers/SNZB-06P/assets/images/large.png"
+      },
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "SNZB-06P"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              3,
+              1030,
+              1280,
+              64529
+            ],
+            "bindings": []
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/SNZB-06P/assets/learn.svg",
+          "instruction": {
+            "en": "Press reset on top for aprox 10 seconds until the red LED blinks.",
+            "nl": "Houd de resetknop bovenop ongeveer 10 seconden ingedrukt totdat de rode LED knippert.",
+            "da": "Tryk på reset øverst i ca. 10 sekunder, indtil den røde LED blinker.",
+            "de": "Drücken Sie oben auf die Reset-Taste und halten Sie sie etwa 10 Sekunden lang gedrückt, bis die rote LED blinkt.",
+            "es": "Presiona el botón de reinicio en la parte superior durante aproximadamente 10 segundos hasta que parpadee el LED rojo.",
+            "fr": "Appuyez sur le bouton de réinitialisation en haut pendant environ 10 secondes jusqu'à ce que le voyant rouge clignote.",
+            "it": "Premi il pulsante di reset in alto per circa 10 secondi fino a quando il LED rosso lampeggia.",
+            "no": "Trykk på reset-knappen øverst i ca. 10 sekunder til den røde LED-en blinker.",
+            "sv": "Tryck på återställningsknappen ovanpå i cirka 10 sekunder tills den röda LED-lampan blinkar.",
+            "pl": "Naciśnij przycisk reset na górze, przytrzymaj przez około 10 sekund, aż czerwona dioda LED zacznie migać.",
+            "ru": "Нажмите и удерживайте кнопку сброса сверху примерно 10 секунд, пока не начнет мигать красный светодиод.",
+            "ko": "빨간색 LED가 깜박일 때까지 상단의 리셋 버튼을 약 10초 동안 누르십시오."
+          }
+        }
+      },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Occupied",
+            "nl": "Bezette",
+            "da": "Optaget",
+            "de": "Besetzt",
+            "es": "Ocupado",
+            "fr": "Occupé",
+            "it": "Occupato",
+            "no": "Opptatt",
+            "sv": "Upptagen",
+            "pl": "Zajęty",
+            "ru": "Занятый",
+            "ko": "점유"
+          },
+          "children": [
+            {
+              "id": "occupied_to_unoccupied_delay",
+              "type": "number",
+              "label": {
+                "en": "Delay",
+                "nl": "Vertraging",
+                "da": "Forsinkelse",
+                "de": "Verzögerung",
+                "es": "Retraso",
+                "fr": "Délai",
+                "it": "Ritardo",
+                "no": "Forsinkelse",
+                "sv": "Fördröjning",
+                "pl": "Opóźnienie",
+                "ru": "Задержка",
+                "ko": "지연"
+              },
+              "value": 60,
+              "attr": {
+                "min": 15,
+                "max": 65535,
+                "step": 1
+              }
+            },
+            {
+              "id": "occupied_threshold",
+              "type": "dropdown",
+              "label": {
+                "en": "Sensitivity",
+                "nl": "Gevoeligheid",
+                "da": "Følsomhed",
+                "de": "Empfindlichkeit",
+                "es": "Sensibilidad",
+                "fr": "Sensibilité",
+                "it": "Sensibilità",
+                "no": "Følsomhet",
+                "sv": "Känslighet",
+                "pl": "Czułość",
+                "ru": "Чувствительность",
+                "ko": "민감도"
+              },
+              "values": [
+                {
+                  "id": "1",
+                  "label": {
+                    "en": "Low",
+                    "nl": "Laag",
+                    "da": "Lav",
+                    "de": "Niedrig",
+                    "es": "Bajo",
+                    "fr": "Bas",
+                    "it": "Basso",
+                    "no": "Lav",
+                    "sv": "Låg",
+                    "pl": "Niski",
+                    "ru": "Низкий",
+                    "ko": "낮은"
+                  }
+                },
+                {
+                  "id": "2",
+                  "label": {
+                    "en": "Medium",
+                    "nl": "Middel",
+                    "da": "Mellem",
+                    "de": "Mittel",
+                    "es": "Medio",
+                    "fr": "Moyen",
+                    "it": "Medio",
+                    "no": "Medium",
+                    "sv": "Medium",
+                    "pl": "Średni",
+                    "ru": "Средний",
+                    "ko": "중간"
+                  }
+                },
+                {
+                  "id": "3",
+                  "label": {
+                    "en": "High",
+                    "nl": "Hoog",
+                    "da": "Høj",
+                    "de": "Hoch",
+                    "es": "Alto",
+                    "fr": "Haut",
+                    "it": "Alto",
+                    "no": "Høy",
+                    "sv": "Hög",
+                    "pl": "Wysoki",
+                    "ru": "Высокий",
+                    "ko": "높은"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/ZBMINIR2/assets/images/xlarge.png",
+        "large": "/drivers/ZBMINIR2/assets/images/large.png",
+        "small": "/drivers/ZBMINIR2/assets/images/small.png"
+      },
+      "id": "ZBMINIR2",
+      "name": {
+        "en": "ZBMINI-R2 Switch",
+        "es": "Interruptor ZBMINI-R2",
+        "it": "Interruttore ZBMINI-R2",
+        "de": "ZBMINI-R2 Schalter"
+      },
+      "class": "socket",
+      "capabilities": [
+        "onoff"
+      ],
+      "icon": "/drivers/ZBMINIR2/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "ZBMINIR2"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              3,
+              4,
+              6,
+              2821,
+              64529,
+              64599
+            ],
+            "bindings": [
+              6
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/ZBMINIR2/assets/learn.svg",
+          "instruction": {
+            "en": "Press the button on the top for approx 10 seconds until the green LED blinks rapidly.",
+            "es": "Pulsa el botón de la parte superior durante aprox. 10 segundos hasta que el LED verde parpadee rápidamente.",
+            "it": "Premi il pulsante nella parte superiore per circa 10 secondi fino a quando il LED verde lampeggia rapidamente.",
+            "de": "Drücke die Taste oben ca. 10 Sekunden, bis die grüne LED schnell blinkt."
+          }
+        }
+      },
+      "settings": [
+        {
+          "id": "TurboMode",
+          "type": "checkbox",
+          "value": false,
+          "label": {
+            "en": "Turbo Mode",
+            "de": "Turbomodus",
+            "es": "Modo turbo",
+            "it": "Modalità Turbo"
+          },
+          "hint": {
+            "en": "Enhancing the signal strength.",
+            "de": "Verbessert die Signalstärke.",
+            "es": "Mejora la intensidad de la señal.",
+            "it": "Migliora la forza del segnale."
+          }
+        },
+        {
+          "id": "network_led",
+          "type": "checkbox",
+          "value": true,
+          "label": {
+            "en": "Network Indicator",
+            "de": "Netzwerkanzeige",
+            "es": "Indicador de red",
+            "it": "Indicatore di rete"
+          }
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Switch Mode",
+            "it": "Cambia Modalità",
+            "de": "Schaltmodus",
+            "es": "Modo del interruptor"
+          },
+          "children": [
+            {
+              "id": "switch_mode",
+              "type": "dropdown",
+              "label": {
+                "en": "Mode",
+                "it": "Modalità",
+                "de": "Modus",
+                "es": "Modo"
+              },
+              "value": "0",
+              "values": [
+                {
+                  "id": "0",
+                  "label": {
+                    "en": "Edge Mode",
+                    "de": "Flankenmodus",
+                    "es": "Modo por flanco",
+                    "it": "Modalità Edge"
+                  }
+                },
+                {
+                  "id": "1",
+                  "label": {
+                    "en": "Pulse Mode",
+                    "de": "Impulsmodus",
+                    "es": "Modo pulso",
+                    "it": "Modalità Impulso"
+                  }
+                },
+                {
+                  "id": "2",
+                  "label": {
+                    "en": "Following Mode",
+                    "de": "Folgemodus",
+                    "es": "Modo seguimiento",
+                    "it": "Modalità Inseguimento"
+                  }
+                },
+                {
+                  "id": "130",
+                  "label": {
+                    "en": "Following Mode (Reverse)",
+                    "de": "Folgemodus (umgekehrt)",
+                    "es": "Modo seguimiento (inverso)",
+                    "it": "Modalità Inseguimento (Inverti)"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "detach_mode",
+              "type": "checkbox",
+              "value": false,
+              "label": {
+                "en": "Detach Relay",
+                "de": "Relais trennen",
+                "es": "Separar relé",
+                "it": "Stacca Relè"
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Power-on",
+            "de": "Einschalten",
+            "es": "Encendido",
+            "it": "Accensione"
+          },
+          "children": [
+            {
+              "id": "power_on_behavior",
+              "type": "dropdown",
+              "label": {
+                "en": "Power-on State",
+                "de": "Einschaltzustand",
+                "es": "Estado al encender",
+                "it": "Stato all'Accensione"
+              },
+              "hint": {
+                "en": "The state of the device when the power restores from a power outage or being turned off physically.",
+                "de": "Der Gerätezustand, wenn die Stromversorgung nach einem Stromausfall wiederhergestellt wird oder das Gerät physisch ausgeschaltet wurde.",
+                "es": "El estado del dispositivo cuando la alimentación se restablece tras un corte de energía o al apagarlo físicamente.",
+                "it": "Stato del dispositivo al momento dell'interruzione dell'alimentazione o dello spegnimento dell'interruttore."
+              },
+              "value": "last_state",
+              "values": [
+                {
+                  "id": "on",
+                  "label": {
+                    "en": "Always On",
+                    "it": "Sempre acceso",
+                    "de": "Immer ein",
+                    "es": "Siempre encendido"
+                  }
+                },
+                {
+                  "id": "off",
+                  "label": {
+                    "en": "Always Off",
+                    "it": "Sempre spento",
+                    "de": "Immer aus",
+                    "es": "Siempre apagado"
+                  }
+                },
+                {
+                  "id": "last_state",
+                  "label": {
+                    "en": "Last State",
+                    "it": "Ultimo stato",
+                    "de": "Letzter Zustand",
+                    "es": "Último estado"
+                  }
+                },
+                {
+                  "id": "toggle",
+                  "label": {
+                    "en": "Toggle",
+                    "de": "Umschalten",
+                    "es": "Alternar",
+                    "it": "Alterna"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "power_on_delay_state",
+              "type": "checkbox",
+              "value": false,
+              "hint": {
+                "en": "Power-on state will be delayed for the time you set.",
+                "de": "Der Einschaltzustand wird um die von dir eingestellte Zeit verzögert.",
+                "es": "El estado al encender se retrasará durante el tiempo que configures.",
+                "it": "Lo stato all'accensione sarà ritardato per il tempo impostato."
+              },
+              "label": {
+                "en": "Delay",
+                "it": "Ritardo",
+                "de": "Verzögerung",
+                "es": "Retraso"
+              }
+            },
+            {
+              "id": "power_on_delay_time",
+              "type": "number",
+              "label": {
+                "en": "Duration (seconds)",
+                "de": "Dauer (Sekunden)",
+                "es": "Duración (segundos)",
+                "it": "Durata (secondi)"
+              },
+              "value": 28,
+              "min": 0.5,
+              "max": 3599.5,
+              "step": 0.5
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Inching Settings",
+            "de": "Inching-Einstellungen",
+            "es": "Ajustes de inching",
+            "it": "Impostazioni di Inching"
+          },
+          "children": [
+            {
+              "id": "inching_enabled",
+              "type": "checkbox",
+              "value": false,
+              "label": {
+                "en": "Enable Inching",
+                "de": "Inching aktivieren",
+                "es": "Activar inching",
+                "it": "Abilita Inching"
+              },
+              "hint": {
+                "en": "Automatically turn off/on after a set time.",
+                "de": "Schaltet nach einer festgelegten Zeit automatisch aus/ein.",
+                "es": "Apaga/enciende automáticamente tras un tiempo establecido.",
+                "it": "Spegne/accende automaticamente dopo un tempo impostato."
+              }
+            },
+            {
+              "id": "inching_time",
+              "type": "number",
+              "label": {
+                "en": "Inching time (seconds)",
+                "de": "Inching-Zeit (Sekunden)",
+                "es": "Tiempo de inching (segundos)",
+                "it": "Tempo di Inching (secondi)"
+              },
+              "value": 1,
+              "min": 0.5,
+              "max": 3599.5,
+              "step": 0.5
+            },
+            {
+              "id": "inching_mode",
+              "type": "dropdown",
+              "label": {
+                "en": "Status",
+                "de": "Status",
+                "es": "Estado",
+                "it": "Stato"
+              },
+              "hint": {
+                "en": "Choose whether to turn on or off after the set time.",
+                "de": "Wähle, ob nach der festgelegten Zeit ein- oder ausgeschaltet werden soll.",
+                "es": "Elige si encender o apagar después del tiempo establecido.",
+                "it": "Scegli se accendere o spegnere dopo il tempo impostato."
+              },
+              "value": "on",
+              "values": [
+                {
+                  "id": "on",
+                  "label": {
+                    "en": "Auto-On",
+                    "de": "Auto-Ein",
+                    "es": "Autoencendido",
+                    "it": "Auto-acceso"
+                  }
+                },
+                {
+                  "id": "off",
+                  "label": {
+                    "en": "Auto-Off",
+                    "de": "Auto-Aus",
+                    "es": "Autoapagado",
+                    "it": "Auto-spento"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

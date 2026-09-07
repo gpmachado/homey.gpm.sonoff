@@ -1,0 +1,43 @@
+{
+  "id": "set_ui_onoff",
+  "title": {
+    "en": "Set switch status (UI only)"
+  },
+  "titleFormatted": {
+    "en": "Set to [[status]]"
+  },
+  "hint": {
+    "en": "Updates the switch's on/off status in the Homey app without actually physically toggling the relay via Zigbee."
+  },
+  "args": [
+    {
+      "name": "device",
+      "type": "device",
+      "filter": "driver_id=MINI-ZBD|ZBMINIR2"
+    },
+    {
+      "name": "status",
+      "type": "dropdown",
+      "values": [
+        {
+          "id": "on",
+          "label": {
+            "en": "On"
+          }
+        },
+        {
+          "id": "off",
+          "label": {
+            "en": "Off"
+          }
+        },
+        {
+          "id": "toggle",
+          "label": {
+            "en": "Toggle"
+          }
+        }
+      ]
+    }
+  ]
+}

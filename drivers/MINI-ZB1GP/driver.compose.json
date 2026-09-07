@@ -1,0 +1,58 @@
+{
+  "id": "MINI-ZB1GP",
+  "name": {
+    "en": "Sonoff Energy Meter",
+    "es": "Medidor de Energía Sonoff",
+    "it": "Misuratore di Energia Sonoff",
+    "de": "Sonoff Energiezähler"
+  },
+  "class": "sensor",
+  "capabilities": [
+    "measure_power",
+    "meter_power",
+    "measure_current",
+    "measure_voltage"
+  ],
+  "energy": {
+    "meterPowerImportedCapability": "meter_power"
+  },
+  "zigbee": {
+    "manufacturerName": [
+      "SONOFF"
+    ],
+    "productId": [
+      "MINI-ZB1GP"
+    ],
+    "endpoints": {
+      "1": {
+        "clusters": [
+          0,
+          3,
+          4,
+          5,
+          6,
+          1794,
+          2820,
+          64529,
+          64599
+        ],
+        "bindings": [
+          1794,
+          2820,
+          64529
+        ]
+      }
+    },
+    "learnmode": {
+      "instruction": {
+        "en": "Press and hold the button on the device until the LED starts blinking rapidly.",
+        "es": "Mantén pulsado el botón del dispositivo hasta que el LED empiece a parpadear rápidamente.",
+        "it": "Tieni premuto il pulsante del dispositivo finché il LED non inizia a lampeggiare rapidamente.",
+        "de": "Halte die Taste am Gerät gedrückt, bis die LED schnell zu blinken beginnt."
+      }
+    }
+  },
+  "$extends": [
+    "zigbee-local"
+  ]
+}
