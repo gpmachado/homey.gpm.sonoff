@@ -3,6 +3,7 @@
 const Homey = require('homey');
 const { Cluster, TimeCluster, debug } = require('zigbee-clusters');
 const SonoffCluster = require('./lib/SonoffCluster');
+const SonoffOnOffCluster = require('./lib/SonoffOnOffCluster');
 
 module.exports = class MyApp extends Homey.App {
 
@@ -22,6 +23,11 @@ module.exports = class MyApp extends Homey.App {
     // registering it explicitly here documents the dependency the same way
     // as SonoffCluster above, instead of relying on that implicit side effect.
     Cluster.addCluster(TimeCluster);
+
+    // Overrides the built-in OnOff cluster (0x0006) with the Sonoff-specific
+    // powerOnBehavior attribute — must run before any device's onNodeInit,
+    // same as SonoffCluster above.
+    Cluster.addCluster(SonoffOnOffCluster);
 
     this.log('MyApp has been initialized');
 

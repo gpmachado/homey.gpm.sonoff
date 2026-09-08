@@ -151,13 +151,7 @@ class SonoffZBMINIR2 extends SonoffBase {
     async onSettings({ oldSettings, newSettings, changedKeys }) {
         if (changedKeys.includes("power_on_behavior")) {
             try {
-                // Settings dropdown uses "last_state"; the ZCL enum8 for
-                // startUpOnOff calls the same value "previous" (0xFF) —
-                // confirmed on the wire via iHost sniffer capture.
-                const startUpOnOff = newSettings.power_on_behavior === 'last_state'
-                    ? 'previous'
-                    : newSettings.power_on_behavior;
-                await this.zclNode.endpoints[1].clusters.onOff.writeAttributes({ startUpOnOff });
+                await this.zclNode.endpoints[1].clusters.onOff.writeAttributes({ powerOnBehavior: newSettings.power_on_behavior });
             } catch (error) {
                 this.log("Error updating the power on behavior:", error.message);
             }
@@ -272,13 +266,8 @@ class SonoffZBMINIR2 extends SonoffBase {
     // onEndDeviceAnnounce() (just a log line) is fine as-is.
 
     async checkAttributes() {
-        this.readAttribute(CLUSTER.ON_OFF, ['startUpOnOff'], (data) => {
-            // Reverse of the write-side mapping: ZCL enum8 decodes 0xFF as
-            // "previous", but the settings dropdown's id is "last_state".
-            const power_on_behavior = data.startUpOnOff === 'previous'
-                ? 'last_state'
-                : data.startUpOnOff;
-            this.setSettings({ power_on_behavior }).catch(this.error);
+        this.readAttribute(CLUSTER.ON_OFF, ['powerOnBehavior'], (data) => {
+            this.setSettings({ power_on_behavior: data.powerOnBehavior }).catch(this.error);
         });
 
         this.readAttribute(SonoffCluster, SonoffClusterAttributes, (data) => {
