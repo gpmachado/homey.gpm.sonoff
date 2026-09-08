@@ -54,8 +54,13 @@ class SonoffZBMINIR2 extends SonoffBase {
         super.onNodeInit({ zclNode });
 
         if (this.hasCapability('onoff')) {
-            // The ZBMINI-R2 firmware doesn't send a ZCL Default Response to setOn/setOff.
-            // registerCapability uses the SDK's default which waits 10 s → "Timeout: Expected Response".
+            // registerCapability's default send waits up to 10s for a ZCL response and
+            // times out here ("Timeout: Expected Response"). A sniffer capture shows
+            // this device DOES answer a similarly-shaped On command from a different
+            // controller, so it isn't a firmware limitation — waitForResponse: false
+            // just stops the JS side from waiting (see zigbee-clusters Cluster.js:
+            // `if (opts.waitForResponse === false) return this.sendFrame(payload);`),
+            // it doesn't change what's sent on the wire or what the device does.
             // Instead, wire the capability manually:
             //   - SET:    registerCapabilityListener with waitForResponse: false (fire-and-forget)
             //   - REPORT: cluster attr.onOff event → setCapabilityValue
@@ -135,6 +140,10 @@ class SonoffZBMINIR2 extends SonoffBase {
                 return _hook(...args);
             };
         }
+
+        // Read initial data so the settings UI reflects the device's actual
+        // configuration rather than Homey's stored defaults.
+        await this.checkAttributes();
 
         this.log('ZBMINIR2 initialized');
     }
@@ -258,15 +267,9 @@ class SonoffZBMINIR2 extends SonoffBase {
         RejoinManager.triggerRejoin(this);
     }
 
-    // ZDO Device Announce — logged for visibility only, NOT used as a rejoin signal.
-    // A routing/mesh re-attach also sends a bare announce (no reboot), which caused
-    // false device_rejoined triggers (announce ~20 min after init, no power cut).
-    // The real power-restore signal is a paired boot dump: 0x0006 Report Attributes +
-    // 0xFC11 Report Attributes arriving within 200ms (handleFrame hook, sniffer-confirmed).
-    // A routing announce never triggers that paired pattern. So rejoin fires there, not here.
-    onEndDeviceAnnounce() {
-        this.log('ZDO Device Announce (rejoin fires on the SonoffCluster boot dump, not here)');
-    }
+    // Rejoin is detected from the SonoffCluster boot dump (see handleFrame hook
+    // above), not from ZDO Device Announce — the base class's default
+    // onEndDeviceAnnounce() (just a log line) is fine as-is.
 
     async checkAttributes() {
         this.readAttribute(CLUSTER.ON_OFF, ['startUpOnOff'], (data) => {

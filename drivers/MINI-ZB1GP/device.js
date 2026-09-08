@@ -34,7 +34,7 @@ class SonoffMINIZB1GP extends SonoffBase {
     this._installClusterReportInterceptor(SonoffCluster, { suppressCmdIds: [0x01, 0x03] });
 
     // Suppress Time cluster (0x000A) binding_unavailable errors
-    this.zclNode.endpoints[1].bind('time', new SonoffTimeServerBoundCluster());
+    this.zclNode.endpoints[1].bind(CLUSTER.TIME.NAME, new SonoffTimeServerBoundCluster());
 
     // Read initial data
     await this.checkAttributes();

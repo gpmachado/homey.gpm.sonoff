@@ -1,7 +1,7 @@
 'use strict';
 
 const Homey = require('homey');
-const { Cluster, debug } = require('zigbee-clusters');
+const { Cluster, TimeCluster, debug } = require('zigbee-clusters');
 const SonoffCluster = require('./lib/SonoffCluster');
 
 module.exports = class MyApp extends Homey.App {
@@ -17,6 +17,11 @@ module.exports = class MyApp extends Homey.App {
     // (0xFC11) globally so zclNode.endpoints[1].clusters['SonoffCluster']
     // resolves for every driver that uses it.
     Cluster.addCluster(SonoffCluster);
+
+    // Time (0x000A) self-registers when zigbee-clusters is required, but
+    // registering it explicitly here documents the dependency the same way
+    // as SonoffCluster above, instead of relying on that implicit side effect.
+    Cluster.addCluster(TimeCluster);
 
     this.log('MyApp has been initialized');
 
