@@ -53,7 +53,7 @@ class SonoffBase extends ZigBeeDevice {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         this.log('Ask attribute', attr);
-        const value = await this.zclNode.endpoints[1].clusters[cluster].readAttributes(...attr);
+        const value = await this.zclNode.endpoints[1].clusters[cluster].readAttributes(attr);
         this.log('Got attr', attr, value);
         handler(value);
         return;
