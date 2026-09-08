@@ -4,7 +4,6 @@ const SonoffCluster = require('../../lib/SonoffCluster');
 const { Cluster, CLUSTER, BoundCluster } = require('zigbee-clusters');
 const SonoffBase = require('../sonoffbase');
 const RejoinManager = require('../../lib/RejoinManager');
-const { SONOFF_REPORT_MAX_INTERVAL_S } = require('../../lib/constants');
 
 // Handles external switch commands (detach_mode) sent directly to the hub
 class MyOnOffBoundCluster extends BoundCluster {
@@ -84,7 +83,7 @@ class SonoffMINIZBD extends SonoffBase {
         this.homey.setTimeout(() => {
             if (!this.zclNode) return;
             this.zclNode.endpoints[1].clusters.onOff.configureReporting({
-                onOff: { minInterval: 0, maxInterval: SONOFF_REPORT_MAX_INTERVAL_S, minChange: 1 },
+                onOff: { minInterval: 0, maxInterval: 1800, minChange: 1 }, // 30 min
             }).catch(err => this.log('[Reporting] boot config failed:', err.message));
         }, 30_000);
 
@@ -143,9 +142,15 @@ class SonoffMINIZBD extends SonoffBase {
     async onSettings({ oldSettings, newSettings, changedKeys }) {
         if (changedKeys.includes("power_on_behavior")) {
             try {
-                await this.zclNode.endpoints[1].clusters.onOff.writeAttributes({ startUpOnOff: newSettings.power_on_behavior });
+                // Settings dropdown uses "last_state"; the ZCL enum8 for
+                // startUpOnOff calls the same value "previous" (0xFF) —
+                // confirmed on the wire via iHost sniffer capture.
+                const startUpOnOff = newSettings.power_on_behavior === 'last_state'
+                    ? 'previous'
+                    : newSettings.power_on_behavior;
+                await this.zclNode.endpoints[1].clusters.onOff.writeAttributes({ startUpOnOff });
             } catch (error) {
-                this.log("Error updating the power on behavior");
+                this.log("Error updating the power on behavior:", error.message);
             }
         }
 
@@ -265,7 +270,12 @@ class SonoffMINIZBD extends SonoffBase {
 
     async checkAttributes() {
         this.readAttribute(CLUSTER.ON_OFF, ['startUpOnOff'], (data) => {
-            this.setSettings({ power_on_behavior: data.startUpOnOff }).catch(this.error);
+            // Reverse of the write-side mapping: ZCL enum8 decodes 0xFF as
+            // "previous", but the settings dropdown's id is "last_state".
+            const power_on_behavior = data.startUpOnOff === 'previous'
+                ? 'last_state'
+                : data.startUpOnOff;
+            this.setSettings({ power_on_behavior }).catch(this.error);
         });
 
         this.readAttribute(SonoffCluster, SonoffClusterAttributes, (data) => {

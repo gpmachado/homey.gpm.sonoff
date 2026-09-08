@@ -1,1 +1,26 @@
-{}
+{
+  "settings": {
+    "title": "Rejoins",
+    "eyebrow": "Sonoff Devices",
+    "intro": "Tracks power-cycle / rejoin events for devices with rejoin detection (MINI-ZBD, ZBMINI-R2).",
+    "refresh": "Refresh now",
+    "waiting_for_data": "Waiting for data…",
+    "device": "Device",
+    "loading": "Loading…",
+    "refreshing": "Refreshing…",
+    "failed_load": "Failed to load:",
+    "updated_at": "Updated at",
+    "confirmation_failed": "Confirmation failed:",
+    "rejoins": "Rejoins",
+    "rejoins_since": "Tracked since",
+    "reset_rejoins": "Reset rejoins",
+    "resetting_rejoins": "Resetting…",
+    "reset_rejoins_failed": "Reset failed:",
+    "reset_rejoins_confirmation": "Reset the rejoin counters for all devices? This cannot be undone.",
+    "total_rejoins": "Total rejoins",
+    "devices_with_rejoins": "Devices affected",
+    "last_rejoin": "Last rejoin",
+    "no_rejoins": "No rejoins recorded yet.",
+    "footnote": "A rejoin is detected from a paired 0xFC11 + 0x0006 boot-dump pattern right after the device reconnects — see MINI-ZBD/ZBMINIR2 device.js."
+  }
+}

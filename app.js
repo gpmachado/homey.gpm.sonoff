@@ -1,7 +1,8 @@
 'use strict';
 
 const Homey = require('homey');
-const { registerCustomClusters } = require('./lib/clusterRegistry');
+const { Cluster, debug } = require('zigbee-clusters');
+const SonoffCluster = require('./lib/SonoffCluster');
 
 module.exports = class MyApp extends Homey.App {
 
@@ -9,10 +10,13 @@ module.exports = class MyApp extends Homey.App {
    * onInit is called when the app is initialized.
    */
   async onInit() {
+    // Flip to false for production (silences verbose ZCL frame logging).
+    debug(true);
+
     // Must run before any device's onNodeInit — registers SonoffCluster
     // (0xFC11) globally so zclNode.endpoints[1].clusters['SonoffCluster']
     // resolves for every driver that uses it.
-    registerCustomClusters();
+    Cluster.addCluster(SonoffCluster);
 
     this.log('MyApp has been initialized');
 

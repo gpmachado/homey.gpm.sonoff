@@ -520,10 +520,10 @@
               "id": "power_on_behavior",
               "type": "dropdown",
               "label": {
-                "en": "Power-on State",
-                "de": "Einschaltzustand",
-                "es": "Estado al encender",
-                "it": "Stato all'Accensione"
+                "en": "Power-on behavior",
+                "de": "Einschaltverhalten",
+                "es": "Comportamiento al encender",
+                "it": "Comportamento all'accensione"
               },
               "hint": {
                 "en": "The state of the device when the power restores from a power outage or being turned off physically.",
@@ -536,25 +536,25 @@
                 {
                   "id": "on",
                   "label": {
-                    "en": "Always On",
-                    "it": "Sempre acceso",
-                    "de": "Immer ein",
-                    "es": "Siempre encendido"
+                    "en": "On",
+                    "it": "Acceso",
+                    "de": "Ein",
+                    "es": "Encendido"
                   }
                 },
                 {
                   "id": "off",
                   "label": {
-                    "en": "Always Off",
-                    "it": "Sempre spento",
-                    "de": "Immer aus",
-                    "es": "Siempre apagado"
+                    "en": "Off",
+                    "it": "Spento",
+                    "de": "Aus",
+                    "es": "Apagado"
                   }
                 },
                 {
                   "id": "last_state",
                   "label": {
-                    "en": "Last State",
+                    "en": "Last state",
                     "it": "Ultimo stato",
                     "de": "Letzter Zustand",
                     "es": "Último estado"
@@ -1094,10 +1094,10 @@
               "id": "power_on_behavior",
               "type": "dropdown",
               "label": {
-                "en": "Power-on State",
-                "de": "Einschaltzustand",
-                "es": "Estado al encender",
-                "it": "Stato all'Accensione"
+                "en": "Power-on behavior",
+                "de": "Einschaltverhalten",
+                "es": "Comportamiento al encender",
+                "it": "Comportamento all'accensione"
               },
               "hint": {
                 "en": "The state of the device when the power restores from a power outage or being turned off physically.",
@@ -1110,25 +1110,25 @@
                 {
                   "id": "on",
                   "label": {
-                    "en": "Always On",
-                    "it": "Sempre acceso",
-                    "de": "Immer ein",
-                    "es": "Siempre encendido"
+                    "en": "On",
+                    "it": "Acceso",
+                    "de": "Ein",
+                    "es": "Encendido"
                   }
                 },
                 {
                   "id": "off",
                   "label": {
-                    "en": "Always Off",
-                    "it": "Sempre spento",
-                    "de": "Immer aus",
-                    "es": "Siempre apagado"
+                    "en": "Off",
+                    "it": "Spento",
+                    "de": "Aus",
+                    "es": "Apagado"
                   }
                 },
                 {
                   "id": "last_state",
                   "label": {
-                    "en": "Last State",
+                    "en": "Last state",
                     "it": "Ultimo stato",
                     "de": "Letzter Zustand",
                     "es": "Último estado"
