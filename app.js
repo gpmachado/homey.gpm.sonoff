@@ -11,8 +11,8 @@ module.exports = class MyApp extends Homey.App {
    * onInit is called when the app is initialized.
    */
   async onInit() {
-    // Flip to false for production (silences verbose ZCL frame logging).
-    debug(true);
+    // Flip to true for verbose ZCL frame logging during development.
+    debug(false);
 
     // Must run before any device's onNodeInit — registers SonoffCluster
     // (0xFC11) globally so zclNode.endpoints[1].clusters['SonoffCluster']
