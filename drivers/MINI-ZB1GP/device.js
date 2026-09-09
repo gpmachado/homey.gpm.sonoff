@@ -31,6 +31,11 @@ class SonoffMINIZB1GP extends SonoffBase {
     // Sonoff-specific settings via custom cluster
     this._registerSonoffListeners();
 
+    // Maintenance action button (Advanced Settings) — same reset as the
+    // mini_zb1gp_reset_consumption flow card, reachable without a flow.
+    if (!this.hasCapability('button.reset_consumption')) await this.addCapability('button.reset_consumption');
+    this.registerCapabilityListener('button.reset_consumption', () => this._resetConsumption());
+
     // Intercept SonoffCluster (0xFC11) reportAttributes frames before the framework's
     // auto-parser runs. The auto-parser fails on type mismatches for Sonoff's custom
     // attribute format, preventing the attr.* events from firing. This same hook also

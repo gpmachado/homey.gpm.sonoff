@@ -1,10 +1,10 @@
 {
   "id": "MINI-ZB1GP",
   "name": {
-    "en": "Sonoff Energy Meter",
-    "es": "Medidor de Energía Sonoff",
-    "it": "Misuratore di Energia Sonoff",
-    "de": "Sonoff Energiezähler"
+    "en": "Sonoff Energy Meter ZB1GP",
+    "es": "Medidor de Energía Sonoff ZB1GP",
+    "it": "Misuratore di Energia Sonoff ZB1GP",
+    "de": "Sonoff Energiezähler ZB1GP"
   },
   "class": "sensor",
   "capabilities": [
@@ -13,7 +13,8 @@
     "meter_power.today",
     "meter_power.month",
     "measure_current",
-    "measure_voltage"
+    "measure_voltage",
+    "button.reset_consumption"
   ],
   "capabilitiesOptions": {
     "meter_power.today": {
@@ -29,6 +30,15 @@
     "meter_power.exported": {
       "title": {
         "en": "Energy exported"
+      }
+    },
+    "button.reset_consumption": {
+      "maintenanceAction": true,
+      "title": {
+        "en": "Reset accumulated consumption"
+      },
+      "desc": {
+        "en": "Resets the device's total energy counter to zero."
       }
     }
   },
