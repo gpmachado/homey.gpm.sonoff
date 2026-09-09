@@ -20,5 +20,16 @@
       "de": "Turbo-Modus"
     },
     "value": false
+  },
+  {
+    "id": "show_exported_energy",
+    "type": "checkbox",
+    "label": {
+      "en": "Show exported energy"
+    },
+    "hint": {
+      "en": "Only relevant if the load/line wiring is reversed so the device measures energy fed back instead of consumed. Off by default — enable only if you know your installation is wired this way."
+    },
+    "value": false
   }
 ]

@@ -10,11 +10,31 @@
   "capabilities": [
     "measure_power",
     "meter_power",
+    "meter_power.today",
+    "meter_power.month",
     "measure_current",
     "measure_voltage"
   ],
+  "capabilitiesOptions": {
+    "meter_power.today": {
+      "title": {
+        "en": "Energy today"
+      }
+    },
+    "meter_power.month": {
+      "title": {
+        "en": "Energy this month"
+      }
+    },
+    "meter_power.exported": {
+      "title": {
+        "en": "Energy exported"
+      }
+    }
+  },
   "energy": {
-    "meterPowerImportedCapability": "meter_power"
+    "meterPowerImportedCapability": "meter_power",
+    "meterPowerExportedCapability": "meter_power.exported"
   },
   "zigbee": {
     "manufacturerName": [

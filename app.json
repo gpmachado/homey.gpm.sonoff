@@ -283,11 +283,31 @@
       "capabilities": [
         "measure_power",
         "meter_power",
+        "meter_power.today",
+        "meter_power.month",
         "measure_current",
         "measure_voltage"
       ],
+      "capabilitiesOptions": {
+        "meter_power.today": {
+          "title": {
+            "en": "Energy today"
+          }
+        },
+        "meter_power.month": {
+          "title": {
+            "en": "Energy this month"
+          }
+        },
+        "meter_power.exported": {
+          "title": {
+            "en": "Energy exported"
+          }
+        }
+      },
       "energy": {
-        "meterPowerImportedCapability": "meter_power"
+        "meterPowerImportedCapability": "meter_power",
+        "meterPowerExportedCapability": "meter_power.exported"
       },
       "zigbee": {
         "manufacturerName": [
@@ -345,6 +365,17 @@
             "es": "Modo turbo",
             "it": "Modalità turbo",
             "de": "Turbo-Modus"
+          },
+          "value": false
+        },
+        {
+          "id": "show_exported_energy",
+          "type": "checkbox",
+          "label": {
+            "en": "Show exported energy"
+          },
+          "hint": {
+            "en": "Only relevant if the load/line wiring is reversed so the device measures energy fed back instead of consumed. Off by default — enable only if you know your installation is wired this way."
           },
           "value": false
         }

@@ -19,6 +19,11 @@ class SonoffMINIZB1GP extends SonoffBase {
     await super.onNodeInit({ zclNode }, { noAttribCheck: true });
     this.log(`[MINI-ZB1GP] ${this.getName()} initialized`);
 
+    // Existing paired devices keep their capability list across an app update.
+    // Add the new counters explicitly so users do not need to pair again.
+    await this._addEnergyCounterCapabilities();
+    await this._syncExportedEnergyCapability();
+
     // Standard capabilities via electricalMeasurement — device returns 0xFFFF
     // but configuring reporting wakes it up periodically so SonoffCluster reports flow.
     this._registerStandardCapabilities();
@@ -40,6 +45,31 @@ class SonoffMINIZB1GP extends SonoffBase {
     await this.checkAttributes();
 
     this.log('[MINI-ZB1GP] energy meter driver ready');
+  }
+
+  async _addEnergyCounterCapabilities() {
+    for (const capability of [
+      'meter_power.today',
+      'meter_power.month',
+    ]) {
+      if (!this.hasCapability(capability)) await this.addCapability(capability);
+    }
+  }
+
+  // meter_power.exported only makes sense if the load/line wiring is reversed
+  // (device measures energy fed back instead of consumed) — hidden by default,
+  // shown only when the user opts in via the "show_exported_energy" setting.
+  async _syncExportedEnergyCapability() {
+    const shouldShow = Boolean(this.getSetting('show_exported_energy'));
+    const hasIt = this.hasCapability('meter_power.exported');
+    if (shouldShow && !hasIt) {
+      await this.addCapability('meter_power.exported');
+      this._registerExportedEnergyCapability();
+    } else if (!shouldShow && hasIt) {
+      await this.removeCapability('meter_power.exported');
+    } else if (shouldShow && hasIt) {
+      this._registerExportedEnergyCapability();
+    }
   }
 
   _registerStandardCapabilities() {
@@ -100,6 +130,51 @@ class SonoffMINIZB1GP extends SonoffBase {
         },
       },
     });
+
+    // Device-maintained consumption counters (Wh on the wire).
+    // These reset automatically at the day/month boundary in the device.
+    for (const [capability, attribute] of [
+      ['meter_power.today', 'energyToday'],
+      ['meter_power.month', 'energyMonth'],
+    ]) {
+      this.registerCapability(capability, SonoffCluster, {
+        get: attribute,
+        report: attribute,
+        reportParser: value => (this._isValidReading(value) ? value / 1000 : null),
+        getParser: value => (this._isValidReading(value) ? value / 1000 : null),
+        getOpts: { getOnStart: true, getOnOnline: true, pollInterval: 300000 },
+        reportOpts: {
+          configureAttributeReporting: {
+            minInterval: 60,
+            maxInterval: 300,
+            minChange: 1, // 1Wh change
+          },
+        },
+      });
+    }
+
+  }
+
+  // Exported (fed-back) total — separate dedicated counter on the wire, not
+  // a sign flip of totalEnergyConsumption. Populates when the device is
+  // wired for export (reversed line/load); reads 0 otherwise. Homey pairs
+  // this with meter_power via energy.meterPowerExportedCapability. Only
+  // registered when the capability exists (see _syncExportedEnergyCapability).
+  _registerExportedEnergyCapability() {
+    this.registerCapability('meter_power.exported', SonoffCluster, {
+      get: 'totalOutputEnergyConsumption',
+      report: 'totalOutputEnergyConsumption',
+      reportParser: value => (this._isValidReading(value) ? value / 1000 : null),
+      getParser: value => (this._isValidReading(value) ? value / 1000 : null),
+      getOpts: { getOnStart: true, getOnOnline: true, pollInterval: 300000 },
+      reportOpts: {
+        configureAttributeReporting: {
+          minInterval: 60,
+          maxInterval: 300,
+          minChange: 1, // 1Wh change
+        },
+      },
+    });
   }
 
   /**
@@ -130,14 +205,29 @@ class SonoffMINIZB1GP extends SonoffBase {
       if (this._isValidReading(value)) this.setCapabilityValue('measure_voltage', value / 1000).catch(this.error);
     };
     this._onAcPower ??= value => {
+      // acCurrentPowerValue is signed — negative means the device is
+      // exporting (feeding power back), matching Homey's measure_power
+      // convention. Validate the raw unsigned value against the sentinels
+      // first; the converted watts value is legitimately negative on export.
+      if (!this._isValidReading(value)) return;
       const watts = this._toSignedInt32(value) / 1000;
-      if (this._isValidReading(watts)) this.setCapabilityValue('measure_power', watts).catch(this.error);
+      this.setCapabilityValue('measure_power', watts).catch(this.error);
     };
     this._onAcCurrent ??= value => {
       if (this._isValidReading(value)) this.setCapabilityValue('measure_current', value / 1000).catch(this.error);
     };
     this._onTotalEnergy ??= value => {
       if (this._isValidReading(value)) this.setCapabilityValue('meter_power', value / 1000).catch(this.error);
+    };
+    this._onTotalOutputEnergy ??= value => {
+      if (!this.hasCapability('meter_power.exported')) return;
+      if (this._isValidReading(value)) this.setCapabilityValue('meter_power.exported', value / 1000).catch(this.error);
+    };
+    this._onEnergyToday ??= value => {
+      if (this._isValidReading(value)) this.setCapabilityValue('meter_power.today', value / 1000).catch(this.error);
+    };
+    this._onEnergyMonth ??= value => {
+      if (this._isValidReading(value)) this.setCapabilityValue('meter_power.month', value / 1000).catch(this.error);
     };
 
     cluster.removeListener('attr.network_led', this._onNetworkLed);
@@ -152,6 +242,12 @@ class SonoffMINIZB1GP extends SonoffBase {
     cluster.on('attr.acCurrentCurrentValue', this._onAcCurrent);
     cluster.removeListener('attr.totalEnergyConsumption', this._onTotalEnergy);
     cluster.on('attr.totalEnergyConsumption', this._onTotalEnergy);
+    cluster.removeListener('attr.totalOutputEnergyConsumption', this._onTotalOutputEnergy);
+    cluster.on('attr.totalOutputEnergyConsumption', this._onTotalOutputEnergy);
+    cluster.removeListener('attr.energyToday', this._onEnergyToday);
+    cluster.on('attr.energyToday', this._onEnergyToday);
+    cluster.removeListener('attr.energyMonth', this._onEnergyMonth);
+    cluster.on('attr.energyMonth', this._onEnergyMonth);
   }
 
   async checkAttributes() {
@@ -174,22 +270,36 @@ class SonoffMINIZB1GP extends SonoffBase {
     if (sonoffCluster) {
       try {
         const energy = await sonoffCluster.readAttributes(
-          ['acCurrentVoltageValue', 'acCurrentPowerValue', 'acCurrentCurrentValue', 'totalEnergyConsumption'],
+          [
+            'acCurrentVoltageValue', 'acCurrentPowerValue', 'acCurrentCurrentValue',
+            'energyToday', 'energyMonth', 'totalEnergyConsumption',
+            'totalOutputEnergyConsumption',
+          ],
           { manufacturerCode: 0x1286 }
         );
         this.log('[MINI-ZB1GP] SonoffCluster energy (mfr):', energy);
         if (energy.acCurrentVoltageValue !== undefined && this._isValidReading(energy.acCurrentVoltageValue)) {
           this.setCapabilityValue('measure_voltage', energy.acCurrentVoltageValue / 1000).catch(() => {});
         }
-        if (energy.acCurrentPowerValue !== undefined) {
+        if (energy.acCurrentPowerValue !== undefined && this._isValidReading(energy.acCurrentPowerValue)) {
           const watts = this._toSignedInt32(energy.acCurrentPowerValue) / 1000;
-          if (this._isValidReading(watts)) this.setCapabilityValue('measure_power', watts).catch(() => {});
+          this.setCapabilityValue('measure_power', watts).catch(() => {});
         }
         if (energy.acCurrentCurrentValue !== undefined && this._isValidReading(energy.acCurrentCurrentValue)) {
           this.setCapabilityValue('measure_current', energy.acCurrentCurrentValue / 1000).catch(() => {});
         }
         if (energy.totalEnergyConsumption !== undefined && this._isValidReading(energy.totalEnergyConsumption)) {
           this.setCapabilityValue('meter_power', energy.totalEnergyConsumption / 1000).catch(() => {});
+        }
+        if (this.hasCapability('meter_power.exported') && energy.totalOutputEnergyConsumption !== undefined
+          && this._isValidReading(energy.totalOutputEnergyConsumption)) {
+          this.setCapabilityValue('meter_power.exported', energy.totalOutputEnergyConsumption / 1000).catch(() => {});
+        }
+        if (energy.energyToday !== undefined && this._isValidReading(energy.energyToday)) {
+          this.setCapabilityValue('meter_power.today', energy.energyToday / 1000).catch(() => {});
+        }
+        if (energy.energyMonth !== undefined && this._isValidReading(energy.energyMonth)) {
+          this.setCapabilityValue('meter_power.month', energy.energyMonth / 1000).catch(() => {});
         }
       } catch (e) {
         this.log('[MINI-ZB1GP] mfr read failed:', e.message);
@@ -210,6 +320,17 @@ class SonoffMINIZB1GP extends SonoffBase {
 
     if (Object.keys(toWrite).length > 0) {
       await this.writeAttributes(SonoffCluster, toWrite);
+    }
+
+    if (changedKeys.includes('show_exported_energy')) {
+      const shouldShow = Boolean(newSettings.show_exported_energy);
+      const hasIt = this.hasCapability('meter_power.exported');
+      if (shouldShow && !hasIt) {
+        await this.addCapability('meter_power.exported');
+        this._registerExportedEnergyCapability();
+      } else if (!shouldShow && hasIt) {
+        await this.removeCapability('meter_power.exported');
+      }
     }
   }
 
