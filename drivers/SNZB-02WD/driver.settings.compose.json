@@ -1,0 +1,36 @@
+[
+  {
+    "id": "temperature_offset",
+    "type": "number",
+    "label": {
+      "en": "Temperature offset (°C)",
+      "es": "Offset de temperatura (°C)",
+      "it": "Offset di temperatura (°C)",
+      "de": "Temperaturoffset (°C)"
+    },
+    "hint": {
+      "en": "Adjusts the reported temperature by this amount. Written directly to the device — not a client-side correction."
+    },
+    "value": 0,
+    "min": -10,
+    "max": 10,
+    "step": 0.1
+  },
+  {
+    "id": "humidity_offset",
+    "type": "number",
+    "label": {
+      "en": "Humidity offset (%)",
+      "es": "Offset de humedad (%)",
+      "it": "Offset di umidità (%)",
+      "de": "Feuchtigkeitsoffset (%)"
+    },
+    "hint": {
+      "en": "Adjusts the reported humidity by this amount. Written directly to the device — not a client-side correction."
+    },
+    "value": 0,
+    "min": -20,
+    "max": 20,
+    "step": 1
+  }
+]
