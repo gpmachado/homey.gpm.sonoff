@@ -1,0 +1,28 @@
+{
+  "id": "DONGLE-P",
+  "name": {
+    "en": "Sonoff Zigbee Dongle P",
+    "es": "Dongle Zigbee Sonoff P",
+    "it": "Dongle Zigbee Sonoff P",
+    "de": "Sonoff Zigbee-Dongle P"
+  },
+  "class": "other",
+  "capabilities": [],
+  "zigbee": {
+    "manufacturerName": ["TexasInstruments"],
+    "productId": ["ti.router"],
+    "endpoints": {
+      "8": { "clusters": [0, 3] }
+    },
+    "learnmode": {
+      "image": "{{driverAssetsPath}}/icon.svg",
+      "instruction": {
+        "en": "Put the dongle in a USB slot and let it power up.",
+        "es": "Introduce el dongle en un puerto USB y deja que se encienda.",
+        "it": "Inserisci il dongle in una porta USB e lascia che si accenda.",
+        "de": "Stecke den Dongle in einen USB-Anschluss und lass ihn hochfahren."
+      }
+    }
+  },
+  "$extends": ["zigbee-local"]
+}
