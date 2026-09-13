@@ -9,10 +9,10 @@
     "local"
   ],
   "name": {
-    "en": "Sonoff Devices"
+    "en": "My Sonoff Devices"
   },
   "description": {
-    "en": "Sonoff Devices"
+    "en": "My Sonoff Devices"
   },
   "category": [
     "appliances"
@@ -230,7 +230,9 @@
       },
       "icon": "/drivers/BASICZBR3/assets/icon.svg",
       "zigbee": {
-        "manufacturerName": "SONOFF",
+        "manufacturerName": [
+          "SONOFF"
+        ],
         "productId": [
           "BASICZBR3"
         ],
@@ -259,6 +261,104 @@
         }
       },
       "settings": []
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/DONGLE-E_R/assets/images/xlarge.png",
+        "large": "/drivers/DONGLE-E_R/assets/images/large.png",
+        "small": "/drivers/DONGLE-E_R/assets/images/small.png"
+      },
+      "id": "DONGLE-E_R",
+      "name": {
+        "en": "Sonoff Zigbee Dongle E",
+        "es": "Dongle Zigbee Sonoff E",
+        "it": "Dongle Zigbee Sonoff E",
+        "de": "Sonoff Zigbee-Dongle E"
+      },
+      "class": "other",
+      "capabilities": [],
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "DONGLE-E_R"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              3,
+              4,
+              5,
+              6,
+              4096
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/DONGLE-E_R/assets/icon.svg",
+          "instruction": {
+            "en": "Put the dongle in a USB slot and let it power up.",
+            "es": "Introduce el dongle en un puerto USB y deja que se encienda.",
+            "it": "Inserisci il dongle in una porta USB e lascia che si accenda.",
+            "de": "Stecke den Dongle in einen USB-Anschluss und lass ihn hochfahren."
+          }
+        }
+      }
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/DONGLE-P/assets/images/xlarge.png",
+        "large": "/drivers/DONGLE-P/assets/images/large.png",
+        "small": "/drivers/DONGLE-P/assets/images/small.png"
+      },
+      "id": "DONGLE-P",
+      "name": {
+        "en": "Sonoff Zigbee Dongle P",
+        "es": "Dongle Zigbee Sonoff P",
+        "it": "Dongle Zigbee Sonoff P",
+        "de": "Sonoff Zigbee-Dongle P"
+      },
+      "class": "other",
+      "capabilities": [],
+      "zigbee": {
+        "manufacturerName": [
+          "TexasInstruments"
+        ],
+        "productId": [
+          "ti.router"
+        ],
+        "endpoints": {
+          "8": {
+            "clusters": [
+              0,
+              3
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/DONGLE-P/assets/icon.svg",
+          "instruction": {
+            "en": "Put the dongle in a USB slot and let it power up.",
+            "es": "Introduce el dongle en un puerto USB y deja que se encienda.",
+            "it": "Inserisci il dongle in una porta USB e lascia che si accenda.",
+            "de": "Stecke den Dongle in einen USB-Anschluss und lass ihn hochfahren."
+          }
+        }
+      }
     },
     {
       "platforms": [
@@ -441,10 +541,10 @@
         "learnmode": {
           "image": "/drivers/MINI-ZBD/assets/learn.svg",
           "instruction": {
-            "en": "Press the button on the top for approx 10 seconds until the green LED blinks rapidly.",
-            "es": "Pulsa el botón de la parte superior durante aprox. 10 segundos hasta que el LED verde parpadee rápidamente.",
-            "it": "Premi il pulsante nella parte superiore per circa 10 secondi fino a quando il LED verde lampeggia rapidamente.",
-            "de": "Drücke die Taste oben ca. 10 Sekunden, bis die grüne LED schnell blinkt."
+            "en": "This device has no physical button. Toggle the connected external switch on/off 10 times in a row to enter pairing mode.",
+            "es": "Este dispositivo no tiene botón físico. Alterna el interruptor externo conectado 10 veces seguidas para entrar en modo de emparejamiento.",
+            "it": "Questo dispositivo non ha un pulsante fisico. Alterna l'interruttore esterno collegato 10 volte di seguito per entrare in modalità di associazione.",
+            "de": "Dieses Gerät hat keine physische Taste. Schalte den angeschlossenen externen Schalter 10 Mal hintereinander um, um den Kopplungsmodus zu starten."
           }
         }
       },
@@ -638,7 +738,7 @@
                 "es": "Duración (segundos)",
                 "it": "Durata (secondi)"
               },
-              "value": 28,
+              "value": 1,
               "min": 0.5,
               "max": 3599.5,
               "step": 0.5
@@ -734,6 +834,188 @@
         "zigbee"
       ],
       "images": {
+        "xlarge": "/drivers/SNZB-02LD/assets/images/xlarge.png",
+        "large": "/drivers/SNZB-02LD/assets/images/large.png",
+        "small": "/drivers/SNZB-02LD/assets/images/small.png"
+      },
+      "id": "SNZB-02LD",
+      "name": {
+        "en": "Thermometer SNZB-02LD",
+        "es": "Termómetro SNZB-02LD",
+        "it": "Termometro SNZB-02LD",
+        "de": "Thermometer SNZB-02LD"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "measure_temperature",
+        "measure_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "CR2450"
+        ]
+      },
+      "icon": "/drivers/SNZB-02LD/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "SNZB-02LD"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              1,
+              1026,
+              64529
+            ],
+            "bindings": [
+              0,
+              1,
+              1026
+            ]
+          }
+        },
+        "learnmode": {
+          "instruction": {
+            "en": "Press button on side for approx 10 seconds until the red LED blinks rapidly.",
+            "es": "Pulsa el botón lateral durante aprox. 10 segundos hasta que el LED rojo parpadee rápidamente.",
+            "it": "Premi il pulsante laterale per circa 10 secondi fino a quando il LED rosso lampeggia rapidamente.",
+            "de": "Seitliche Taste ca. 10 Sekunden drücken, bis die rote LED schnell blinkt."
+          }
+        }
+      },
+      "settings": [
+        {
+          "id": "temperature_offset",
+          "type": "number",
+          "label": {
+            "en": "Temperature offset (°C)",
+            "es": "Offset de temperatura (°C)",
+            "it": "Offset di temperatura (°C)",
+            "de": "Temperaturoffset (°C)"
+          },
+          "hint": {
+            "en": "Adjusts the reported temperature by this amount. Written directly to the device — not a client-side correction."
+          },
+          "value": 0,
+          "min": -10,
+          "max": 10,
+          "step": 0.1
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/SNZB-02WD/assets/images/xlarge.png",
+        "large": "/drivers/SNZB-02WD/assets/images/large.png",
+        "small": "/drivers/SNZB-02WD/assets/images/small.png"
+      },
+      "id": "SNZB-02WD",
+      "name": {
+        "en": "Thermometer SNZB-02WD",
+        "es": "Termómetro SNZB-02WD",
+        "it": "Termometro SNZB-02WD",
+        "de": "Thermometer SNZB-02WD"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "measure_temperature",
+        "measure_humidity",
+        "measure_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "CR2450"
+        ]
+      },
+      "icon": "/drivers/SNZB-02WD/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "SNZB-02WD"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              1,
+              1026,
+              1029,
+              64529
+            ],
+            "bindings": [
+              0,
+              1,
+              1026,
+              1029
+            ]
+          }
+        },
+        "learnmode": {
+          "instruction": {
+            "en": "Press button on side for approx 10 seconds until the red LED blinks rapidly.",
+            "es": "Pulsa el botón lateral durante aprox. 10 segundos hasta que el LED rojo parpadee rápidamente.",
+            "it": "Premi il pulsante laterale per circa 10 secondi fino a quando il LED rosso lampeggia rapidamente.",
+            "de": "Seitliche Taste ca. 10 Sekunden drücken, bis die rote LED schnell blinkt."
+          }
+        }
+      },
+      "settings": [
+        {
+          "id": "temperature_offset",
+          "type": "number",
+          "label": {
+            "en": "Temperature offset (°C)",
+            "es": "Offset de temperatura (°C)",
+            "it": "Offset di temperatura (°C)",
+            "de": "Temperaturoffset (°C)"
+          },
+          "hint": {
+            "en": "Adjusts the reported temperature by this amount. Written directly to the device — not a client-side correction."
+          },
+          "value": 0,
+          "min": -10,
+          "max": 10,
+          "step": 0.1
+        },
+        {
+          "id": "humidity_offset",
+          "type": "number",
+          "label": {
+            "en": "Humidity offset (%)",
+            "es": "Offset de humedad (%)",
+            "it": "Offset di umidità (%)",
+            "de": "Feuchtigkeitsoffset (%)"
+          },
+          "hint": {
+            "en": "Adjusts the reported humidity by this amount. Written directly to the device — not a client-side correction."
+          },
+          "value": 0,
+          "min": -20,
+          "max": 20,
+          "step": 1
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
         "xlarge": "/drivers/SNZB-03/assets/images/xlarge.png",
         "large": "/drivers/SNZB-03/assets/images/large.png",
         "small": "/drivers/SNZB-03/assets/images/small.png"
@@ -783,6 +1065,65 @@
             "es": "Pulsa el botón de reinicio de la parte inferior con un alfiler durante aprox. 10 segundos hasta que el LED rojo parpadee rápidamente.",
             "it": "Premi il reset nella parte inferiore con un ago per circa 10 secondi fino a quando il LED rosso lampeggia rapidamente.",
             "de": "Reset-Taste unten mit einer Nadel ca. 10 Sekunden drücken, bis die rote LED schnell blinkt."
+          }
+        }
+      }
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/SNZB-04P/assets/images/xlarge.png",
+        "large": "/drivers/SNZB-04P/assets/images/large.png",
+        "small": "/drivers/SNZB-04P/assets/images/small.png"
+      },
+      "id": "SNZB-04P",
+      "name": {
+        "en": "Door/Window Sensor SNZB-04P",
+        "es": "Sensor de puerta/ventana SNZB-04P",
+        "it": "Sensore porta/finestra SNZB-04P",
+        "de": "Tür-/Fenstersensor SNZB-04P"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "alarm_contact",
+        "alarm_tamper",
+        "measure_battery"
+      ],
+      "energy": {
+        "batteries": [
+          "CR2477"
+        ]
+      },
+      "icon": "/drivers/SNZB-04P/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "eWeLink"
+        ],
+        "productId": [
+          "SNZB-04P"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              1,
+              1280,
+              64529
+            ],
+            "bindings": []
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/SNZB-04P/assets/learn.svg",
+          "instruction": {
+            "en": "Press the button for approx 10 seconds until the red LED starts blinking.",
+            "es": "Pulsa el botón durante aprox. 10 segundos hasta que el LED rojo empiece a parpadear.",
+            "it": "Premi il pulsante per circa 10 secondi fino a quando il LED rosso inizia a lampeggiare.",
+            "de": "Drücke die Taste ca. 10 Sekunden, bis die rote LED zu blinken beginnt."
           }
         }
       }
@@ -1212,7 +1553,7 @@
                 "es": "Duración (segundos)",
                 "it": "Durata (secondi)"
               },
-              "value": 28,
+              "value": 1,
               "min": 0.5,
               "max": 3599.5,
               "step": 0.5

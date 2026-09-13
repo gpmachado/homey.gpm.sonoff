@@ -2,6 +2,7 @@
 
 const { ZigBeeDevice } = require('homey-zigbeedriver');
 const { debug, CLUSTER } = require('zigbee-clusters');
+const { writeAttributesVerbose } = require('../lib/zclDebug');
 
 if (process.env.DEBUG === "1") {
   debug(true);
@@ -96,7 +97,7 @@ class SonoffBase extends ZigBeeDevice {
       }
 
       this.log('Write attribute', items);
-      return await clust.writeAttributes(items);
+      return await writeAttributesVerbose(this, clust, items);
     } catch (error) {
       this.error('Error write attr', items, error);
       throw error;

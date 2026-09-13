@@ -188,7 +188,7 @@
           "es": "Duración (segundos)",
           "it": "Durata (secondi)"
         },
-        "value": 28,
+        "value": 1,
         "min": 0.5,
         "max": 3599.5,
         "step": 0.5

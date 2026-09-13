@@ -37,10 +37,10 @@
     "learnmode": {
       "image": "{{driverAssetsPath}}/learn.svg",
       "instruction": {
-        "en": "Press the button on the top for approx 10 seconds until the green LED blinks rapidly.",
-        "es": "Pulsa el botón de la parte superior durante aprox. 10 segundos hasta que el LED verde parpadee rápidamente.",
-        "it": "Premi il pulsante nella parte superiore per circa 10 secondi fino a quando il LED verde lampeggia rapidamente.",
-        "de": "Drücke die Taste oben ca. 10 Sekunden, bis die grüne LED schnell blinkt."
+        "en": "This device has no physical button. Toggle the connected external switch on/off 10 times in a row to enter pairing mode.",
+        "es": "Este dispositivo no tiene botón físico. Alterna el interruptor externo conectado 10 veces seguidas para entrar en modo de emparejamiento.",
+        "it": "Questo dispositivo non ha un pulsante fisico. Alterna l'interruttore esterno collegato 10 volte di seguito per entrare in modalità di associazione.",
+        "de": "Dieses Gerät hat keine physische Taste. Schalte den angeschlossenen externen Schalter 10 Mal hintereinander um, um den Kopplungsmodus zu starten."
       }
     }
   },

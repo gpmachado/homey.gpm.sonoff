@@ -18,7 +18,7 @@
   },
   "icon": "{{driverAssetsPath}}/icon.svg",
   "zigbee": {
-    "manufacturerName": "SONOFF",
+    "manufacturerName": ["SONOFF"],
     "productId": [
       "BASICZBR3"
     ],

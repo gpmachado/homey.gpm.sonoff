@@ -4,6 +4,7 @@ const SonoffCluster = require('../../lib/SonoffCluster');
 const { CLUSTER, BoundCluster } = require('zigbee-clusters');
 const SonoffBase = require('../sonoffbase');
 const RejoinManager = require('../../lib/RejoinManager');
+const { writeAttributesVerbose } = require('../../lib/zclDebug');
 
 // Handles external switch commands (detach_mode) sent directly to the hub
 class MyOnOffBoundCluster extends BoundCluster {
@@ -151,7 +152,7 @@ class SonoffZBMINIR2 extends SonoffBase {
     async onSettings({ oldSettings, newSettings, changedKeys }) {
         if (changedKeys.includes("power_on_behavior")) {
             try {
-                await this.zclNode.endpoints[1].clusters.onOff.writeAttributes({ powerOnBehavior: newSettings.power_on_behavior });
+                await writeAttributesVerbose(this, this.zclNode.endpoints[1].clusters.onOff, { powerOnBehavior: newSettings.power_on_behavior });
             } catch (error) {
                 this.log("Error updating the power on behavior:", error.message);
             }
@@ -276,7 +277,10 @@ class SonoffZBMINIR2 extends SonoffBase {
             if (data.TurboMode !== undefined)          settingsData.TurboMode            = data.TurboMode === 20;
             if (data.network_led !== undefined)        settingsData.network_led          = Boolean(data.network_led);
             if (data.power_on_delay_state !== undefined) settingsData.power_on_delay_state = Boolean(data.power_on_delay_state);
-            if (data.power_on_delay_time !== undefined) settingsData.power_on_delay_time  = data.power_on_delay_time / 2;
+            // Clamp to the settings schema's min (0.5) — the device reports 0
+            // when the delay is disabled, which is below the field's allowed
+            // range and would otherwise leave the number field empty/invalid.
+            if (data.power_on_delay_time !== undefined) settingsData.power_on_delay_time  = Math.max(0.5, data.power_on_delay_time / 2);
             if (data.switch_mode !== undefined)        settingsData.switch_mode          = String(data.switch_mode);
             if (data.detach_mode !== undefined)        settingsData.detach_mode          = Boolean(data.detach_mode);
             if (Object.keys(settingsData).length) this.setSettings(settingsData).catch(this.error);
