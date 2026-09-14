@@ -1,5 +1,8 @@
 {
   "1.0.0": {
     "en": "First version!"
+  },
+  "1.0.1": {
+    "en": "Added Zigbee Dongle E/P, SNZB-04P, ZBMINI, and SNZB-02LD/WD drivers, plus settings fixes for ZBMINIR2/MINI-ZBD."
   }
 }
