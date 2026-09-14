@@ -4,5 +4,8 @@
   },
   "1.0.1": {
     "en": "Added Zigbee Dongle E/P, SNZB-04P, ZBMINI, and SNZB-02LD/WD drivers, plus settings fixes for ZBMINIR2/MINI-ZBD."
+  },
+  "1.0.2": {
+    "en": "Added SNZB-04PR2 door/window sensor driver."
   }
 }
