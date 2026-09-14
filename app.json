@@ -1314,6 +1314,63 @@
         "zigbee"
       ],
       "images": {
+        "xlarge": "/drivers/ZBMINI/assets/images/xlarge.png",
+        "large": "/drivers/ZBMINI/assets/images/large.png",
+        "small": "/drivers/ZBMINI/assets/images/small.png"
+      },
+      "id": "ZBMINI",
+      "name": {
+        "en": "ZBMINI Switch",
+        "es": "Interruptor ZBMINI",
+        "it": "Interruttore ZBMINI",
+        "de": "ZBMINI Schalter"
+      },
+      "class": "socket",
+      "capabilities": [
+        "onoff"
+      ],
+      "icon": "/drivers/ZBMINI/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "01MINIZB"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              3,
+              4,
+              5,
+              6,
+              4096
+            ],
+            "bindings": [
+              6
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/ZBMINI/assets/learn.svg",
+          "instruction": {
+            "en": "Press the button on the top for approx 10 seconds until the green LED blinks rapidly.",
+            "es": "Pulsa el botón de la parte superior durante aprox. 10 segundos hasta que el LED verde parpadee rápidamente.",
+            "it": "Premi il pulsante nella parte superiore per circa 10 secondi fino a quando il LED verde lampeggia rapidamente.",
+            "de": "Drücke die Taste oben ca. 10 Sekunden, bis die grüne LED schnell blinkt."
+          }
+        }
+      }
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
         "xlarge": "/drivers/ZBMINIR2/assets/images/xlarge.png",
         "large": "/drivers/ZBMINIR2/assets/images/large.png",
         "small": "/drivers/ZBMINIR2/assets/images/small.png"
