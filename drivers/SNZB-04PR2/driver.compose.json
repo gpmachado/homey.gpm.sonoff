@@ -1,0 +1,30 @@
+{
+  "id": "SNZB-04PR2",
+  "name": {
+    "en": "Door/Window Sensor SNZB-04PR2",
+    "es": "Sensor de puerta/ventana SNZB-04PR2",
+    "it": "Sensore porta/finestra SNZB-04PR2",
+    "de": "Tür-/Fenstersensor SNZB-04PR2"
+  },
+  "class": "sensor",
+  "capabilities": ["alarm_contact", "alarm_tamper", "measure_battery"],
+  "energy": { "batteries": ["CR2477"] },
+  "icon": "{{driverAssetsPath}}/icon.svg",
+  "zigbee": {
+    "manufacturerName": ["eWeLink"],
+    "productId": ["SNZB-04PR2"],
+    "endpoints": {
+      "1": { "clusters": [1, 1280, 64529], "bindings": [] }
+    },
+    "learnmode": {
+      "image": "{{driverAssetsPath}}/learn.svg",
+      "instruction": {
+        "en": "Press the button for approx 10 seconds until the red LED starts blinking.",
+        "es": "Pulsa el botón durante aprox. 10 segundos hasta que el LED rojo empiece a parpadear.",
+        "it": "Premi il pulsante per circa 10 secondi fino a quando il LED rosso inizia a lampeggiare.",
+        "de": "Drücke die Taste ca. 10 Sekunden, bis die rote LED zu blinken beginnt."
+      }
+    }
+  },
+  "$extends": ["zigbee-local"]
+}
