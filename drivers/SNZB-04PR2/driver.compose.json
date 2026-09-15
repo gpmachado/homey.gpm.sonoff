@@ -11,7 +11,7 @@
   "energy": { "batteries": ["CR2477"] },
   "icon": "{{driverAssetsPath}}/icon.svg",
   "zigbee": {
-    "manufacturerName": ["eWeLink"],
+    "manufacturerName": ["SONOFF"],
     "productId": ["SNZB-04PR2"],
     "endpoints": {
       "1": { "clusters": [1, 1280, 64529], "bindings": [] }
