@@ -109,6 +109,72 @@
     ],
     "triggers": [
       {
+        "id": "MINI-ZB1GSP:single_click",
+        "title": {
+          "en": "Single click",
+          "es": "Clic simple",
+          "it": "Clic singolo",
+          "de": "Einfacher Klick"
+        },
+        "titleFormatted": {
+          "en": "Single click",
+          "es": "Clic simple",
+          "it": "Clic singolo",
+          "de": "Einfacher Klick"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=MINI-ZB1GSP"
+          }
+        ]
+      },
+      {
+        "id": "MINI-ZB1GSP:double_click",
+        "title": {
+          "en": "Double click",
+          "es": "Doble clic",
+          "it": "Doppio clic",
+          "de": "Doppelklick"
+        },
+        "titleFormatted": {
+          "en": "Double click",
+          "es": "Doble clic",
+          "it": "Doppio clic",
+          "de": "Doppelklick"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=MINI-ZB1GSP"
+          }
+        ]
+      },
+      {
+        "id": "MINI-ZB1GSP:long_press",
+        "title": {
+          "en": "Long press",
+          "es": "Pulsación larga",
+          "it": "Pressione lunga",
+          "de": "Langer Druck"
+        },
+        "titleFormatted": {
+          "en": "Long press",
+          "es": "Pulsación larga",
+          "it": "Pressione lunga",
+          "de": "Langer Druck"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=MINI-ZB1GSP"
+          }
+        ]
+      },
+      {
         "id": "MINI-ZBD_device_rejoined",
         "title": {
           "en": "Reconnected after power cut",
@@ -499,6 +565,383 @@
         "zigbee"
       ],
       "images": {
+        "xlarge": "/drivers/MINI-ZB1GSP/assets/images/xlarge.png",
+        "large": "/drivers/MINI-ZB1GSP/assets/images/large.png",
+        "small": "/drivers/MINI-ZB1GSP/assets/images/small.png"
+      },
+      "id": "MINI-ZB1GSP",
+      "name": {
+        "en": "Sonoff Switch ZB1GSP (with power monitoring)",
+        "es": "Interruptor Sonoff ZB1GSP (con medición de energía)",
+        "it": "Interruttore Sonoff ZB1GSP (con misurazione di potenza)",
+        "de": "Sonoff Schalter ZB1GSP (mit Leistungsmessung)"
+      },
+      "class": "socket",
+      "capabilities": [
+        "onoff",
+        "measure_power",
+        "measure_voltage",
+        "measure_current",
+        "meter_power",
+        "meter_power.today",
+        "meter_power.month",
+        "meter_power.exported",
+        "output_energy_today",
+        "output_energy_month",
+        "alarm_generic",
+        "alarm_generic.metering_error",
+        "alarm_generic.overload_protection"
+      ],
+      "capabilitiesOptions": {
+        "meter_power.today": {
+          "title": {
+            "en": "Energy today"
+          }
+        },
+        "meter_power.month": {
+          "title": {
+            "en": "Energy this month"
+          }
+        },
+        "meter_power.exported": {
+          "title": {
+            "en": "Exported"
+          }
+        },
+        "alarm_generic": {
+          "title": {
+            "en": "Overheated"
+          }
+        },
+        "alarm_generic.metering_error": {
+          "title": {
+            "en": "Metering error"
+          }
+        },
+        "alarm_generic.overload_protection": {
+          "title": {
+            "en": "Overload protection"
+          }
+        }
+      },
+      "energy": {
+        "meterPowerImportedCapability": "meter_power",
+        "meterPowerExportedCapability": "meter_power.exported"
+      },
+      "icon": "/drivers/MINI-ZB1GSP/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "MINI-ZB1GSP"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              6,
+              64529
+            ],
+            "bindings": [
+              6
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/MINI-ZB1GSP/assets/learn.svg",
+          "instruction": {
+            "en": "Press the button on the top for approx 10 seconds until the green LED blinks rapidly.",
+            "es": "Pulsa el botón de la parte superior durante aprox. 10 segundos hasta que el LED verde parpadee rápidamente.",
+            "it": "Premi il pulsante nella parte superiore per circa 10 secondi fino a quando il LED verde lampeggia rapidamente.",
+            "de": "Drücke die Taste oben ca. 10 Sekunden, bis die grüne LED schnell blinkt."
+          }
+        }
+      },
+      "settings": [
+        {
+          "id": "network_indicator",
+          "type": "checkbox",
+          "label": {
+            "en": "Network indicator LED"
+          },
+          "value": true,
+          "hint": {
+            "en": "Turn the blue network status LED on or off."
+          }
+        },
+        {
+          "id": "turbo_mode",
+          "type": "checkbox",
+          "label": {
+            "en": "Turbo mode"
+          },
+          "value": false,
+          "hint": {
+            "en": "Boosts Zigbee radio transmit power to improve range."
+          }
+        },
+        {
+          "id": "switch_mode",
+          "type": "dropdown",
+          "label": {
+            "en": "Switch mode"
+          },
+          "value": "0",
+          "hint": {
+            "en": "Type of external switch wired to the device. Use 'Pulse' for self-resetting (momentary) buttons. 'Edge' is the default for a normal rocker."
+          },
+          "values": [
+            {
+              "id": "0",
+              "label": {
+                "en": "Edge (rocker)"
+              }
+            },
+            {
+              "id": "1",
+              "label": {
+                "en": "Pulse (momentary)"
+              }
+            },
+            {
+              "id": "2",
+              "label": {
+                "en": "Follow switch"
+              }
+            },
+            {
+              "id": "130",
+              "label": {
+                "en": "Follow switch (inverted)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "power_on_behavior",
+          "type": "dropdown",
+          "label": {
+            "en": "Power-on behavior"
+          },
+          "value": "off",
+          "values": [
+            {
+              "id": "off",
+              "label": {
+                "en": "Off"
+              }
+            },
+            {
+              "id": "on",
+              "label": {
+                "en": "On"
+              }
+            },
+            {
+              "id": "last_state",
+              "label": {
+                "en": "Last state"
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Delayed power-on"
+          },
+          "children": [
+            {
+              "id": "delayed_power_on_state",
+              "type": "checkbox",
+              "label": {
+                "en": "Enable"
+              },
+              "hint": {
+                "en": "Turn the device on automatically after the delay below, once powered."
+              },
+              "value": false
+            },
+            {
+              "id": "delayed_power_on_time",
+              "type": "number",
+              "label": {
+                "en": "Delay (seconds)"
+              },
+              "hint": {
+                "en": "Time to wait before the delayed power-on action (0.5 - 3599.5 seconds)."
+              },
+              "value": 1,
+              "min": 0.5,
+              "max": 3599.5,
+              "step": 0.5
+            }
+          ]
+        },
+        {
+          "id": "detach_relay",
+          "type": "checkbox",
+          "label": {
+            "en": "Detach relay (experimental)"
+          },
+          "value": false,
+          "hint": {
+            "en": "Experimental: the device may reject this write with MALFORMED_COMMAND. Kept as a setting so it lights up automatically once supported. When working: the physical rocker stops switching the relay — useful for controlling a smart bulb via scene instead."
+          }
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Inching"
+          },
+          "children": [
+            {
+              "id": "inching_control",
+              "type": "checkbox",
+              "label": {
+                "en": "Enable"
+              },
+              "hint": {
+                "en": "Automatically turn off/on after a specified time"
+              },
+              "value": false
+            },
+            {
+              "id": "inching_mode",
+              "type": "dropdown",
+              "label": {
+                "en": "Action"
+              },
+              "hint": {
+                "en": "Turn off after turning on, or turn on after turning off"
+              },
+              "value": "off",
+              "values": [
+                {
+                  "id": "off",
+                  "label": {
+                    "en": "Turn off after on"
+                  }
+                },
+                {
+                  "id": "on",
+                  "label": {
+                    "en": "Turn on after off"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "inching_time",
+              "type": "number",
+              "label": {
+                "en": "Time (seconds)"
+              },
+              "hint": {
+                "en": "Time before automatic action (0.5 - 3599.5 seconds)"
+              },
+              "value": 1,
+              "min": 0.5,
+              "max": 3599.5,
+              "step": 0.5
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Power protector"
+          },
+          "children": [
+            {
+              "id": "max_current_protect",
+              "type": "number",
+              "label": {
+                "en": "Max current (A)"
+              },
+              "value": 16,
+              "min": 0.1,
+              "max": 16,
+              "step": 0.1
+            },
+            {
+              "id": "max_power_protect",
+              "type": "number",
+              "label": {
+                "en": "Max power (W)"
+              },
+              "value": 3840,
+              "min": 2,
+              "max": 3840,
+              "step": 0.1
+            },
+            {
+              "id": "max_voltage_protect_enabled",
+              "type": "checkbox",
+              "label": {
+                "en": "Enable overvoltage protection"
+              },
+              "value": false
+            },
+            {
+              "id": "max_voltage_protect",
+              "type": "number",
+              "label": {
+                "en": "Max voltage (V)"
+              },
+              "value": 277,
+              "min": 85,
+              "max": 277,
+              "step": 1
+            },
+            {
+              "id": "min_voltage_protect_enabled",
+              "type": "checkbox",
+              "label": {
+                "en": "Enable undervoltage protection"
+              },
+              "value": false
+            },
+            {
+              "id": "min_voltage_protect",
+              "type": "number",
+              "label": {
+                "en": "Min voltage (V)"
+              },
+              "value": 85,
+              "min": 85,
+              "max": 277,
+              "step": 1
+            },
+            {
+              "id": "external_switch_only_recovery",
+              "type": "checkbox",
+              "label": {
+                "en": "Recover only via external switch"
+              },
+              "value": false
+            },
+            {
+              "id": "auto_recovery",
+              "type": "checkbox",
+              "label": {
+                "en": "Auto-recover when back in range"
+              },
+              "value": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
         "xlarge": "/drivers/MINI-ZBD/assets/images/xlarge.png",
         "large": "/drivers/MINI-ZBD/assets/images/large.png",
         "small": "/drivers/MINI-ZBD/assets/images/small.png"
@@ -834,6 +1277,208 @@
         "zigbee"
       ],
       "images": {
+        "xlarge": "/drivers/S60ZBTPF/assets/images/xlarge.png",
+        "large": "/drivers/S60ZBTPF/assets/images/large.png",
+        "small": "/drivers/S60ZBTPF/assets/images/small.png"
+      },
+      "id": "S60ZBTPF",
+      "name": {
+        "en": "Wall Plug S60ZBTPF",
+        "es": "Enchufe S60ZBTPF",
+        "it": "Presa S60ZBTPF",
+        "de": "Steckdose S60ZBTPF"
+      },
+      "class": "socket",
+      "capabilities": [
+        "onoff",
+        "measure_power",
+        "measure_current",
+        "measure_voltage",
+        "meter_power",
+        "meter_power.today",
+        "meter_power.yesterday",
+        "meter_power.month"
+      ],
+      "capabilitiesOptions": {
+        "meter_power.today": {
+          "title": {
+            "en": "Energy today"
+          }
+        },
+        "meter_power.yesterday": {
+          "title": {
+            "en": "Energy yesterday"
+          }
+        },
+        "meter_power.month": {
+          "title": {
+            "en": "Energy this month"
+          }
+        }
+      },
+      "icon": "/drivers/S60ZBTPF/assets/icon.svg",
+      "zigbee": {
+        "manufacturerName": [
+          "SONOFF"
+        ],
+        "productId": [
+          "S60ZBTPF",
+          "S60ZBTPG"
+        ],
+        "endpoints": {
+          "1": {
+            "clusters": [
+              0,
+              3,
+              4,
+              5,
+              6,
+              1794,
+              2820,
+              64599,
+              64529
+            ],
+            "bindings": [
+              6,
+              2820
+            ]
+          }
+        },
+        "learnmode": {
+          "image": "/drivers/S60ZBTPF/assets/learn.svg",
+          "instruction": {
+            "en": "Press and hold the button for 5 seconds until the LED flashes.",
+            "es": "Mantén pulsado el botón durante 5 segundos hasta que el LED parpadee.",
+            "it": "Tieni premuto il pulsante per 5 secondi fino a quando il LED lampeggia.",
+            "de": "Halte die Taste 5 Sekunden gedrückt, bis die LED blinkt."
+          }
+        }
+      },
+      "settings": [
+        {
+          "id": "network_indicator",
+          "type": "checkbox",
+          "label": {
+            "en": "Network indicator LED"
+          },
+          "value": true,
+          "hint": {
+            "en": "Turn the blue network status LED on or off."
+          }
+        },
+        {
+          "id": "outlet_control_protect",
+          "type": "checkbox",
+          "label": {
+            "en": "Lock remote control"
+          },
+          "value": false,
+          "hint": {
+            "en": "When enabled, the outlet ignores on/off commands from Homey and the physical button — use to prevent accidental control."
+          }
+        },
+        {
+          "id": "power_on_behavior",
+          "type": "dropdown",
+          "label": {
+            "en": "Power-on behavior"
+          },
+          "value": "last_state",
+          "values": [
+            {
+              "id": "off",
+              "label": {
+                "en": "Off"
+              }
+            },
+            {
+              "id": "on",
+              "label": {
+                "en": "On"
+              }
+            },
+            {
+              "id": "toggle",
+              "label": {
+                "en": "Toggle"
+              }
+            },
+            {
+              "id": "last_state",
+              "label": {
+                "en": "Last state"
+              }
+            }
+          ]
+        },
+        {
+          "type": "group",
+          "label": {
+            "en": "Inching"
+          },
+          "children": [
+            {
+              "id": "inching_control",
+              "type": "checkbox",
+              "label": {
+                "en": "Enable"
+              },
+              "hint": {
+                "en": "Automatically turn off/on after a specified time"
+              },
+              "value": false
+            },
+            {
+              "id": "inching_mode",
+              "type": "dropdown",
+              "label": {
+                "en": "Action"
+              },
+              "hint": {
+                "en": "Turn off after turning on, or turn on after turning off"
+              },
+              "value": "off",
+              "values": [
+                {
+                  "id": "off",
+                  "label": {
+                    "en": "Turn off after on"
+                  }
+                },
+                {
+                  "id": "on",
+                  "label": {
+                    "en": "Turn on after off"
+                  }
+                }
+              ]
+            },
+            {
+              "id": "inching_time",
+              "type": "number",
+              "label": {
+                "en": "Time (seconds)"
+              },
+              "hint": {
+                "en": "Time before automatic action (0.5 - 3599.5 seconds)"
+              },
+              "value": 1,
+              "min": 0.5,
+              "max": 3599.5,
+              "step": 0.5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
         "xlarge": "/drivers/SNZB-02LD/assets/images/xlarge.png",
         "large": "/drivers/SNZB-02LD/assets/images/large.png",
         "small": "/drivers/SNZB-02LD/assets/images/small.png"
@@ -904,6 +1549,54 @@
           "min": -10,
           "max": 10,
           "step": 0.1
+        },
+        {
+          "id": "temperature_decimals",
+          "type": "dropdown",
+          "label": {
+            "en": "Temperature decimals",
+            "es": "Decimales de temperatura",
+            "it": "Decimali di temperatura",
+            "de": "Temperatur-Dezimalstellen"
+          },
+          "value": "1",
+          "values": [
+            {
+              "id": "0",
+              "label": {
+                "en": "0 (e.g. 21°C)"
+              }
+            },
+            {
+              "id": "1",
+              "label": {
+                "en": "1 (e.g. 21.4°C)"
+              }
+            },
+            {
+              "id": "2",
+              "label": {
+                "en": "2 (e.g. 21.43°C)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "reporting_interval",
+          "type": "number",
+          "label": {
+            "en": "Reporting interval (seconds)",
+            "es": "Intervalo de reporte (segundos)",
+            "it": "Intervallo di segnalazione (secondi)",
+            "de": "Meldeintervall (Sekunden)"
+          },
+          "hint": {
+            "en": "Maximum time between reports, even without a change (5 - 3600 seconds)."
+          },
+          "value": 3600,
+          "min": 5,
+          "max": 3600,
+          "step": 1
         }
       ]
     },
@@ -1004,6 +1697,85 @@
           "value": 0,
           "min": -20,
           "max": 20,
+          "step": 1
+        },
+        {
+          "id": "temperature_decimals",
+          "type": "dropdown",
+          "label": {
+            "en": "Temperature decimals",
+            "es": "Decimales de temperatura",
+            "it": "Decimali di temperatura",
+            "de": "Temperatur-Dezimalstellen"
+          },
+          "value": "1",
+          "values": [
+            {
+              "id": "0",
+              "label": {
+                "en": "0 (e.g. 21°C)"
+              }
+            },
+            {
+              "id": "1",
+              "label": {
+                "en": "1 (e.g. 21.4°C)"
+              }
+            },
+            {
+              "id": "2",
+              "label": {
+                "en": "2 (e.g. 21.43°C)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "humidity_decimals",
+          "type": "dropdown",
+          "label": {
+            "en": "Humidity decimals",
+            "es": "Decimales de humedad",
+            "it": "Decimali di umidità",
+            "de": "Luftfeuchtigkeit-Dezimalstellen"
+          },
+          "value": "0",
+          "values": [
+            {
+              "id": "0",
+              "label": {
+                "en": "0 (e.g. 55%)"
+              }
+            },
+            {
+              "id": "1",
+              "label": {
+                "en": "1 (e.g. 55.2%)"
+              }
+            },
+            {
+              "id": "2",
+              "label": {
+                "en": "2 (e.g. 55.23%)"
+              }
+            }
+          ]
+        },
+        {
+          "id": "reporting_interval",
+          "type": "number",
+          "label": {
+            "en": "Reporting interval (seconds)",
+            "es": "Intervalo de reporte (segundos)",
+            "it": "Intervallo di segnalazione (secondi)",
+            "de": "Meldeintervall (Sekunden)"
+          },
+          "hint": {
+            "en": "Maximum time between reports, even without a change (5 - 3600 seconds)."
+          },
+          "value": 3600,
+          "min": 5,
+          "max": 3600,
           "step": 1
         }
       ]
@@ -1161,7 +1933,7 @@
       "icon": "/drivers/SNZB-04PR2/assets/icon.svg",
       "zigbee": {
         "manufacturerName": [
-          "eWeLink"
+          "SONOFF"
         ],
         "productId": [
           "SNZB-04PR2"
@@ -1188,6 +1960,17 @@
       }
     },
     {
+      "platforms": [
+        "local"
+      ],
+      "connectivity": [
+        "zigbee"
+      ],
+      "images": {
+        "xlarge": "/drivers/SNZB-06P/assets/images/xlarge.png",
+        "large": "/drivers/SNZB-06P/assets/images/large.png",
+        "small": "/drivers/SNZB-06P/assets/images/small.png"
+      },
       "id": "SNZB-06P",
       "name": {
         "en": "Presence Sensor SNZB-06P",
@@ -1207,10 +1990,7 @@
       "capabilities": [
         "alarm_motion"
       ],
-      "images": {
-        "small": "/drivers/SNZB-06P/assets/images/small.png",
-        "large": "/drivers/SNZB-06P/assets/images/large.png"
-      },
+      "icon": "/drivers/SNZB-06P/assets/icon.svg",
       "zigbee": {
         "manufacturerName": [
           "SONOFF"
@@ -1234,17 +2014,9 @@
           "image": "/drivers/SNZB-06P/assets/learn.svg",
           "instruction": {
             "en": "Press reset on top for aprox 10 seconds until the red LED blinks.",
-            "nl": "Houd de resetknop bovenop ongeveer 10 seconden ingedrukt totdat de rode LED knippert.",
-            "da": "Tryk på reset øverst i ca. 10 sekunder, indtil den røde LED blinker.",
-            "de": "Drücken Sie oben auf die Reset-Taste und halten Sie sie etwa 10 Sekunden lang gedrückt, bis die rote LED blinkt.",
             "es": "Presiona el botón de reinicio en la parte superior durante aproximadamente 10 segundos hasta que parpadee el LED rojo.",
-            "fr": "Appuyez sur le bouton de réinitialisation en haut pendant environ 10 secondes jusqu'à ce que le voyant rouge clignote.",
             "it": "Premi il pulsante di reset in alto per circa 10 secondi fino a quando il LED rosso lampeggia.",
-            "no": "Trykk på reset-knappen øverst i ca. 10 sekunder til den røde LED-en blinker.",
-            "sv": "Tryck på återställningsknappen ovanpå i cirka 10 sekunder tills den röda LED-lampan blinkar.",
-            "pl": "Naciśnij przycisk reset na górze, przytrzymaj przez około 10 sekund, aż czerwona dioda LED zacznie migać.",
-            "ru": "Нажмите и удерживайте кнопку сброса сверху примерно 10 секунд, пока не начнет мигать красный светодиод.",
-            "ko": "빨간색 LED가 깜박일 때까지 상단의 리셋 버튼을 약 10초 동안 누르십시오."
+            "de": "Drücken Sie oben auf die Reset-Taste und halten Sie sie etwa 10 Sekunden lang gedrückt, bis die rote LED blinkt."
           }
         }
       },
@@ -1757,5 +2529,51 @@
         }
       ]
     }
-  ]
+  ],
+  "capabilities": {
+    "output_energy_month": {
+      "type": "number",
+      "title": {
+        "en": "Export energy this month",
+        "es": "Energía exportada este mes",
+        "it": "Energia esportata questo mese",
+        "de": "Exportierte Energie diesen Monat"
+      },
+      "units": {
+        "en": "kWh"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Energy fed back this month"
+      },
+      "chartType": "spline",
+      "decimals": 2,
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/capabilities/energy.svg"
+    },
+    "output_energy_today": {
+      "type": "number",
+      "title": {
+        "en": "Export energy today",
+        "es": "Energía exportada hoy",
+        "it": "Energia esportata oggi",
+        "de": "Exportierte Energie heute"
+      },
+      "units": {
+        "en": "kWh"
+      },
+      "insights": true,
+      "desc": {
+        "en": "Energy fed back today"
+      },
+      "chartType": "spline",
+      "decimals": 2,
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor",
+      "icon": "/assets/capabilities/energy.svg"
+    }
+  }
 }

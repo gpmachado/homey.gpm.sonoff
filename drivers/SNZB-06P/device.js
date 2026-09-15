@@ -3,12 +3,14 @@
 const SonoffBase = require('../sonoffbase');
 const { CLUSTER } = require('zigbee-clusters');
 const IASZoneHelper = require('../../lib/IASZoneHelper');
+const { installNamedLogging } = require('../../lib/zclDebug');
 
 const OccupancySensing = CLUSTER.OCCUPANCY_SENSING;
 
 class SonoffSNZB06P extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
+    installNamedLogging(this);
     await super.onNodeInit({ zclNode });
 
     if (this.hasCapability('alarm_contact')) {
