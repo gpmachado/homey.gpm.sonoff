@@ -1,0 +1,22 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Export energy today",
+    "es": "Energía exportada hoy",
+    "it": "Energia esportata oggi",
+    "de": "Exportierte Energie heute"
+  },
+  "units": {
+    "en": "kWh"
+  },
+  "insights": true,
+  "desc": {
+    "en": "Energy fed back today"
+  },
+  "chartType": "spline",
+  "decimals": 2,
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "icon": "/assets/capabilities/energy.svg"
+}

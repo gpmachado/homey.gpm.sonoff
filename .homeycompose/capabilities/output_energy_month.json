@@ -1,0 +1,22 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Export energy this month",
+    "es": "Energía exportada este mes",
+    "it": "Energia esportata questo mese",
+    "de": "Exportierte Energie diesen Monat"
+  },
+  "units": {
+    "en": "kWh"
+  },
+  "insights": true,
+  "desc": {
+    "en": "Energy fed back this month"
+  },
+  "chartType": "spline",
+  "decimals": 2,
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor",
+  "icon": "/assets/capabilities/energy.svg"
+}
