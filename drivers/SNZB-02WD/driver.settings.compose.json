@@ -32,5 +32,54 @@
     "min": -20,
     "max": 20,
     "step": 1
+  },
+  {
+    "id": "temperature_decimals",
+    "type": "dropdown",
+    "label": {
+      "en": "Temperature decimals",
+      "es": "Decimales de temperatura",
+      "it": "Decimali di temperatura",
+      "de": "Temperatur-Dezimalstellen"
+    },
+    "value": "1",
+    "values": [
+      { "id": "0", "label": { "en": "0 (e.g. 21°C)" } },
+      { "id": "1", "label": { "en": "1 (e.g. 21.4°C)" } },
+      { "id": "2", "label": { "en": "2 (e.g. 21.43°C)" } }
+    ]
+  },
+  {
+    "id": "humidity_decimals",
+    "type": "dropdown",
+    "label": {
+      "en": "Humidity decimals",
+      "es": "Decimales de humedad",
+      "it": "Decimali di umidità",
+      "de": "Luftfeuchtigkeit-Dezimalstellen"
+    },
+    "value": "0",
+    "values": [
+      { "id": "0", "label": { "en": "0 (e.g. 55%)" } },
+      { "id": "1", "label": { "en": "1 (e.g. 55.2%)" } },
+      { "id": "2", "label": { "en": "2 (e.g. 55.23%)" } }
+    ]
+  },
+  {
+    "id": "reporting_interval",
+    "type": "number",
+    "label": {
+      "en": "Reporting interval (seconds)",
+      "es": "Intervalo de reporte (segundos)",
+      "it": "Intervallo di segnalazione (secondi)",
+      "de": "Meldeintervall (Sekunden)"
+    },
+    "hint": {
+      "en": "Maximum time between reports, even without a change (5 - 3600 seconds)."
+    },
+    "value": 3600,
+    "min": 5,
+    "max": 3600,
+    "step": 1
   }
 ]
