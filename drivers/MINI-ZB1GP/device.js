@@ -4,6 +4,7 @@ const SonoffBase = require('../sonoffbase');
 const SonoffCluster = require('../../lib/SonoffCluster');
 const { CLUSTER } = require('zigbee-clusters');
 const { SonoffTimeServerBoundCluster } = require('../../lib/TimeCluster');
+const { installNamedLogging } = require('../../lib/zclDebug');
 
 /**
  * SonoffMINIZB1GP — driver for the Sonoff MINI-ZB1GP energy meter.
@@ -16,8 +17,9 @@ const { SonoffTimeServerBoundCluster } = require('../../lib/TimeCluster');
 class SonoffMINIZB1GP extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
+    installNamedLogging(this);
     await super.onNodeInit({ zclNode }, { noAttribCheck: true });
-    this.log(`[MINI-ZB1GP] ${this.getName()} initialized`);
+    this.log('initialized');
 
     // Existing paired devices keep their capability list across an app update.
     // Add the new counters explicitly so users do not need to pair again.
@@ -50,39 +52,17 @@ class SonoffMINIZB1GP extends SonoffBase {
     await this.checkAttributes();
 
     // The device resets energyToday/energyMonth internally at the day/month
-    // boundary, but only *reports* the new value once real consumption
-    // triggers a fresh calculation — a passive report can lag behind the
-    // actual midnight reset by hours. Force an active read shortly after
-    // midnight so the capability reflects the reset promptly either way.
-    this._scheduleMidnightRefresh();
+    // boundary (and generally updates energy/power counters) but only
+    // *reports* a new value once real consumption triggers a fresh
+    // calculation — a passive report can lag behind an actual change by
+    // hours. Poll actively instead of waiting on reports alone. Same 120s
+    // base interval as the smartplug driver in nova.digital.homeyapp.
+    if (this._energyPollInterval) this.homey.clearInterval(this._energyPollInterval);
+    this._energyPollInterval = this.homey.setInterval(() => {
+      this.checkAttributes().catch(err => this.error('[MINI-ZB1GP] periodic poll failed:', err.message));
+    }, 120_000);
 
     this.log('[MINI-ZB1GP] energy meter driver ready');
-  }
-
-  // Schedules a one-shot read just after the next local midnight, then
-  // reschedules itself for the following day.
-  _scheduleMidnightRefresh() {
-    const now = new Date();
-    const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 10);
-    const delay = next.getTime() - now.getTime();
-    this._midnightTimer = this.homey.setTimeout(() => {
-      this._refreshDailyMonthlyCounters(next).catch(err => this.error('[MINI-ZB1GP] midnight refresh failed:', err.message));
-      this._scheduleMidnightRefresh();
-    }, delay);
-  }
-
-  async _refreshDailyMonthlyCounters(firedAt) {
-    const cluster = this.zclNode.endpoints[1].clusters[SonoffCluster.NAME];
-    if (!cluster) return;
-    const attrs = firedAt.getDate() === 1 ? ['energyToday', 'energyMonth'] : ['energyToday'];
-    const data = await cluster.readAttributes(attrs, { manufacturerCode: 0x1286 });
-    this.log('[MINI-ZB1GP] midnight refresh read:', data);
-    if (data.energyToday !== undefined && this._isValidReading(data.energyToday)) {
-      this.setCapabilityValue('meter_power.today', data.energyToday / 1000).catch(() => {});
-    }
-    if (data.energyMonth !== undefined && this._isValidReading(data.energyMonth)) {
-      this.setCapabilityValue('meter_power.month', data.energyMonth / 1000).catch(() => {});
-    }
   }
 
   async _addEnergyCounterCapabilities() {
@@ -403,9 +383,9 @@ class SonoffMINIZB1GP extends SonoffBase {
   }
 
   async _teardown() {
-    if (this._midnightTimer) {
-      this.homey.clearTimeout(this._midnightTimer);
-      this._midnightTimer = null;
+    if (this._energyPollInterval) {
+      this.homey.clearInterval(this._energyPollInterval);
+      this._energyPollInterval = null;
     }
     await super._teardown();
   }

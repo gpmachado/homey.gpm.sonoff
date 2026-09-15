@@ -4,7 +4,7 @@ const SonoffCluster = require('../../lib/SonoffCluster');
 const { CLUSTER, BoundCluster } = require('zigbee-clusters');
 const SonoffBase = require('../sonoffbase');
 const RejoinManager = require('../../lib/RejoinManager');
-const { writeAttributesVerbose } = require('../../lib/zclDebug');
+const { writeAttributesVerbose, installNamedLogging } = require('../../lib/zclDebug');
 
 // Handles external switch commands (detach_mode) sent directly to the hub
 class MyOnOffBoundCluster extends BoundCluster {
@@ -51,6 +51,7 @@ const INCHING_PROTOCOL = {
 class SonoffZBMINIR2 extends SonoffBase {
 
     async onNodeInit({ zclNode }) {
+        installNamedLogging(this);
 
         super.onNodeInit({ zclNode });
 

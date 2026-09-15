@@ -3,7 +3,7 @@
 const SonoffBase = require('./sonoffbase');
 const { CLUSTER } = require('zigbee-clusters');
 const SonoffCluster = require('../lib/SonoffCluster');
-const { writeAttributesVerbose } = require('../lib/zclDebug');
+const { writeAttributesVerbose, installNamedLogging } = require('../lib/zclDebug');
 
 /**
  * Shared base for the SNZB-02LD (temperature only) and SNZB-02WD
@@ -13,9 +13,20 @@ const { writeAttributesVerbose } = require('../lib/zclDebug');
 class TempHumiditySensor extends SonoffBase {
 
     async onNodeInit({ zclNode }) {
+        installNamedLogging(this);
         super.onNodeInit({ zclNode });
 
         this._hasHumidity = !!zclNode.endpoints[1].clusters[CLUSTER.RELATIVE_HUMIDITY_MEASUREMENT.NAME];
+
+        // SonoffBase only installs a passive battery listener — it never
+        // actively reads the value, so measure_battery stays empty until
+        // the device happens to send an unsolicited report on its own,
+        // which can take hours. Read it once on pairing instead.
+        this.readAttribute(CLUSTER.POWER_CONFIGURATION, ['batteryPercentageRemaining'], (data) => {
+            if (data?.batteryPercentageRemaining !== undefined) {
+                this.setCapabilityValue('measure_battery', data.batteryPercentageRemaining / 2).catch(this.error);
+            }
+        });
 
         if (this.isFirstInit()) {
             await this._configureReporting().catch(err => this.error('Failed to configure reporting', err));
@@ -23,7 +34,7 @@ class TempHumiditySensor extends SonoffBase {
 
         // Read whatever calibration the device currently has applied, so the
         // settings UI reflects reality instead of Homey's last stored value.
-        await this._syncCalibrationFromDevice();
+        await this.syncOffsetSettings();
 
         this._onTempReport ??= this.onTemperatureMeasuredAttributeReport.bind(this);
         const tempCluster = zclNode.endpoints[1].clusters[CLUSTER.TEMPERATURE_MEASUREMENT.NAME];
@@ -49,14 +60,20 @@ class TempHumiditySensor extends SonoffBase {
     }
 
     async _configureReporting() {
+        const tempDecimals = parseInt(this.getSetting('temperature_decimals') ?? '1', 10);
+        const humDecimals = parseInt(this.getSetting('humidity_decimals') ?? '0', 10);
+        const maxInterval = parseInt(this.getSetting('reporting_interval') || '3600', 10);
+        const tempMinChange = Math.pow(10, 2 - tempDecimals); // 0dec=100, 1dec=10, 2dec=1
+        const humMinChange = Math.pow(10, 2 - humDecimals);
+
         const reportingConfigs = [
             {
                 endpointId: 1,
                 cluster: CLUSTER.TEMPERATURE_MEASUREMENT,
                 attributeName: 'measuredValue',
                 minInterval: 5,
-                maxInterval: 3600,
-                minChange: 50, // 0.5 °C in ZCL units (×100)
+                maxInterval,
+                minChange: tempMinChange,
             },
         ];
 
@@ -66,18 +83,21 @@ class TempHumiditySensor extends SonoffBase {
                 cluster: CLUSTER.RELATIVE_HUMIDITY_MEASUREMENT,
                 attributeName: 'measuredValue',
                 minInterval: 5,
-                maxInterval: 3600,
-                minChange: 300, // 3 %RH in ZCL units (×100)
+                maxInterval,
+                minChange: humMinChange,
             });
         }
 
         await this.configureAttributeReporting(reportingConfigs);
-        this.log('Reporting configured');
+        this.log(`Reporting configured: maxInterval=${maxInterval}s tempMinChange=${tempMinChange} humMinChange=${humMinChange}`);
     }
 
-    async _syncCalibrationFromDevice() {
+    async syncOffsetSettings() {
         const cluster = this.zclNode.endpoints[1].clusters[SonoffCluster.NAME];
-        if (!cluster) return;
+        if (!cluster) {
+            this.log('SonoffCluster not available, skipping offset sync');
+            return;
+        }
 
         const attrs = this._hasHumidity
             ? ['temperatureCalibration', 'humidityCalibration']
@@ -110,9 +130,37 @@ class TempHumiditySensor extends SonoffBase {
         this.log('Calibration reasserted after rejoin:', attrs);
     }
 
+    _parseReportedValue(measuredValue, decimalsKey) {
+        const d = parseInt(this.getSetting(decimalsKey) ?? '1', 10);
+        const factor = Math.pow(10, d);
+        return Math.round((measuredValue / 100) * factor) / factor;
+    }
+
+    onTemperatureMeasuredAttributeReport(measuredValue) {
+        const parsedValue = this._parseReportedValue(measuredValue, 'temperature_decimals');
+        this.setCapabilityValue('measure_temperature', parsedValue).catch(this.error);
+    }
+
+    onRelativeHumidityMeasuredAttributeReport(measuredValue) {
+        if (this.hasCapability('measure_humidity')) {
+            const parsedValue = this._parseReportedValue(measuredValue, 'humidity_decimals');
+            this.setCapabilityValue('measure_humidity', parsedValue).catch(this.error);
+        }
+    }
+
     async onSettings({ newSettings, changedKeys }) {
+        if (changedKeys.includes('temperature_decimals') || changedKeys.includes('humidity_decimals') || changedKeys.includes('reporting_interval')) {
+            await this._configureReporting().catch(err => this.error('Failed to reconfigure reporting', err));
+        }
+
         const cluster = this.zclNode.endpoints[1].clusters[SonoffCluster.NAME];
-        if (!cluster) return;
+        if (!cluster) {
+            this.log('SonoffCluster not available, offset settings cannot be applied to device');
+            this.homey.notifications.createNotification({
+                excerpt: `${this.getName()}: Re-add device to enable offset calibration features.`,
+            }).catch(err => this.error('Failed to create notification:', err));
+            return;
+        }
 
         const attrs = {};
         if (changedKeys.includes('temperature_offset')) {
@@ -124,16 +172,6 @@ class TempHumiditySensor extends SonoffBase {
         if (Object.keys(attrs).length) {
             await writeAttributesVerbose(this, cluster, attrs);
             this.log('Calibration written to device:', attrs);
-        }
-    }
-
-    onTemperatureMeasuredAttributeReport(measuredValue) {
-        this.setCapabilityValue('measure_temperature', Math.round(measuredValue / 10) / 10).catch(this.error);
-    }
-
-    onRelativeHumidityMeasuredAttributeReport(measuredValue) {
-        if (this.hasCapability('measure_humidity')) {
-            this.setCapabilityValue('measure_humidity', Math.round(measuredValue / 10) / 10).catch(this.error);
         }
     }
 

@@ -3,11 +3,24 @@
 const SonoffBase = require('../sonoffbase');
 const SonoffCluster = require('../../lib/SonoffCluster');
 const IASZoneHelper = require('../../lib/IASZoneHelper');
+const { CLUSTER } = require('zigbee-clusters');
+const { installNamedLogging } = require('../../lib/zclDebug');
 
 class SonoffSNZB04PR2 extends SonoffBase {
 
     async onNodeInit({ zclNode }) {
+        installNamedLogging(this);
         await super.onNodeInit({ zclNode });
+
+        // SonoffBase only installs a passive battery listener — it never
+        // actively reads the value, so measure_battery stays empty until
+        // the device happens to send an unsolicited report on its own,
+        // which can take hours. Read it once on pairing instead.
+        this.readAttribute(CLUSTER.POWER_CONFIGURATION, ['batteryPercentageRemaining'], (data) => {
+            if (data?.batteryPercentageRemaining !== undefined) {
+                this.setCapabilityValue('measure_battery', data.batteryPercentageRemaining / 2).catch(this.error);
+            }
+        });
 
         this._iasZone = new IASZoneHelper(this, {
             endpointId: 1,

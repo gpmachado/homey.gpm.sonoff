@@ -2,10 +2,12 @@
 
 const { CLUSTER } = require('zigbee-clusters');
 const SonoffBase = require('../sonoffbase');
+const { installNamedLogging } = require('../../lib/zclDebug');
 
 class SonoffBASICZBR3 extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
+    installNamedLogging(this);
     super.onNodeInit({ zclNode });
 
     if (this.hasCapability('onoff')) {

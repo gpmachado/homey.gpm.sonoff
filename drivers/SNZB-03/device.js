@@ -3,10 +3,12 @@
 const SonoffBase = require('../sonoffbase');
 const { BasicSilentBoundCluster } = require('../../lib/TimeCluster');
 const IASZoneHelper = require('../../lib/IASZoneHelper');
+const { installNamedLogging } = require('../../lib/zclDebug');
 
 class SonoffSNZB03 extends SonoffBase {
 
     async onNodeInit({ zclNode }) {
+        installNamedLogging(this);
 
         await super.onNodeInit({ zclNode }, { noAttribCheck: true });
 
