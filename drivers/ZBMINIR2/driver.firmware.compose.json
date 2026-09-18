@@ -1,0 +1,24 @@
+{
+  "updates": [
+    {
+      "changelog": {
+        "en": "OEM firmware from Sonoff/eWeLink, mirrored via Koenkk's zigbee-OTA index.",
+        "pt": "Firmware original da Sonoff/eWeLink, espelhado via índice zigbee-OTA do Koenkk."
+      },
+      "device": {
+        "manufacturerName": "SONOFF",
+        "productId": "ZBMINIR2"
+      },
+      "files": [
+        {
+          "fileVersion": 4104,
+          "imageType": 8,
+          "manufacturerCode": 4742,
+          "size": 277180,
+          "name": "zbminir2_v1.0.8.ota",
+          "integrity": "sha256:2c8b13851a05ee1c17b28cbe37b7edce5280c437dca8da4894a17aae84501220"
+        }
+      ]
+    }
+  ]
+}

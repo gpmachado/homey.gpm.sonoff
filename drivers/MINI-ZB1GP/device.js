@@ -4,7 +4,8 @@ const SonoffBase = require('../sonoffbase');
 const SonoffCluster = require('../../lib/SonoffCluster');
 const { CLUSTER } = require('zigbee-clusters');
 const { SonoffTimeServerBoundCluster } = require('../../lib/TimeCluster');
-const { installNamedLogging } = require('../../lib/zclDebug');
+const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
+const { HEARTBEAT_FAST_MS } = require('../../lib/constants');
 
 /**
  * SonoffMINIZB1GP — driver for the Sonoff MINI-ZB1GP energy meter.
@@ -17,7 +18,6 @@ const { installNamedLogging } = require('../../lib/zclDebug');
 class SonoffMINIZB1GP extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
-    installNamedLogging(this);
     await super.onNodeInit({ zclNode }, { noAttribCheck: true });
     this.log('initialized');
 
@@ -61,6 +61,16 @@ class SonoffMINIZB1GP extends SonoffBase {
     this._energyPollInterval = this.homey.setInterval(() => {
       this.checkAttributes().catch(err => this.error('[MINI-ZB1GP] periodic poll failed:', err.message));
     }, 120_000);
+
+    // Migrate already-paired devices: driver.compose.json only applies
+    // capabilities to newly-paired devices.
+    if (!this.hasCapability('is_availability')) {
+      await this.addCapability('is_availability').catch(() => {});
+    }
+
+    // Active poll runs every 120s (see above); 25 min gives a wide margin.
+    this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_FAST_MS });
+    await this._availability.install();
 
     this.log('[MINI-ZB1GP] energy meter driver ready');
   }
@@ -387,6 +397,7 @@ class SonoffMINIZB1GP extends SonoffBase {
       this.homey.clearInterval(this._energyPollInterval);
       this._energyPollInterval = null;
     }
+    await this._availability?.uninstall().catch(() => {});
     await super._teardown();
   }
 

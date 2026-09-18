@@ -1,0 +1,167 @@
+{
+  "triggers": [
+    {
+      "id": "siren_activated",
+      "title": {
+        "en": "Siren activated",
+        "es": "Sirena activada",
+        "it": "Sirena attivata",
+        "de": "Sirene aktiviert"
+      },
+      "titleFormatted": {
+        "en": "[[device]] siren was activated",
+        "es": "La sirena de [[device]] se activó",
+        "it": "La sirena di [[device]] è stata attivata",
+        "de": "Die Sirene von [[device]] wurde aktiviert"
+      },
+      "hint": {
+        "en": "Triggered when the siren starts sounding.",
+        "es": "Se activa cuando la sirena empieza a sonar.",
+        "it": "Si attiva quando la sirena inizia a suonare.",
+        "de": "Wird ausgelöst, wenn die Sirene zu ertönen beginnt."
+      },
+      "tokens": [
+        {
+          "name": "duration",
+          "type": "number",
+          "title": {
+            "en": "Duration (seconds)",
+            "es": "Duración (segundos)",
+            "it": "Durata (secondi)",
+            "de": "Dauer (Sekunden)"
+          },
+          "example": 60
+        }
+      ]
+    },
+    {
+      "id": "siren_deactivated",
+      "title": {
+        "en": "Siren deactivated",
+        "es": "Sirena desactivada",
+        "it": "Sirena disattivata",
+        "de": "Sirene deaktiviert"
+      },
+      "titleFormatted": {
+        "en": "[[device]] siren was deactivated",
+        "es": "La sirena de [[device]] se desactivó",
+        "it": "La sirena di [[device]] è stata disattivata",
+        "de": "Die Sirene von [[device]] wurde deaktiviert"
+      },
+      "hint": {
+        "en": "Triggered when the siren stops sounding (automatic, manual, or by the device itself).",
+        "es": "Se activa cuando la sirena deja de sonar (automático, manual o por el propio dispositivo).",
+        "it": "Si attiva quando la sirena smette di suonare (automaticamente, manualmente o dal dispositivo stesso).",
+        "de": "Wird ausgelöst, wenn die Sirene aufhört zu ertönen (automatisch, manuell oder durch das Gerät selbst)."
+      },
+      "tokens": [
+        {
+          "name": "reason",
+          "type": "string",
+          "title": {
+            "en": "Stop reason",
+            "es": "Motivo de parada",
+            "it": "Motivo dell'arresto",
+            "de": "Stoppgrund"
+          },
+          "example": "auto"
+        }
+      ]
+    }
+  ],
+  "conditions": [
+    {
+      "id": "is_playing",
+      "title": {
+        "en": "Siren is !{{sounding|not sounding}}",
+        "es": "La sirena está !{{sonando|sin sonar}}",
+        "it": "La sirena è !{{in suono|silenziosa}}",
+        "de": "Die Sirene !{{ertönt|ertönt nicht}}"
+      },
+      "titleFormatted": {
+        "en": "[[device]] siren is !{{sounding|not sounding}}",
+        "es": "La sirena de [[device]] está !{{sonando|sin sonar}}",
+        "it": "La sirena di [[device]] è !{{in suono|silenziosa}}",
+        "de": "Die Sirene von [[device]] !{{ertönt|ertönt nicht}}"
+      },
+      "hint": {
+        "en": "Check if the siren is currently sounding.",
+        "es": "Comprueba si la sirena está sonando actualmente.",
+        "it": "Controlla se la sirena sta attualmente suonando.",
+        "de": "Prüft, ob die Sirene derzeit ertönt."
+      }
+    }
+  ],
+  "actions": [
+    {
+      "id": "siren_play",
+      "title": {
+        "en": "Play siren with sound preset",
+        "es": "Reproducir sirena con preajuste de sonido",
+        "it": "Riproduci sirena con preimpostazione suono",
+        "de": "Sirene mit Klangvoreinstellung abspielen"
+      },
+      "titleFormatted": {
+        "en": "Play sound preset [[sound_type]] for [[duration]] seconds",
+        "es": "Reproducir preajuste de sonido [[sound_type]] durante [[duration]] segundos",
+        "it": "Riproduci la preimpostazione audio [[sound_type]] per [[duration]] secondi",
+        "de": "Klangvoreinstellung [[sound_type]] für [[duration]] Sekunden abspielen"
+      },
+      "hint": {
+        "en": "Play a specific sound preset for the given duration (volume, sound and light on/off are taken from Settings).",
+        "es": "Reproduce un preajuste de sonido específico durante la duración indicada (el volumen y el sonido/luz se toman de Ajustes).",
+        "it": "Riproduce una preimpostazione audio specifica per la durata indicata (volume e suono/luce vengono presi dalle Impostazioni).",
+        "de": "Spielt eine bestimmte Klangvoreinstellung für die angegebene Dauer ab (Lautstärke sowie Ton/Licht ein/aus werden aus den Einstellungen übernommen)."
+      },
+      "args": [
+        {
+          "name": "sound_type",
+          "type": "dropdown",
+          "values": [
+            { "id": "0", "label": { "en": "Preset 0" } },
+            { "id": "1", "label": { "en": "Preset 1" } },
+            { "id": "2", "label": { "en": "Preset 2" } },
+            { "id": "3", "label": { "en": "Preset 3" } },
+            { "id": "4", "label": { "en": "Preset 4" } },
+            { "id": "5", "label": { "en": "Preset 5" } },
+            { "id": "6", "label": { "en": "Preset 6" } },
+            { "id": "7", "label": { "en": "Preset 7" } },
+            { "id": "8", "label": { "en": "Preset 8" } },
+            { "id": "9", "label": { "en": "Preset 9" } }
+          ]
+        },
+        {
+          "name": "duration",
+          "type": "number",
+          "min": 1,
+          "max": 900,
+          "step": 1,
+          "placeholder": {
+            "en": "60"
+          }
+        }
+      ]
+    },
+    {
+      "id": "siren_stop",
+      "title": {
+        "en": "Stop siren",
+        "es": "Detener sirena",
+        "it": "Ferma sirena",
+        "de": "Sirene stoppen"
+      },
+      "titleFormatted": {
+        "en": "Stop the siren",
+        "es": "Detener la sirena",
+        "it": "Ferma la sirena",
+        "de": "Sirene stoppen"
+      },
+      "hint": {
+        "en": "Immediately stop the siren if it is sounding.",
+        "es": "Detiene inmediatamente la sirena si está sonando.",
+        "it": "Ferma immediatamente la sirena se sta suonando.",
+        "de": "Stoppt die Sirene sofort, wenn sie ertönt."
+      }
+    }
+  ]
+}

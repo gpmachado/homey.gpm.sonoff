@@ -2,9 +2,10 @@
 
 const { ZigBeeDevice } = require('homey-zigbeedriver');
 const { debug, CLUSTER } = require('zigbee-clusters');
-const { writeAttributesVerbose } = require('../lib/zclDebug');
+const { writeAttributesVerbose, installNamedLogging } = require('../lib/zclDebug');
+const { ZCL_DEBUG } = require('../lib/constants');
 
-if (process.env.DEBUG === "1") {
+if (ZCL_DEBUG) {
   debug(true);
 }
 
@@ -12,14 +13,22 @@ if (process.env.DEBUG === "1") {
  * SonoffBase — shared base class for Sonoff Zigbee device drivers.
  * Provides battery-report wiring, retrying attribute reads, filtered
  * attribute writes, and idempotent teardown on uninit/delete.
+ *
+ * Deliberately does NOT bind anything on the OTA cluster (0x0019): Homey
+ * ≥13.2 has its own native Zigbee firmware-update mechanism (Device Updates,
+ * see https://apps.developer.homey.app/wireless/zigbee/zigbee-firmware-updates)
+ * that talks to the device's OTA client directly. An app-level BoundCluster
+ * answering queryNextImageRequest itself would race with — and could block —
+ * that native flow.
  */
 class SonoffBase extends ZigBeeDevice {
 
   async onNodeInit({ zclNode }, options) {
+    installNamedLogging(this);
     this.log(`NodeInit SonoffBase: ${this.getName()}`);
     options = options || {};
 
-    if (process.env.DEBUG === "1") {
+    if (ZCL_DEBUG) {
       this.enableDebug();
     }
     this.printNode();
@@ -38,12 +47,68 @@ class SonoffBase extends ZigBeeDevice {
         pc.on('attr.batteryPercentageRemaining', this._onBatteryReport);
       }
     }
+
+    // Homey's own native Device Updates feature (≥13.2) polls basic.swBuildId
+    // directly over the shared Zigbee radio, bypassing our zclNode entirely.
+    // Our own 'basic' cluster instance still sees the response frame (shared
+    // radio traffic) but has no pending request matching it — no driver here
+    // ever reads from 'basic' itself — so it logs 'unknown_command_received'.
+    // Accurate (we really didn't ask), but noisy. Drop only frames with no
+    // matching _trxHandlers entry, so a genuine future read (ours or the
+    // framework's own) is never swallowed.
+    if (!this.node._basicReadResponseHookInstalled) {
+      this.node._basicReadResponseHookInstalled = true;
+      const _basicHook = this.node.handleFrame.bind(this.node);
+      this.node.handleFrame = (...args) => {
+        const [, clusterId, frame] = args;
+        if (clusterId === CLUSTER.BASIC.ID && Buffer.isBuffer(frame) && frame.length >= 3) {
+          const mfrSpecific = frame[0] & 0x04;
+          const cmdId = mfrSpecific ? (frame.length >= 5 ? frame[4] : -1) : frame[2];
+          if (cmdId === 0x01) { // readAttributes response (global)
+            const trxSeq = frame[mfrSpecific ? 3 : 1];
+            const basicCluster = this.zclNode.endpoints[1].clusters[CLUSTER.BASIC.NAME];
+            if (basicCluster && !basicCluster._trxHandlers[trxSeq]) {
+              return Promise.resolve();
+            }
+          }
+        }
+        return _basicHook(...args);
+      };
+    }
   }
 
   // Read an attribute once, only on the device's first-ever init (not on every restart).
   async initAttribute(cluster, attr, handler) {
     if (!this.isFirstInit()) return;
     this.readAttribute(cluster, attr, handler);
+  }
+
+  /**
+   * Periodically read the Basic cluster (zclVersion — universal, cheap) and
+   * feed the result to this._availability as an explicit activity signal.
+   * Use for devices with no other frequent traffic of their own (ZBMINIR2,
+   * dongles/repeaters) — see AvailabilityManagerPassive/Callback in
+   * lib/AvailabilityManager.js, which already covers devices that already
+   * poll something else on a short interval (energy meters).
+   */
+  _startActivePoll(intervalMs = 5 * 60 * 1000) {
+    if (this._activePollInterval || this._activePollStart) return; // already running (re-init guard)
+    const poll = async () => {
+      if (!this.zclNode) return;
+      try {
+        await this.zclNode.endpoints[1].clusters.basic.readAttributes(['zclVersion']);
+        this._availability?.notifyActivity('active-poll');
+      } catch (err) {
+        this.log('[Active poll] failed:', err.message);
+      }
+    };
+    // Random start offset within one interval so devices initialised together
+    // at boot don't all poll (and hit the mesh) in the same instant.
+    this._activePollStart = this.homey.setTimeout(() => {
+      this._activePollStart = null;
+      this._activePollInterval = this.homey.setInterval(poll, intervalMs);
+      poll();
+    }, Math.floor(Math.random() * intervalMs));
   }
 
   // Read one or more attributes with exponential backoff + jitter retry.
@@ -102,6 +167,22 @@ class SonoffBase extends ZigBeeDevice {
       this.error('Error write attr', items, error);
       throw error;
     }
+  }
+
+  // zigbee-clusters' Cluster#configureReporting throws `new Error(status)` where
+  // status is the raw ZCL status string returned by the device. Some of those
+  // are definitive ("this attribute/cluster will never support that config")
+  // and retrying them changes nothing — only silence/timeout is worth retrying
+  // opportunistically on the next sign of device activity.
+  static isDefinitiveZclRejection(err) {
+    return [
+      'UNSUPPORTED_ATTRIBUTE',
+      'UNSUPPORTED_CLUSTER',
+      'MALFORMED_COMMAND',
+      'INVALID_FIELD',
+      'INVALID_VALUE',
+      'NOT_FOUND',
+    ].includes(err?.message);
   }
 
   // Several Sonoff manufacturer-specific attributes (e.g. acCurrentPowerValue)
@@ -213,6 +294,14 @@ class SonoffBase extends ZigBeeDevice {
   async _teardown() {
     this.zclNode?.endpoints?.[1]?.clusters?.[CLUSTER.POWER_CONFIGURATION.NAME]
       ?.removeListener('attr.batteryPercentageRemaining', this._onBatteryReport);
+    if (this._activePollStart) {
+      this.homey.clearTimeout(this._activePollStart);
+      this._activePollStart = null;
+    }
+    if (this._activePollInterval) {
+      this.homey.clearInterval(this._activePollInterval);
+      this._activePollInterval = null;
+    }
   }
 
 }

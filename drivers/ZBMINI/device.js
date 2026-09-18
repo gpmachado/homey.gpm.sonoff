@@ -1,12 +1,10 @@
 'use strict';
 
 const SonoffBase = require('../sonoffbase');
-const { installNamedLogging } = require('../../lib/zclDebug');
 
 class SonoffZBMINI extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
-    installNamedLogging(this);
     super.onNodeInit({ zclNode });
 
     if (this.hasCapability('onoff')) {

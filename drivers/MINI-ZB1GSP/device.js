@@ -2,7 +2,9 @@
 
 const SonoffBase = require('../sonoffbase');
 const SonoffCluster = require('../../lib/SonoffCluster');
-const { writeAttributesVerbose, installNamedLogging } = require('../../lib/zclDebug');
+const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
+const { HEARTBEAT_FAST_MS } = require('../../lib/constants');
+const { writeAttributesVerbose } = require('../../lib/zclDebug');
 
 // zigbee-herdsman-converters: detachRelayActionEvent lookup
 const ACTION_LOOKUP = {
@@ -32,8 +34,13 @@ const INCHING_PROTOCOL = {
 class SonoffMiniZB1GSP extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
-    installNamedLogging(this);
     super.onNodeInit({ zclNode });
+
+    // Migrate already-paired devices: driver.compose.json only applies
+    // capabilities to newly-paired devices.
+    if (!this.hasCapability('is_availability')) {
+      await this.addCapability('is_availability').catch(() => {});
+    }
 
     if (this.hasCapability('onoff')) {
       // Same fix as BASICZBR3/ZBMINIR2: this firmware doesn't reliably send
@@ -157,6 +164,11 @@ class SonoffMiniZB1GSP extends SonoffBase {
     }, 120_000);
 
     await this.checkAttributes();
+
+    // Power/energy poll runs every 120s (see above), so activity is frequent;
+    // 25 min gives a wide margin over both that poll and onOff reporting.
+    this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_FAST_MS });
+    await this._availability.install();
 
     this.log('MINI-ZB1GSP initialized');
   }
@@ -419,6 +431,7 @@ class SonoffMiniZB1GSP extends SonoffBase {
       this.homey.clearInterval(this._powerPollInterval);
       this._powerPollInterval = null;
     }
+    await this._availability?.uninstall().catch(() => {});
     await super._teardown();
   }
 

@@ -3,7 +3,9 @@
 const SonoffBase = require('./sonoffbase');
 const { CLUSTER } = require('zigbee-clusters');
 const SonoffCluster = require('../lib/SonoffCluster');
-const { writeAttributesVerbose, installNamedLogging } = require('../lib/zclDebug');
+const { writeAttributesVerbose } = require('../lib/zclDebug');
+const { AvailabilityManagerCallback } = require('../lib/AvailabilityManager');
+const { HEARTBEAT_SLOW_MS } = require('../lib/constants');
 
 /**
  * Shared base for the SNZB-02LD (temperature only) and SNZB-02WD
@@ -13,10 +15,15 @@ const { writeAttributesVerbose, installNamedLogging } = require('../lib/zclDebug
 class TempHumiditySensor extends SonoffBase {
 
     async onNodeInit({ zclNode }) {
-        installNamedLogging(this);
         super.onNodeInit({ zclNode });
 
         this._hasHumidity = !!zclNode.endpoints[1].clusters[CLUSTER.RELATIVE_HUMIDITY_MEASUREMENT.NAME];
+
+        // Migrate already-paired devices: driver.compose.json only applies
+        // capabilities to newly-paired devices.
+        if (!this.hasCapability('is_availability')) {
+            await this.addCapability('is_availability').catch(() => {});
+        }
 
         // SonoffBase only installs a passive battery listener — it never
         // actively reads the value, so measure_battery stays empty until
@@ -48,6 +55,14 @@ class TempHumiditySensor extends SonoffBase {
             humidityCluster.on('attr.measuredValue', this._onHumidityReport);
         }
 
+        // Battery/sleepy end device — no handleFrame-based passive tracking
+        // (see AvailabilityManagerPassive's doc). notifyActivity is called
+        // explicitly from the temperature/humidity report handlers below and
+        // from onEndDeviceAnnounce, since a temperature/humidity report is
+        // the actual proof this device is alive and reporting normally.
+        this._availability = new AvailabilityManagerCallback(this, { timeout: HEARTBEAT_SLOW_MS });
+        await this._availability.install();
+
         this.log(`${this.driver.id} initialized`);
     }
 
@@ -55,6 +70,7 @@ class TempHumiditySensor extends SonoffBase {
     // reconfigure reporting and re-write the stored offset so it isn't lost.
     async onEndDeviceAnnounce() {
         this.log('endDeviceAnnounce — re-syncing reporting config and calibration');
+        this._markAliveFromAvailability?.('rejoin');
         await this._configureReporting().catch(err => this.error('Failed to re-configure reporting on rejoin', err));
         await this._reassertCalibration().catch(err => this.error('Failed to reassert calibration on rejoin', err));
     }
@@ -137,11 +153,13 @@ class TempHumiditySensor extends SonoffBase {
     }
 
     onTemperatureMeasuredAttributeReport(measuredValue) {
+        this._markAliveFromAvailability?.('temperature');
         const parsedValue = this._parseReportedValue(measuredValue, 'temperature_decimals');
         this.setCapabilityValue('measure_temperature', parsedValue).catch(this.error);
     }
 
     onRelativeHumidityMeasuredAttributeReport(measuredValue) {
+        this._markAliveFromAvailability?.('humidity');
         if (this.hasCapability('measure_humidity')) {
             const parsedValue = this._parseReportedValue(measuredValue, 'humidity_decimals');
             this.setCapabilityValue('measure_humidity', parsedValue).catch(this.error);
@@ -183,6 +201,7 @@ class TempHumiditySensor extends SonoffBase {
             this.zclNode?.endpoints?.[1]?.clusters?.[CLUSTER.RELATIVE_HUMIDITY_MEASUREMENT.NAME]
                 ?.removeListener('attr.measuredValue', this._onHumidityReport);
         }
+        await this._availability?.uninstall().catch(() => {});
         await super._teardown();
     }
 

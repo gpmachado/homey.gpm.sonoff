@@ -7,7 +7,7 @@
     "de": "Sonoff Zigbee-Dongle P"
   },
   "class": "other",
-  "capabilities": [],
+  "capabilities": ["is_availability"],
   "zigbee": {
     "manufacturerName": ["TexasInstruments"],
     "productId": ["ti.router"],

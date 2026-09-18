@@ -8,6 +8,7 @@
   },
   "class": "sensor",
   "capabilities": [
+    "is_availability",
     "measure_power",
     "meter_power",
     "meter_power.today",

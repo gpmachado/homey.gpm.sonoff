@@ -3,13 +3,12 @@
 const SonoffBase = require('../sonoffbase');
 const SonoffCluster = require('../../lib/SonoffCluster');
 const { SonoffTimeServerBoundCluster } = require('../../lib/TimeCluster');
-const { writeAttributesVerbose, installNamedLogging } = require('../../lib/zclDebug');
+const { writeAttributesVerbose } = require('../../lib/zclDebug');
 const { CLUSTER } = require('zigbee-clusters');
 
 class SonoffS60ZBTPF extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
-    installNamedLogging(this);
     super.onNodeInit({ zclNode });
 
     // Serve time to the device so it can track its own daily/monthly energy

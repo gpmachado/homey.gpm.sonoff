@@ -4,7 +4,6 @@ const SonoffCluster = require('../../lib/SonoffCluster');
 const { Cluster, CLUSTER, BoundCluster } = require('zigbee-clusters');
 const SonoffBase = require('../sonoffbase');
 const RejoinManager = require('../../lib/RejoinManager');
-const { installNamedLogging } = require('../../lib/zclDebug');
 
 // Handles external switch commands (detach_mode) sent directly to the hub
 class MyOnOffBoundCluster extends BoundCluster {
@@ -14,18 +13,22 @@ class MyOnOffBoundCluster extends BoundCluster {
         this._click = device.homey.flow.getDeviceTriggerCard("MINI-ZBD:click");
     }
     toggle() {
+        this._device.log('[detach_mode] toggle received (external switch)');
         this._click.trigger(this._device, {}, {}).catch(this._device.error);
     }
     setOn() {
+        this._device.log('[detach_mode] setOn received (external switch)');
         this._device.setCapabilityValue('onoff', true).catch(this._device.error);
     }
     setOff() {
+        this._device.log('[detach_mode] setOff received (external switch)');
         this._device.setCapabilityValue('onoff', false).catch(this._device.error);
     }
     onWithTimedOff({ onOffControl, onTime, offWaitTime }) {
-        this._device.log('onWithTimedOff received', { onOffControl, onTime, offWaitTime });
+        this._device.log('[detach_mode] onWithTimedOff received', { onOffControl, onTime, offWaitTime });
     }
     offWithEffect() {
+        this._device.log('[detach_mode] offWithEffect received (external switch)');
         this._device.setCapabilityValue('onoff', false).catch(this._device.error);
     }
 }
@@ -51,7 +54,6 @@ const INCHING_PROTOCOL = {
 class SonoffMINIZBD extends SonoffBase {
 
     async onNodeInit({ zclNode }) {
-        installNamedLogging(this);
 
         super.onNodeInit({ zclNode });
 

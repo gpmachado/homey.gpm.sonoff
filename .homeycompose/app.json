@@ -19,6 +19,14 @@
   "permissions": [],
   "brandColor": "#0099CC",
   "api": {
+    "getMessageStats": {
+      "method": "GET",
+      "path": "/message-stats"
+    },
+    "resetMessageStats": {
+      "method": "POST",
+      "path": "/message-stats/reset"
+    },
     "getRejoinStats": {
       "method": "GET",
       "path": "/rejoin-stats"
