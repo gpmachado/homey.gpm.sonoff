@@ -42,7 +42,7 @@ class DoorWindowSensor extends SonoffBase {
     async onNodeInit({ zclNode }) {
         await super.onNodeInit({ zclNode });
 
-        // SonoffBase only installs a passive battery listener — it never
+        // SonoffBase only installs a passive battery listener - it never
         // actively reads the value, so measure_battery stays empty until
         // the device happens to send an unsolicited report on its own,
         // which can take hours. Read it once on pairing instead.
@@ -53,8 +53,8 @@ class DoorWindowSensor extends SonoffBase {
         });
 
         // This is a sleepy end-device: a configureReporting request sent right now
-        // (onNodeInit, outside its wake window) commonly gets no ACK at all — not a
-        // rejection, just silence — and the promise only rejects on Homey's own
+        // (onNodeInit, outside its wake window) commonly gets no ACK at all - not a
+        // rejection, just silence - and the promise only rejects on Homey's own
         // send-timeout. Track success per group and keep retrying opportunistically
         // whenever the device proves it's awake (IAS activity, rejoin), instead of
         // trying exactly once and giving up. Set before the IAS init below, whose
@@ -74,7 +74,7 @@ class DoorWindowSensor extends SonoffBase {
             readInitialState: true,
             configureCieAddress: false,
             onStatus: zoneStatus => this._zoneStatusChangeNotification(zoneStatus),
-            onActivity: () => this._retryPendingReporting(),
+            onActivity: () => { this._markSeen(); this._retryPendingReporting(); },
         });
         await this._iasZone.init(zclNode);
 
@@ -85,7 +85,7 @@ class DoorWindowSensor extends SonoffBase {
         // every time. The passive `report` listener is the only mechanism that works.
         this.registerCapability('alarm_tamper', SonoffCluster, {
             report: 'tamper',
-            reportParser: value => Boolean(value),
+            reportParser: value => { this._markSeen(); return Boolean(value); },
         });
 
         this.log(`${this.driver.id} initialized`);
@@ -126,6 +126,7 @@ class DoorWindowSensor extends SonoffBase {
     }
 
     onEndDeviceAnnounce() {
+        this._markSeen();
         this.log(`[${this.driver.id}] Device rejoined network (End Device Announce)`);
         for (const key of Object.keys(REPORTING)) {
             if (this._reporting?.[key]) this._reporting[key].pending = true;

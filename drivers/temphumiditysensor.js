@@ -19,13 +19,7 @@ class TempHumiditySensor extends SonoffBase {
 
         this._hasHumidity = !!zclNode.endpoints[1].clusters[CLUSTER.RELATIVE_HUMIDITY_MEASUREMENT.NAME];
 
-        // Migrate already-paired devices: driver.compose.json only applies
-        // capabilities to newly-paired devices.
-        if (!this.hasCapability('is_availability')) {
-            await this.addCapability('is_availability').catch(() => {});
-        }
-
-        // SonoffBase only installs a passive battery listener — it never
+        // SonoffBase only installs a passive battery listener - it never
         // actively reads the value, so measure_battery stays empty until
         // the device happens to send an unsolicited report on its own,
         // which can take hours. Read it once on pairing instead.
@@ -55,7 +49,7 @@ class TempHumiditySensor extends SonoffBase {
             humidityCluster.on('attr.measuredValue', this._onHumidityReport);
         }
 
-        // Battery/sleepy end device — no handleFrame-based passive tracking
+        // Battery/sleepy end device - no handleFrame-based passive tracking
         // (see AvailabilityManagerPassive's doc). notifyActivity is called
         // explicitly from the temperature/humidity report handlers below and
         // from onEndDeviceAnnounce, since a temperature/humidity report is
@@ -66,10 +60,10 @@ class TempHumiditySensor extends SonoffBase {
         this.log(`${this.driver.id} initialized`);
     }
 
-    // A battery pull/rejoin resets the device's own calibration back to 0 —
+    // A battery pull/rejoin resets the device's own calibration back to 0 -
     // reconfigure reporting and re-write the stored offset so it isn't lost.
     async onEndDeviceAnnounce() {
-        this.log('endDeviceAnnounce — re-syncing reporting config and calibration');
+        this.log('endDeviceAnnounce - re-syncing reporting config and calibration');
         this._markAliveFromAvailability?.('rejoin');
         await this._configureReporting().catch(err => this.error('Failed to re-configure reporting on rejoin', err));
         await this._reassertCalibration().catch(err => this.error('Failed to reassert calibration on rejoin', err));

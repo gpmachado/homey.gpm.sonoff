@@ -1,6 +1,8 @@
 'use strict';
 
 const SonoffBase = require('../sonoffbase');
+const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
+const { HEARTBEAT_FASTEST_MS } = require('../../lib/constants');
 
 class SonoffZBMINI extends SonoffBase {
 
@@ -22,16 +24,29 @@ class SonoffZBMINI extends SonoffBase {
       _onOffCluster.on('attr.onOff', this._onOnOff);
 
       this.registerCapabilityListener('onoff', async value => {
-        this.log(`set onoff → ${value} (cluster: onOff, endpoint: 1)`);
+        this.log(`set onoff -> ${value} (cluster: onOff, endpoint: 1)`);
         if (value) return _onOffCluster.setOn({}, { waitForResponse: false });
         return _onOffCluster.setOff({}, { waitForResponse: false });
       });
     }
 
+    // Field-confirmed: the firmware sends an onOff report every ~239 s in either
+    // state (13 in a row while on, and again while off after a power-up), so the
+    // passive frame hook alone is a reliable heartbeat - 10 min is ~2.5x that (a
+    // missed report is absorbed by poll-before-offline) and no active poll is needed.
+    this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_FASTEST_MS });
+    await this._availability.install();
+
     this.log('ZBMINI initialized');
   }
 
+  async _teardown() {
+    await this._availability?.uninstall().catch(() => {});
+    await super._teardown();
+  }
+
   async onDeleted() {
+    await this._teardown();
     this.log('ZBMINI removed');
   }
 

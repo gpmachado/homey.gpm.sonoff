@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.gpm.sonoff",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "compatibility": ">=12.4.0",
   "sdk": 3,
   "runtime": "nodejs",
@@ -48,64 +48,6 @@
   },
   "source": "https://github.com/gpmachado/homey.gpm.sonoff",
   "flow": {
-    "conditions": [
-      {
-        "id": "availability_is_on",
-        "title": {
-          "en": "Availability is on",
-          "es": "Disponibilidad activada",
-          "it": "Disponibilità attiva",
-          "de": "Verfügbarkeit ist aktiv"
-        },
-        "titleFormatted": {
-          "en": "[[device]] is available",
-          "es": "[[device]] está disponible",
-          "it": "[[device]] è disponibile",
-          "de": "[[device]] ist verfügbar"
-        },
-        "hint": {
-          "en": "True when the device is currently online",
-          "es": "Verdadero cuando el dispositivo está actualmente en línea",
-          "it": "Vero quando il dispositivo è attualmente online",
-          "de": "Wahr, wenn das Gerät aktuell online ist"
-        },
-        "args": [
-          {
-            "name": "device",
-            "type": "device",
-            "filter": "capabilities=is_availability"
-          }
-        ]
-      },
-      {
-        "id": "is_playing",
-        "title": {
-          "en": "Siren is !{{sounding|not sounding}}",
-          "es": "La sirena está !{{sonando|sin sonar}}",
-          "it": "La sirena è !{{in suono|silenziosa}}",
-          "de": "Die Sirene !{{ertönt|ertönt nicht}}"
-        },
-        "titleFormatted": {
-          "en": "[[device]] siren is !{{sounding|not sounding}}",
-          "es": "La sirena de [[device]] está !{{sonando|sin sonar}}",
-          "it": "La sirena di [[device]] è !{{in suono|silenziosa}}",
-          "de": "Die Sirene von [[device]] !{{ertönt|ertönt nicht}}"
-        },
-        "hint": {
-          "en": "Check if the siren is currently sounding.",
-          "es": "Comprueba si la sirena está sonando actualmente.",
-          "it": "Controlla se la sirena sta attualmente suonando.",
-          "de": "Prüft, ob die Sirene derzeit ertönt."
-        },
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=SNZB-09P"
-          }
-        ]
-      }
-    ],
     "actions": [
       {
         "id": "mini_zb1gp_reset_consumption",
@@ -307,358 +249,6 @@
     ],
     "triggers": [
       {
-        "id": "DONGLE-E_R_availability_turned_on",
-        "title": {
-          "en": "Became available",
-          "de": "Wurde verfügbar",
-          "es": "Pasó a estar disponible",
-          "it": "Disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes available.",
-          "de": "Wird ausgelöst, wenn dieses Gerät verfügbar wird.",
-          "es": "Se activa cuando este dispositivo pasa a estar disponible.",
-          "it": "Si attiva quando questo dispositivo diventa disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=DONGLE-E_R"
-          }
-        ]
-      },
-      {
-        "id": "DONGLE-E_R_availability_turned_off",
-        "title": {
-          "en": "Became unavailable",
-          "de": "Wurde nicht verfügbar",
-          "es": "Pasó a no estar disponible",
-          "it": "Non più disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes unavailable.",
-          "de": "Wird ausgelöst, wenn dieses Gerät nicht mehr verfügbar ist.",
-          "es": "Se activa cuando este dispositivo deja de estar disponible.",
-          "it": "Si attiva quando questo dispositivo non è più disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=DONGLE-E_R"
-          }
-        ]
-      },
-      {
-        "id": "DONGLE-P_availability_turned_on",
-        "title": {
-          "en": "Became available",
-          "de": "Wurde verfügbar",
-          "es": "Pasó a estar disponible",
-          "it": "Disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes available.",
-          "de": "Wird ausgelöst, wenn dieses Gerät verfügbar wird.",
-          "es": "Se activa cuando este dispositivo pasa a estar disponible.",
-          "it": "Si attiva quando questo dispositivo diventa disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=DONGLE-P"
-          }
-        ]
-      },
-      {
-        "id": "DONGLE-P_availability_turned_off",
-        "title": {
-          "en": "Became unavailable",
-          "de": "Wurde nicht verfügbar",
-          "es": "Pasó a no estar disponible",
-          "it": "Non più disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes unavailable.",
-          "de": "Wird ausgelöst, wenn dieses Gerät nicht mehr verfügbar ist.",
-          "es": "Se activa cuando este dispositivo deja de estar disponible.",
-          "it": "Si attiva quando questo dispositivo non è più disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=DONGLE-P"
-          }
-        ]
-      },
-      {
-        "id": "MINI-ZB1GP_availability_turned_on",
-        "title": {
-          "en": "Became available",
-          "de": "Wurde verfügbar",
-          "es": "Pasó a estar disponible",
-          "it": "Disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes available.",
-          "de": "Wird ausgelöst, wenn dieses Gerät verfügbar wird.",
-          "es": "Se activa cuando este dispositivo pasa a estar disponible.",
-          "it": "Si attiva quando questo dispositivo diventa disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=MINI-ZB1GP"
-          }
-        ]
-      },
-      {
-        "id": "MINI-ZB1GP_availability_turned_off",
-        "title": {
-          "en": "Became unavailable",
-          "de": "Wurde nicht verfügbar",
-          "es": "Pasó a no estar disponible",
-          "it": "Non più disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes unavailable.",
-          "de": "Wird ausgelöst, wenn dieses Gerät nicht mehr verfügbar ist.",
-          "es": "Se activa cuando este dispositivo deja de estar disponible.",
-          "it": "Si attiva quando questo dispositivo non è più disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=MINI-ZB1GP"
-          }
-        ]
-      },
-      {
-        "id": "MINI-ZB1GSP_availability_turned_on",
-        "title": {
-          "en": "Became available",
-          "de": "Wurde verfügbar",
-          "es": "Pasó a estar disponible",
-          "it": "Disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes available.",
-          "de": "Wird ausgelöst, wenn dieses Gerät verfügbar wird.",
-          "es": "Se activa cuando este dispositivo pasa a estar disponible.",
-          "it": "Si attiva quando questo dispositivo diventa disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=MINI-ZB1GSP"
-          }
-        ]
-      },
-      {
-        "id": "MINI-ZB1GSP_availability_turned_off",
-        "title": {
-          "en": "Became unavailable",
-          "de": "Wurde nicht verfügbar",
-          "es": "Pasó a no estar disponible",
-          "it": "Non più disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes unavailable.",
-          "de": "Wird ausgelöst, wenn dieses Gerät nicht mehr verfügbar ist.",
-          "es": "Se activa cuando este dispositivo deja de estar disponible.",
-          "it": "Si attiva quando questo dispositivo non è più disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=MINI-ZB1GSP"
-          }
-        ]
-      },
-      {
         "id": "MINI-ZB1GSP:single_click",
         "title": {
           "en": "Single click",
@@ -769,182 +359,6 @@
         ]
       },
       {
-        "id": "SNZB-02LD_availability_turned_on",
-        "title": {
-          "en": "Became available",
-          "de": "Wurde verfügbar",
-          "es": "Pasó a estar disponible",
-          "it": "Disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes available.",
-          "de": "Wird ausgelöst, wenn dieses Gerät verfügbar wird.",
-          "es": "Se activa cuando este dispositivo pasa a estar disponible.",
-          "it": "Si attiva quando questo dispositivo diventa disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=SNZB-02LD"
-          }
-        ]
-      },
-      {
-        "id": "SNZB-02LD_availability_turned_off",
-        "title": {
-          "en": "Became unavailable",
-          "de": "Wurde nicht verfügbar",
-          "es": "Pasó a no estar disponible",
-          "it": "Non più disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes unavailable.",
-          "de": "Wird ausgelöst, wenn dieses Gerät nicht mehr verfügbar ist.",
-          "es": "Se activa cuando este dispositivo deja de estar disponible.",
-          "it": "Si attiva quando questo dispositivo non è più disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=SNZB-02LD"
-          }
-        ]
-      },
-      {
-        "id": "SNZB-02WD_availability_turned_on",
-        "title": {
-          "en": "Became available",
-          "de": "Wurde verfügbar",
-          "es": "Pasó a estar disponible",
-          "it": "Disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes available.",
-          "de": "Wird ausgelöst, wenn dieses Gerät verfügbar wird.",
-          "es": "Se activa cuando este dispositivo pasa a estar disponible.",
-          "it": "Si attiva quando questo dispositivo diventa disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=SNZB-02WD"
-          }
-        ]
-      },
-      {
-        "id": "SNZB-02WD_availability_turned_off",
-        "title": {
-          "en": "Became unavailable",
-          "de": "Wurde nicht verfügbar",
-          "es": "Pasó a no estar disponible",
-          "it": "Non più disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes unavailable.",
-          "de": "Wird ausgelöst, wenn dieses Gerät nicht mehr verfügbar ist.",
-          "es": "Se activa cuando este dispositivo deja de estar disponible.",
-          "it": "Si attiva quando questo dispositivo non è più disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=SNZB-02WD"
-          }
-        ]
-      },
-      {
         "id": "siren_activated",
         "title": {
           "en": "Siren activated",
@@ -1049,94 +463,6 @@
         ]
       },
       {
-        "id": "ZBMINIR2_availability_turned_on",
-        "title": {
-          "en": "Became available",
-          "de": "Wurde verfügbar",
-          "es": "Pasó a estar disponible",
-          "it": "Disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes available.",
-          "de": "Wird ausgelöst, wenn dieses Gerät verfügbar wird.",
-          "es": "Se activa cuando este dispositivo pasa a estar disponible.",
-          "it": "Si attiva quando questo dispositivo diventa disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=ZBMINIR2"
-          }
-        ]
-      },
-      {
-        "id": "ZBMINIR2_availability_turned_off",
-        "title": {
-          "en": "Became unavailable",
-          "de": "Wurde nicht verfügbar",
-          "es": "Pasó a no estar disponible",
-          "it": "Non più disponibile"
-        },
-        "hint": {
-          "en": "Fires when this device becomes unavailable.",
-          "de": "Wird ausgelöst, wenn dieses Gerät nicht mehr verfügbar ist.",
-          "es": "Se activa cuando este dispositivo deja de estar disponible.",
-          "it": "Si attiva quando questo dispositivo non è più disponibile."
-        },
-        "tokens": [
-          {
-            "name": "device_name",
-            "type": "string",
-            "title": {
-              "en": "Device name",
-              "de": "Gerätename",
-              "es": "Nombre del dispositivo",
-              "it": "Nome del dispositivo"
-            }
-          },
-          {
-            "name": "timestamp",
-            "type": "string",
-            "title": {
-              "en": "Timestamp",
-              "de": "Zeitstempel",
-              "es": "Marca de tiempo",
-              "it": "Data e ora"
-            }
-          }
-        ],
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=ZBMINIR2"
-          }
-        ]
-      },
-      {
         "id": "ZBMINIR2:click",
         "title": {
           "en": "Single click",
@@ -1155,6 +481,36 @@
             "type": "device",
             "name": "device",
             "filter": "driver_id=ZBMINIR2"
+          }
+        ]
+      }
+    ],
+    "conditions": [
+      {
+        "id": "is_playing",
+        "title": {
+          "en": "Siren is !{{sounding|not sounding}}",
+          "es": "La sirena está !{{sonando|sin sonar}}",
+          "it": "La sirena è !{{in suono|silenziosa}}",
+          "de": "Die Sirene !{{ertönt|ertönt nicht}}"
+        },
+        "titleFormatted": {
+          "en": "[[device]] siren is !{{sounding|not sounding}}",
+          "es": "La sirena de [[device]] está !{{sonando|sin sonar}}",
+          "it": "La sirena di [[device]] è !{{in suono|silenziosa}}",
+          "de": "Die Sirene von [[device]] !{{ertönt|ertönt nicht}}"
+        },
+        "hint": {
+          "en": "Check if the siren is currently sounding.",
+          "es": "Comprueba si la sirena está sonando actualmente.",
+          "it": "Controlla se la sirena sta attualmente suonando.",
+          "de": "Prüft, ob die Sirene derzeit ertönt."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=SNZB-09P"
           }
         ]
       }
@@ -1244,9 +600,7 @@
         "de": "Sonoff Zigbee-Dongle E"
       },
       "class": "other",
-      "capabilities": [
-        "is_availability"
-      ],
+      "capabilities": [],
       "zigbee": {
         "manufacturerName": [
           "SONOFF"
@@ -1297,9 +651,7 @@
         "de": "Sonoff Zigbee-Dongle P"
       },
       "class": "other",
-      "capabilities": [
-        "is_availability"
-      ],
+      "capabilities": [],
       "zigbee": {
         "manufacturerName": [
           "TexasInstruments"
@@ -1347,7 +699,6 @@
       },
       "class": "sensor",
       "capabilities": [
-        "is_availability",
         "measure_power",
         "meter_power",
         "meter_power.today",
@@ -1452,7 +803,7 @@
             "en": "Show exported energy"
           },
           "hint": {
-            "en": "Only relevant if the load/line wiring is reversed so the device measures energy fed back instead of consumed. Off by default — enable only if you know your installation is wired this way."
+            "en": "Only relevant if the load/line wiring is reversed so the device measures energy fed back instead of consumed. Off by default - enable only if you know your installation is wired this way."
           },
           "value": false
         }
@@ -1480,7 +831,6 @@
       "class": "socket",
       "capabilities": [
         "onoff",
-        "is_availability",
         "measure_power",
         "measure_voltage",
         "measure_current",
@@ -1689,7 +1039,7 @@
           },
           "value": false,
           "hint": {
-            "en": "Experimental: the device may reject this write with MALFORMED_COMMAND. Kept as a setting so it lights up automatically once supported. When working: the physical rocker stops switching the relay — useful for controlling a smart bulb via scene instead."
+            "en": "Experimental: the device may reject this write with MALFORMED_COMMAND. Kept as a setting so it lights up automatically once supported. When working: the physical rocker stops switching the relay - useful for controlling a smart bulb via scene instead."
           }
         },
         {
@@ -2276,7 +1626,7 @@
           },
           "value": false,
           "hint": {
-            "en": "When enabled, the outlet ignores on/off commands from Homey and the physical button — use to prevent accidental control."
+            "en": "When enabled, the outlet ignores on/off commands from Homey and the physical button - use to prevent accidental control."
           }
         },
         {
@@ -2395,8 +1745,7 @@
       "class": "sensor",
       "capabilities": [
         "measure_temperature",
-        "measure_battery",
-        "is_availability"
+        "measure_battery"
       ],
       "energy": {
         "batteries": [
@@ -2446,7 +1795,7 @@
             "de": "Temperaturoffset (°C)"
           },
           "hint": {
-            "en": "Adjusts the reported temperature by this amount. Written directly to the device — not a client-side correction."
+            "en": "Adjusts the reported temperature by this amount. Written directly to the device - not a client-side correction."
           },
           "value": 0,
           "min": -10,
@@ -2526,8 +1875,7 @@
       "capabilities": [
         "measure_temperature",
         "measure_humidity",
-        "measure_battery",
-        "is_availability"
+        "measure_battery"
       ],
       "energy": {
         "batteries": [
@@ -2579,7 +1927,7 @@
             "de": "Temperaturoffset (°C)"
           },
           "hint": {
-            "en": "Adjusts the reported temperature by this amount. Written directly to the device — not a client-side correction."
+            "en": "Adjusts the reported temperature by this amount. Written directly to the device - not a client-side correction."
           },
           "value": 0,
           "min": -10,
@@ -2596,7 +1944,7 @@
             "de": "Feuchtigkeitsoffset (%)"
           },
           "hint": {
-            "en": "Adjusts the reported humidity by this amount. Written directly to the device — not a client-side correction."
+            "en": "Adjusts the reported humidity by this amount. Written directly to the device - not a client-side correction."
           },
           "value": 0,
           "min": -20,
@@ -3386,8 +2734,7 @@
       },
       "class": "socket",
       "capabilities": [
-        "onoff",
-        "is_availability"
+        "onoff"
       ],
       "icon": "/drivers/ZBMINIR2/assets/icon.svg",
       "zigbee": {
@@ -3727,25 +3074,6 @@
     }
   ],
   "capabilities": {
-    "is_availability": {
-      "type": "boolean",
-      "title": {
-        "en": "Is Available",
-        "es": "Disponible",
-        "it": "Disponibile",
-        "de": "Verfügbar"
-      },
-      "desc": {
-        "en": "true = device available, false = device unavailable. Used for availability flow triggers.",
-        "es": "true = dispositivo disponible, false = dispositivo no disponible. Usado para disparadores de flujo de disponibilidad.",
-        "it": "true = dispositivo disponibile, false = dispositivo non disponibile. Usato per i trigger di flusso di disponibilità.",
-        "de": "true = Gerät verfügbar, false = Gerät nicht verfügbar. Wird für Verfügbarkeits-Flow-Trigger verwendet."
-      },
-      "getable": true,
-      "setable": false,
-      "insights": false,
-      "uiComponent": null
-    },
     "output_energy_month": {
       "type": "number",
       "title": {

@@ -8,8 +8,7 @@
   },
   "class": "socket",
   "capabilities": [
-    "onoff",
-    "is_availability"
+    "onoff"
   ],
   "icon": "{{driverAssetsPath}}/icon.svg",
   "zigbee": {

@@ -7,7 +7,7 @@
     "de": "Thermometer SNZB-02WD"
   },
   "class": "sensor",
-  "capabilities": ["measure_temperature", "measure_humidity", "measure_battery", "is_availability"],
+  "capabilities": ["measure_temperature", "measure_humidity", "measure_battery"],
   "energy": { "batteries": ["CR2450"] },
   "icon": "{{driverAssetsPath}}/icon.svg",
   "zigbee": {

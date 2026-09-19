@@ -4,3 +4,5 @@ analise/
 *.pcapng
 .claude/
 .*
+homey-app-debug*
+env.json

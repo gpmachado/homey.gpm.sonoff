@@ -36,12 +36,6 @@ class SonoffMiniZB1GSP extends SonoffBase {
   async onNodeInit({ zclNode }) {
     super.onNodeInit({ zclNode });
 
-    // Migrate already-paired devices: driver.compose.json only applies
-    // capabilities to newly-paired devices.
-    if (!this.hasCapability('is_availability')) {
-      await this.addCapability('is_availability').catch(() => {});
-    }
-
     if (this.hasCapability('onoff')) {
       // Same fix as BASICZBR3/ZBMINIR2: this firmware doesn't reliably send
       // a ZCL Default Response to setOn/setOff, which makes
@@ -57,7 +51,7 @@ class SonoffMiniZB1GSP extends SonoffBase {
       _onOffCluster.on('attr.onOff', this._onOnOff);
 
       this.registerCapabilityListener('onoff', async value => {
-        this.log(`set onoff → ${value} (cluster: onOff, endpoint: 1)`);
+        this.log(`set onoff -> ${value} (cluster: onOff, endpoint: 1)`);
         if (value) return _onOffCluster.setOn({}, { waitForResponse: false });
         return _onOffCluster.setOff({}, { waitForResponse: false });
       });
@@ -102,10 +96,10 @@ class SonoffMiniZB1GSP extends SonoffBase {
         }
       });
 
-      // Live power measurements — manufacturer-specific cluster, NOT the
+      // Live power measurements - manufacturer-specific cluster, NOT the
       // standard Electrical Measurement cluster (confirmed against
       // zigbee-herdsman-converters). Power can be negative here (export
-      // direction) — acCurrentPowerValue is signed on the wire.
+      // direction) - acCurrentPowerValue is signed on the wire.
       sonoffCluster.on('attr.acCurrentVoltageValue', (value) => {
         if (this._isValidReading(value)) this.setCapabilityValue('measure_voltage', value / 1000).catch(this.error);
       });
@@ -117,7 +111,7 @@ class SonoffMiniZB1GSP extends SonoffBase {
         if (this._isValidReading(value)) this.setCapabilityValue('measure_current', value / 1000).catch(this.error);
       });
 
-      // Cumulative import/export counters — real running totals reported by
+      // Cumulative import/export counters - real running totals reported by
       // the device, no client-side reconstruction needed.
       sonoffCluster.on('attr.totalEnergyConsumption', (value) => {
         if (this._isValidReading(value)) this.setCapabilityValue('meter_power', value / 1000).catch(this.error);
@@ -155,7 +149,7 @@ class SonoffMiniZB1GSP extends SonoffBase {
 
     // Passive reports alone can lag behind a real change by hours (same
     // issue as MINI-ZB1GP's daily/monthly counters). Poll actively every
-    // 120s instead — same base interval as the smartplug driver in
+    // 120s instead - same base interval as the smartplug driver in
     // nova.digital.homeyapp.
     if (this._powerPollInterval) this.homey.clearInterval(this._powerPollInterval);
     this.pollPowerMeasurements();
@@ -332,7 +326,7 @@ class SonoffMiniZB1GSP extends SonoffBase {
 
   /**
    * Set inching (auto-off/on) configuration. Same protocol as ZBMINIR2's
-   * setInching — see that driver for the payload format breakdown.
+   * setInching - see that driver for the payload format breakdown.
    */
   async setInching(enabled = false, time = 1, mode = 'on') {
     const tmpTime = Math.min(Math.max(Math.round(time * 2000 / 1000), 1), 0xffff);

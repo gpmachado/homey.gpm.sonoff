@@ -9,7 +9,7 @@
       "de": "Temperaturoffset (°C)"
     },
     "hint": {
-      "en": "Adjusts the reported temperature by this amount. Written directly to the device — not a client-side correction."
+      "en": "Adjusts the reported temperature by this amount. Written directly to the device - not a client-side correction."
     },
     "value": 0,
     "min": -10,
@@ -26,7 +26,7 @@
       "de": "Feuchtigkeitsoffset (%)"
     },
     "hint": {
-      "en": "Adjusts the reported humidity by this amount. Written directly to the device — not a client-side correction."
+      "en": "Adjusts the reported humidity by this amount. Written directly to the device - not a client-side correction."
     },
     "value": 0,
     "min": -20,

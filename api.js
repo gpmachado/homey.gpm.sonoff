@@ -4,28 +4,34 @@
  * App Settings API.
  *
  * getMessageStats/resetMessageStats cover devices with an AvailabilityManager
- * installed (see lib/AvailabilityManager.js) — one row per physical Zigbee
+ * installed (see lib/AvailabilityManager.js) - one row per physical Zigbee
  * node, since multi-gang drivers install it on the main/EP1 device only.
+ * Battery sensors without a heartbeat (SNZB-04P, SNZB-03...) have none, so the
+ * response also carries the total of installed physical devices to tell the
+ * two counts apart: { devices: [...rows], totalDevices }.
  *
  * getRejoinStats/resetRejoinStats cover devices with rejoin detection
- * (see lib/RejoinManager.js) independently — a device can have one, both,
+ * (see lib/RejoinManager.js) independently - a device can have one, both,
  * or neither, so these stay separate endpoints/tabs.
  */
 module.exports = {
   async getMessageStats({ homey }) {
     const rowsByPhysicalDevice = new Map();
+    const allPhysicalIds = new Set();
     const drivers = homey.drivers.getDrivers();
 
     for (const [driverId, driver] of Object.entries(drivers)) {
       for (const device of driver.getDevices()) {
-        const manager = device._availability;
-        if (!manager || typeof manager.getMessageStats !== 'function') continue;
-
         const data = device.getData?.() || {};
         const settings = device.getSettings?.() || {};
         const physicalId = data.ieeeAddress
           || settings.zb_ieee_address
           || device.getId();
+        allPhysicalIds.add(physicalId);
+
+        const manager = device._availability;
+        if (!manager || typeof manager.getMessageStats !== 'function') continue;
+
         const fullStats = manager.getMessageStats();
         const stats = {
           mode: fullStats.mode,
@@ -61,8 +67,11 @@ module.exports = {
       }
     }
 
-    return Array.from(rowsByPhysicalDevice.values())
-      .map(({ isSubDevice, ...row }) => row);
+    return {
+      devices: Array.from(rowsByPhysicalDevice.values())
+        .map(({ isSubDevice, ...row }) => row),
+      totalDevices: allPhysicalIds.size,
+    };
   },
 
   async resetMessageStats({ homey }) {

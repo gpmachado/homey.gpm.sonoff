@@ -61,13 +61,13 @@ class SonoffMINIZBD extends SonoffBase {
             // registerCapability's default send waits up to 10s for a ZCL response and
             // times out here ("Timeout: Expected Response"). A sniffer capture shows
             // this device DOES answer a similarly-shaped On command from a different
-            // controller, so it isn't a firmware limitation — waitForResponse: false
+            // controller, so it isn't a firmware limitation - waitForResponse: false
             // just stops the JS side from waiting (see zigbee-clusters Cluster.js:
             // `if (opts.waitForResponse === false) return this.sendFrame(payload);`),
             // it doesn't change what's sent on the wire or what the device does.
             // Instead, wire the capability manually:
             //   - SET:    registerCapabilityListener with waitForResponse: false (fire-and-forget)
-            //   - REPORT: cluster attr.onOff event → setCapabilityValue
+            //   - REPORT: cluster attr.onOff event -> setCapabilityValue
             const _onOffCluster = zclNode.endpoints[1].clusters.onOff;
 
             this._onOnOff ??= value => {
@@ -78,7 +78,7 @@ class SonoffMINIZBD extends SonoffBase {
             _onOffCluster.on('attr.onOff', this._onOnOff);
 
             this.registerCapabilityListener('onoff', async value => {
-                this.log(`set onoff → ${value} (cluster: onOff, endpoint: 1)`);
+                this.log(`set onoff -> ${value} (cluster: onOff, endpoint: 1)`);
                 if (value) {
                     return _onOffCluster.setOn({}, { waitForResponse: false });
                 }
@@ -88,7 +88,7 @@ class SonoffMINIZBD extends SonoffBase {
 
         // Deferred 30 s: mesh routes are stale immediately after boot.
         // Firing configureAttributeReporting before the route is established generates
-        // [err] stack traces from homey-zigbeedriver's executeMethod — harmless but noisy.
+        // [err] stack traces from homey-zigbeedriver's executeMethod - harmless but noisy.
         this.homey.setTimeout(() => {
             if (!this.zclNode) return;
             this.zclNode.endpoints[1].clusters.onOff.configureReporting({
@@ -105,10 +105,10 @@ class SonoffMINIZBD extends SonoffBase {
         //
         //   1. Filter Sonoff ACK frames (cmdId 0x0B, mfr-specific) that zigbee-clusters can't route
         //      via BoundCluster. Covers: SonoffCluster inching ACK and stray defaultResponse on onOff.
-        //   2. Track OnOff (0x0006) Report Attributes timestamp — boot-dump corroborator.
+        //   2. Track OnOff (0x0006) Report Attributes timestamp - boot-dump corroborator.
         //   3. Rejoin detection: 0xFC11 Report Attributes + 0x0006 Report Attributes within 200ms.
         //      On power restore both clusters report together (sniffer confirmed: ~8ms apart).
-        //      Periodic 0xFC11 heartbeats arrive without a 0x0006 companion → no false positive.
+        //      Periodic 0xFC11 heartbeats arrive without a 0x0006 companion -> no false positive.
         this._onOffReportTs = 0; // timestamp of last 0x0006 Report Attributes (boot-dump corroborator)
         // Guarded against re-installing on re-init: this.node can be reused by the
         // framework across an onNodeInit re-run, and wrapping handleFrame again on
@@ -124,16 +124,16 @@ class SonoffMINIZBD extends SonoffBase {
                 if (Buffer.isBuffer(frame) && frame.length >= 3) {
                     const mfrSpecific = frame[0] & 0x04;
                     const cmdId = mfrSpecific ? (frame.length >= 5 ? frame[4] : -1) : frame[2];
-                    // 1. Drop Sonoff manufacturer ACK (0x0B) — prevents unknown_command_received errors
+                    // 1. Drop Sonoff manufacturer ACK (0x0B) - prevents unknown_command_received errors
                     if (cmdId === 0x0B && (clusterId === SonoffCluster.ID || clusterId === 6)) return Promise.resolve();
                     if (cmdId === 0x0A && !mfrSpecific) {
-                        // 2. Record OnOff (0x0006) report time — used to corroborate FC11 boot dump
+                        // 2. Record OnOff (0x0006) report time - used to corroborate FC11 boot dump
                         if (clusterId === 6) {
                             this._onOffReportTs = _now;
                         }
                         // 3. Fire rejoin only when 0xFC11 0x0A is paired with a recent 0x0006 0x0A.
                         //    Sniffer: real boot dump has 0x0006 arriving ~8ms before 0xFC11.
-                        //    Heartbeat: 0xFC11 arrives alone (gap >> 200ms) → suppressed.
+                        //    Heartbeat: 0xFC11 arrives alone (gap >> 200ms) -> suppressed.
                         else if (clusterId === SonoffCluster.ID) {
                             if ((_now - this._onOffReportTs) < 200 && _now - (this._lastSonoffWriteAt ?? 0) >= 30_000) {
                                 this._notifyRejoin();
@@ -161,7 +161,7 @@ class SonoffMINIZBD extends SonoffBase {
             }
         }
 
-        // Convert TurboMode boolean checkbox → int16 expected by device (20=on, 9=off)
+        // Convert TurboMode boolean checkbox -> int16 expected by device (20=on, 9=off)
         // Convert power_on_delay_time from seconds (UI) to 0.5s units for wire (scale: 2)
         const settingsToWrite = { ...newSettings };
         if (settingsToWrite.TurboMode !== undefined) {
@@ -208,7 +208,7 @@ class SonoffMINIZBD extends SonoffBase {
      */
     async setInching(enabled = false, time = 1, mode = 'on') {
         if (typeof enabled !== 'boolean') throw new TypeError(`enabled must be boolean, got ${typeof enabled}`);
-        if (typeof time !== 'number' || time < 0 || time > 32767.5) throw new RangeError(`time must be 0–32767.5 s, got ${time}`);
+        if (typeof time !== 'number' || time < 0 || time > 32767.5) throw new RangeError(`time must be 0-32767.5 s, got ${time}`);
         if (!['on', 'off'].includes(mode)) throw new TypeError(`mode must be "on" or "off", got "${mode}"`);
 
         try {
@@ -266,7 +266,7 @@ class SonoffMINIZBD extends SonoffBase {
     }
 
     // Rejoin is detected from the SonoffCluster boot dump (see handleFrame hook
-    // above), not from ZDO Device Announce — the base class's default
+    // above), not from ZDO Device Announce - the base class's default
     // onEndDeviceAnnounce() (just a log line) is fine as-is.
 
     async checkAttributes() {
@@ -280,7 +280,7 @@ class SonoffMINIZBD extends SonoffBase {
             if (data.TurboMode !== undefined)          settingsData.TurboMode            = data.TurboMode === 20;
             if (data.network_led !== undefined)        settingsData.network_led          = Boolean(data.network_led);
             if (data.power_on_delay_state !== undefined) settingsData.power_on_delay_state = Boolean(data.power_on_delay_state);
-            // Clamp to the settings schema's min (0.5) — the device reports 0
+            // Clamp to the settings schema's min (0.5) - the device reports 0
             // when the delay is disabled, which is below the field's allowed
             // range and would otherwise leave the number field empty/invalid.
             if (data.power_on_delay_time !== undefined) settingsData.power_on_delay_time  = Math.max(0.5, data.power_on_delay_time / 2);

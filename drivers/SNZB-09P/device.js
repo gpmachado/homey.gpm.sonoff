@@ -5,10 +5,10 @@ const SonoffCluster = require('../../lib/SonoffCluster');
 const { CLUSTER, BoundCluster } = require('zigbee-clusters');
 
 // The SNZB-09P reports its own alert state back (triggered manually on the
-// device, via a scene, or cancelled) using the same 'alertCommand' — data[1]
+// device, via a scene, or cancelled) using the same 'alertCommand' - data[1]
 // is the alarm type (0=none, 1=manual, 2=scene). Keeps onoff/flows in sync
 // even when Homey didn't start the alarm itself.
-// NOT verified against real hardware — ported from macmonty's own SNZB-09P
+// NOT verified against real hardware - ported from macmonty's own SNZB-09P
 // driver (_reference/macmonty.Homey.Sonoff.Zigbee-master), cross-checked
 // against zigbee-herdsman-converters' snzb_09p_alert fromZigbee converter.
 class SirenAlertBoundCluster extends BoundCluster {
@@ -52,7 +52,7 @@ class SonoffSNZB09P extends SonoffBase {
       getOpts: { getOnStart: true, getOnOnline: true },
     });
 
-    // SonoffBase only installs a passive battery listener — it never
+    // SonoffBase only installs a passive battery listener - it never
     // actively reads the value, so measure_battery stays empty until the
     // device happens to send an unsolicited report on its own (same fix as
     // the other SNZB-0x battery sensors).
@@ -85,7 +85,7 @@ class SonoffSNZB09P extends SonoffBase {
     this.log('SNZB-09P initialized');
   }
 
-  // overrides: optional { soundType, duration } — used by the "Play siren
+  // overrides: optional { soundType, duration } - used by the "Play siren
   // with sound preset" flow action; falls back to Settings otherwise.
   async _startSiren(overrides = {}) {
     const settings = this.getSettings();
@@ -120,7 +120,7 @@ class SonoffSNZB09P extends SonoffBase {
   }
 
   // Device does not reliably send an alertCommand(alarmType: none) report
-  // when the duration elapses — mirror ekaza_siren's UI auto-reset so the
+  // when the duration elapses - mirror ekaza_siren's UI auto-reset so the
   // onoff tile doesn't stay stuck "on" after the siren itself has stopped.
   _scheduleAutoReset(duration) {
     clearTimeout(this._alarmAutoResetTimer);
@@ -144,7 +144,7 @@ class SonoffSNZB09P extends SonoffBase {
   async onSettings({ changedKeys }) {
     const keys = ['alarm_sound_enable', 'alarm_light_enable', 'alarm_sound_type', 'alarm_volume_level', 'alarm_duration'];
     if (keys.some(key => changedKeys.includes(key))) {
-      this.log('Alarm settings changed — applied on next trigger (device has no standalone "save config" command)');
+      this.log('Alarm settings changed - applied on next trigger (device has no standalone "save config" command)');
     }
   }
 

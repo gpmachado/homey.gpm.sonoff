@@ -9,7 +9,6 @@
   "class": "socket",
   "capabilities": [
     "onoff",
-    "is_availability",
     "measure_power",
     "measure_voltage",
     "measure_current",
@@ -119,7 +118,7 @@
       "type": "checkbox",
       "label": { "en": "Detach relay (experimental)" },
       "value": false,
-      "hint": { "en": "Experimental: the device may reject this write with MALFORMED_COMMAND. Kept as a setting so it lights up automatically once supported. When working: the physical rocker stops switching the relay — useful for controlling a smart bulb via scene instead." }
+      "hint": { "en": "Experimental: the device may reject this write with MALFORMED_COMMAND. Kept as a setting so it lights up automatically once supported. When working: the physical rocker stops switching the relay - useful for controlling a smart bulb via scene instead." }
     },
     {
       "type": "group",

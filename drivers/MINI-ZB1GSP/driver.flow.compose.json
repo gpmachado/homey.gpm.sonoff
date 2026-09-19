@@ -1,14 +1,6 @@
 {
   "triggers": [
     {
-      "$extends": "availability_turned_on",
-      "$id": "MINI-ZB1GSP_availability_turned_on"
-    },
-    {
-      "$extends": "availability_turned_off",
-      "$id": "MINI-ZB1GSP_availability_turned_off"
-    },
-    {
       "id": "MINI-ZB1GSP:single_click",
       "title": { "en": "Single click", "es": "Clic simple", "it": "Clic singolo", "de": "Einfacher Klick" },
       "titleFormatted": { "en": "Single click", "es": "Clic simple", "it": "Clic singolo", "de": "Einfacher Klick" },

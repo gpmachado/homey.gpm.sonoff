@@ -4,6 +4,7 @@ const Homey = require('homey');
 const { Cluster, TimeCluster, debug } = require('zigbee-clusters');
 const SonoffCluster = require('./lib/SonoffCluster');
 const SonoffOnOffCluster = require('./lib/SonoffOnOffCluster');
+const { DEBUG_LEVEL } = require('./lib/constants');
 
 module.exports = class MyApp extends Homey.App {
 
@@ -11,10 +12,11 @@ module.exports = class MyApp extends Homey.App {
    * onInit is called when the app is initialized.
    */
   async onInit() {
-    // Flip to true for verbose ZCL frame logging during development.
-    debug(true);
+    // Raw ZCL frame dumps follow the single DEBUG key in env.json (level 2, see
+    // lib/constants.js) - the only switch, nothing to edit here.
+    debug(DEBUG_LEVEL >= 2);
 
-    // Must run before any device's onNodeInit — registers SonoffCluster
+    // Must run before any device's onNodeInit - registers SonoffCluster
     // (0xFC11) globally so zclNode.endpoints[1].clusters['SonoffCluster']
     // resolves for every driver that uses it.
     Cluster.addCluster(SonoffCluster);
@@ -25,14 +27,14 @@ module.exports = class MyApp extends Homey.App {
     Cluster.addCluster(TimeCluster);
 
     // Overrides the built-in OnOff cluster (0x0006) with the Sonoff-specific
-    // powerOnBehavior attribute — must run before any device's onNodeInit,
+    // powerOnBehavior attribute - must run before any device's onNodeInit,
     // same as SonoffCluster above.
     Cluster.addCluster(SonoffOnOffCluster);
 
     this.log('MyApp has been initialized');
 
     // Updates the onoff capability in the UI only, without sending a Zigbee
-    // command — used to correct the displayed state on devices where
+    // command - used to correct the displayed state on devices where
     // detach_mode decouples the physical switch from the relay.
     this.homey.flow.getActionCard('set_ui_onoff')
       .registerRunListener(async (args) => {
@@ -65,10 +67,6 @@ module.exports = class MyApp extends Homey.App {
     this.homey.flow.getConditionCard('is_playing')
       .registerRunListener(async (args) => Boolean(args.device.getCapabilityValue('onoff')));
 
-    // Generic "is available" condition for any driver with is_availability
-    // (see lib/AvailabilityManager.js) — one card, filtered by capability.
-    this.homey.flow.getConditionCard('availability_is_on')
-      .registerRunListener(async (args) => args.device.getAvailable());
   }
 
 };

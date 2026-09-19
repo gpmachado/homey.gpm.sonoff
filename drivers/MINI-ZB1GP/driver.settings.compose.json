@@ -28,7 +28,7 @@
       "en": "Show exported energy"
     },
     "hint": {
-      "en": "Only relevant if the load/line wiring is reversed so the device measures energy fed back instead of consumed. Off by default — enable only if you know your installation is wired this way."
+      "en": "Only relevant if the load/line wiring is reversed so the device measures energy fed back instead of consumed. Off by default - enable only if you know your installation is wired this way."
     },
     "value": false
   }

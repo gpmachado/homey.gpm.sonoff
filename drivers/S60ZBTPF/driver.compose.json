@@ -52,7 +52,7 @@
       "type": "checkbox",
       "label": { "en": "Lock remote control" },
       "value": false,
-      "hint": { "en": "When enabled, the outlet ignores on/off commands from Homey and the physical button — use to prevent accidental control." }
+      "hint": { "en": "When enabled, the outlet ignores on/off commands from Homey and the physical button - use to prevent accidental control." }
     },
     {
       "id": "power_on_behavior",

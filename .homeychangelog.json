@@ -13,5 +13,8 @@
   },
   "1.0.4": {
     "en": "SNZP04PR2 fix"
+  },
+  "1.0.5": {
+    "en": "Availability tracking for mains-powered devices (ZBMINI, ZBMINIR2, MINI-ZB1GP/GSP, SNZB-06P, Zigbee Dongle E/P) and the SNZB-02LD/WD thermometers, with a Traffic and Rejoins overview in the app settings. Last-seen time for the SNZB-03 and SNZB-04P/PR2 sensors. SNZB-04P battery reporting, SNZB-06P fixes and the new SNZB-09P siren."
   }
 }

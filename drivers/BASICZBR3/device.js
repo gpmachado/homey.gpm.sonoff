@@ -21,7 +21,7 @@ class SonoffBASICZBR3 extends SonoffBase {
       _onOffCluster.on('attr.onOff', this._onOnOff);
 
       this.registerCapabilityListener('onoff', async value => {
-        this.log(`set onoff → ${value} (cluster: onOff, endpoint: 1)`);
+        this.log(`set onoff -> ${value} (cluster: onOff, endpoint: 1)`);
         if (value) return _onOffCluster.setOn({}, { waitForResponse: false });
         return _onOffCluster.setOff({}, { waitForResponse: false });
       });

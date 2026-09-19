@@ -5,3 +5,4 @@
 *.log
 .DS_Store
 **/.DS_Store
+homey-app-debug*

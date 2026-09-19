@@ -18,6 +18,36 @@
       --good: #16856a;
       --bad: #c45151;
       --shadow: 0 12px 32px rgba(16, 42, 67, 0.08);
+      --head-bg: #f9fbfd;
+      --row-line: #edf3f7;
+      --track: #e6f0f4;
+      --bad-soft: rgba(196, 81, 81, 0.12);
+      --on-blue: #fff;
+      --on-bad: #fff;
+      color-scheme: light;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e4edf5;
+        --muted: #9db2c6;
+        --paper: #0e1821;
+        --panel: #15222d;
+        --line: #26384a;
+        --blue: #1aa6d6;
+        --blue-dark: #5cc4ea;
+        --pulse: #3aa9d4;
+        --good: #3dbb9a;
+        --bad: #e07a7a;
+        --shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+        --head-bg: #1a2937;
+        --row-line: #1f3040;
+        --track: #22374a;
+        --bad-soft: rgba(224, 122, 122, 0.16);
+        --on-blue: #06202c;
+        --on-bad: #1c0d0d;
+        color-scheme: dark;
+      }
     }
 
     * { box-sizing: border-box; }
@@ -56,7 +86,7 @@
       padding: 0 16px;
       border: 1px solid var(--blue);
       border-radius: 8px;
-      color: #fff;
+      color: var(--on-blue);
       background: var(--blue);
       font-weight: 650;
       cursor: pointer;
@@ -73,7 +103,7 @@
       cursor: pointer;
       white-space: nowrap;
     }
-    .reset:hover { color: #fff; background: var(--bad); }
+    .reset:hover { color: var(--on-bad); background: var(--bad); }
     .refresh[disabled], .reset[disabled] { cursor: wait; opacity: 0.65; }
     .refresh:focus-visible, .reset:focus-visible, select:focus-visible, th button:focus-visible, .tab:focus-visible {
       outline: 3px solid rgba(0, 153, 204, 0.28);
@@ -164,7 +194,7 @@
       padding: 0;
       border-bottom: 1px solid var(--line);
       color: var(--muted);
-      background: #f9fbfd;
+      background: var(--head-bg);
       text-align: right;
       white-space: nowrap;
     }
@@ -185,7 +215,7 @@
     th.plain { padding: 12px 14px; font-size: 10px; font-weight: 750; letter-spacing: 0.065em; text-transform: uppercase; }
     td {
       padding: 14px;
-      border-bottom: 1px solid #edf3f7;
+      border-bottom: 1px solid var(--row-line);
       text-align: right;
       vertical-align: middle;
       white-space: nowrap;
@@ -218,7 +248,7 @@
       overflow: hidden;
       margin-top: 8px;
       border-radius: 3px;
-      background: #e6f0f4;
+      background: var(--track);
     }
     .pulse-bar { height: 100%; border-radius: inherit; background: var(--pulse); }
     .mode {
@@ -232,12 +262,25 @@
       font-weight: 700;
       text-transform: uppercase;
     }
+    .meta-last { display: none; }
+    .badge-off {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: var(--bad-soft);
+      color: var(--bad);
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    tr.offline-row td { background: var(--bad-soft); }
     .rejoin-count-badge {
       display: inline-block;
       min-width: 22px;
       padding: 2px 8px;
       border-radius: 999px;
-      background: rgba(196, 81, 81, 0.12);
+      background: var(--bad-soft);
       color: var(--bad);
       font-weight: 700;
     }
@@ -251,9 +294,14 @@
       .intro { margin-top: 8px; font-size: 12px; }
       .tabs { margin-bottom: 12px; }
       .tab { font-size: 12px; padding: 8px 2px; }
-      .summary, .summary.summary-3 { grid-template-columns: 1fr; margin-bottom: 12px; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 12px; }
+      .summary.summary-3 { grid-template-columns: 1fr; }
       .summary-item { padding: 11px 14px; border-right: 0; border-bottom: 1px solid var(--line); }
-      .summary-item:last-child { border-bottom: 0; }
+      .summary:not(.summary-3) .summary-item:nth-child(odd) { border-right: 1px solid var(--line); }
+      .summary:not(.summary-3) .summary-item:nth-last-child(-n+2) { border-bottom: 0; }
+      .summary.summary-3 .summary-item:last-child { border-bottom: 0; }
+      .col-prev, .col-last { display: none; }
+      .reset { min-height: 36px; }
       .summary-label { margin-bottom: 3px; font-size: 9px; }
       .summary-value { font-size: 18px; }
       .toolbar { gap: 8px; align-items: stretch; flex-direction: column; margin-bottom: 8px; }
@@ -264,9 +312,10 @@
       table { font-size: 11px; }
       th button, th.plain { padding: 9px 10px; font-size: 8px; }
       td { padding: 10px; }
-      td:first-child { min-width: 205px; }
-      .device-name { gap: 7px; font-size: 11px; line-height: 1.3; }
+      td:first-child { min-width: 0; width: auto; max-width: 54vw; }
+      .device-name { flex-wrap: wrap; gap: 4px 7px; font-size: 11px; line-height: 1.3; }
       .device-meta, .mode { font-size: 8px; }
+      .meta-last { display: inline; }
       .footnote { margin-top: 10px; font-size: 9px; }
     }
   </style>
@@ -277,7 +326,7 @@
       <div>
         <p class="eyebrow" data-i18n="settings.eyebrow">Sonoff Devices</p>
         <h1 data-i18n="settings.title">Zigbee Traffic</h1>
-        <p class="intro" data-i18n="settings.intro">One row per physical device with availability tracking. Multi-gang devices are counted once through their main device.</p>
+        <p class="intro" data-i18n="settings.intro">One row per physical device with traffic tracking. Multi-gang devices are counted once through their main device. Battery sensors without a heartbeat are not tracked.</p>
       </div>
       <div>
         <button id="refresh" class="refresh" type="button" data-i18n="settings.refresh">Refresh now</button>
@@ -292,34 +341,34 @@
     <div id="panel-traffic" class="panel" role="tabpanel">
       <section class="summary" aria-label="Summary">
         <div class="summary-item">
-          <span class="summary-label" data-i18n="settings.physical_devices">Physical devices</span>
-          <strong id="device-count" class="summary-value">—</strong>
+          <span class="summary-label" data-i18n="settings.physical_devices">Monitored / installed</span>
+          <strong id="device-count" class="summary-value">-</strong>
         </div>
         <div class="summary-item">
-          <span class="summary-label" data-i18n="settings.messages_24h">Messages · 24 h</span>
-          <strong id="message-total" class="summary-value">—</strong>
+          <span class="summary-label" data-i18n="settings.messages_24h">Messages - 24 h</span>
+          <strong id="message-total" class="summary-value">-</strong>
         </div>
         <div class="summary-item">
-          <span class="summary-label" data-i18n="settings.messages_current_hour">Messages · current hour</span>
-          <strong id="current-hour-total" class="summary-value">—</strong>
+          <span class="summary-label" data-i18n="settings.messages_current_hour">Messages - current hour</span>
+          <strong id="current-hour-total" class="summary-value">-</strong>
         </div>
         <div class="summary-item">
-          <span class="summary-label" data-i18n="settings.most_active_current_hour">Most active · current hour</span>
-          <strong id="top-talker" class="summary-value">—</strong>
+          <span class="summary-label" data-i18n="settings.most_active_current_hour">Most active - current hour</span>
+          <strong id="top-talker" class="summary-value">-</strong>
         </div>
       </section>
 
       <div class="toolbar">
-        <span id="updated-at" class="toolbar-note" data-i18n="settings.waiting_for_data">Waiting for data…</span>
+        <span id="updated-at" class="toolbar-note" data-i18n="settings.waiting_for_data">Waiting for data...</span>
         <div class="toolbar-actions">
           <button id="reset" class="reset" type="button" data-i18n="settings.reset">Reset statistics</button>
           <label class="sort-wrap" for="sort">
             <span data-i18n="settings.sort_by">Sort by</span>
             <select id="sort">
-              <option value="name-asc" data-i18n="settings.sort_name">Name A–Z</option>
-              <option value="last24h-desc" data-i18n="settings.sort_24h">Most messages · 24 h</option>
-              <option value="currentHour-desc" data-i18n="settings.sort_current_hour">Most messages · current hour</option>
-              <option value="previousHour-desc" data-i18n="settings.sort_previous_hour">Most messages · previous hour</option>
+              <option value="name-asc" data-i18n="settings.sort_name">Name A-Z</option>
+              <option value="last24h-desc" data-i18n="settings.sort_24h">Most messages - 24 h</option>
+              <option value="currentHour-desc" data-i18n="settings.sort_current_hour">Most messages - current hour</option>
+              <option value="previousHour-desc" data-i18n="settings.sort_previous_hour">Most messages - previous hour</option>
               <option value="lastMessageAt-desc" data-i18n="settings.sort_recent">Most recent activity</option>
             </select>
           </label>
@@ -332,33 +381,33 @@
             <tr>
               <th><button type="button" data-sort="name-asc" data-i18n="settings.device">Device</button></th>
               <th><button type="button" data-sort="currentHour-desc" data-i18n="settings.current_hour">Current hour</button></th>
-              <th><button type="button" data-sort="previousHour-desc" data-i18n="settings.previous_hour">Previous hour</button></th>
-              <th><button type="button" data-sort="last24h-desc">24 h</button></th>
-              <th><button type="button" data-sort="lastMessageAt-desc" data-i18n="settings.last_message">Last message</button></th>
+              <th class="col-prev"><button type="button" data-sort="previousHour-desc" data-i18n="settings.previous_hour">Previous hour</button></th>
+              <th><button type="button" data-sort="last24h-desc" data-i18n="settings.last_24h">24 h</button></th>
+              <th class="col-last"><button type="button" data-sort="lastMessageAt-desc" data-i18n="settings.last_message">Last message</button></th>
             </tr>
           </thead>
           <tbody id="rows">
-            <tr><td colspan="5" class="state" data-i18n="settings.loading">Loading…</td></tr>
+            <tr><td colspan="5" class="state" data-i18n="settings.loading">Loading...</td></tr>
           </tbody>
         </table>
       </section>
 
-      <p class="footnote" data-i18n="settings.footnote">"Frames" are raw Zigbee messages (mains-powered devices). "Activity" represents explicit callbacks from battery/sleepy sensors. Data is persisted at most once every five minutes.</p>
+      <p class="footnote" data-i18n="settings.footnote">"Frames" are raw Zigbee messages (mains-powered devices). "Activity" represents explicit callbacks from battery/sleepy sensors. Data is persisted at most once every five minutes. Devices without a heartbeat (SNZB-03, SNZB-04P, SNZB-04PR2, SNZB-09P, MINI-ZBD...) are counted in "installed" but have no traffic row.</p>
     </div>
 
     <div id="panel-rejoins" class="panel" role="tabpanel" hidden>
       <section class="summary summary-3" aria-label="Rejoin summary">
         <div class="summary-item">
           <span class="summary-label" data-i18n="settings.total_rejoins">Total rejoins</span>
-          <strong id="rejoin-total" class="summary-value">—</strong>
+          <strong id="rejoin-total" class="summary-value">-</strong>
         </div>
         <div class="summary-item">
           <span class="summary-label" data-i18n="settings.devices_with_rejoins">Devices affected</span>
-          <strong id="rejoin-device-count" class="summary-value">—</strong>
+          <strong id="rejoin-device-count" class="summary-value">-</strong>
         </div>
         <div class="summary-item">
           <span class="summary-label" data-i18n="settings.rejoins_since">Tracked since</span>
-          <strong id="rejoin-since" class="summary-value">—</strong>
+          <strong id="rejoin-since" class="summary-value">-</strong>
         </div>
       </section>
 
@@ -379,18 +428,19 @@
             </tr>
           </thead>
           <tbody id="rejoin-rows">
-            <tr><td colspan="3" class="state" data-i18n="settings.loading">Loading…</td></tr>
+            <tr><td colspan="3" class="state" data-i18n="settings.loading">Loading...</td></tr>
           </tbody>
         </table>
       </section>
 
-      <p class="footnote" data-i18n="settings.rejoin_footnote">A rejoin is detected from a paired 0xFC11 + 0x0006 boot-dump pattern right after the device reconnects — see MINI-ZBD/ZBMINIR2 device.js.</p>
+      <p class="footnote" data-i18n="settings.rejoin_footnote">A rejoin is detected from a paired 0xFC11 + 0x0006 boot-dump pattern right after the device reconnects - see MINI-ZBD/ZBMINIR2 device.js.</p>
     </div>
   </main>
 
   <script>
     var homeyApi = null;
     var trafficDevices = [];
+    var totalDevices = 0;
     var rejoinDevices = [];
     var currentSort = 'name-asc';
     var latestRequest = 0;
@@ -419,14 +469,14 @@
     }
 
     function formatTime(timestamp) {
-      if (!timestamp) return '—';
+      if (!timestamp) return '-';
       return new Intl.DateTimeFormat(userLocale(), {
         day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
       }).format(new Date(timestamp));
     }
 
     function formatDate(timestamp) {
-      if (!timestamp) return '—';
+      if (!timestamp) return '-';
       return new Intl.DateTimeFormat(userLocale(), {
         day: '2-digit', month: '2-digit', year: 'numeric'
       }).format(new Date(timestamp));
@@ -475,26 +525,28 @@
             device.zone,
             device.driverId,
             device.manufacturerName,
-            device.modelId
-          ].filter(Boolean).join(' · ');
+            device.modelId !== device.driverId ? device.modelId : ''
+          ].filter(Boolean).join(' - ');
           var mode = device.stats.mode === 'frames' ? translate('settings.frames') : translate('settings.activity');
 
-          return '<tr>' +
+          return '<tr' + (device.available ? '' : ' class="offline-row"') + '>' +
             '<td>' +
               '<div class="device-name">' +
                 '<span class="status-dot' + (device.available ? '' : ' offline') + '"></span>' +
                 '<span>' + escapeHtml(device.name) + '</span>' +
                 '<span class="mode">' + mode + '</span>' +
+                (device.available ? '' : '<span class="badge-off">' + escapeHtml(translate('settings.unavailable')) + '</span>') +
               '</div>' +
-              '<div class="device-meta">' + escapeHtml(meta) + '</div>' +
+              '<div class="device-meta">' + escapeHtml(meta) +
+                '<span class="meta-last"> - ' + escapeHtml(formatTime(device.stats.lastMessageAt)) + '</span></div>' +
               '<div class="pulse-track" aria-hidden="true">' +
                 '<div class="pulse-bar" style="width:' + width + '%"></div>' +
               '</div>' +
             '</td>' +
             '<td class="number">' + formatNumber(device.stats.currentHour) + '</td>' +
-            '<td class="number">' + formatNumber(device.stats.previousHour) + '</td>' +
+            '<td class="number col-prev">' + formatNumber(device.stats.previousHour) + '</td>' +
             '<td class="number">' + formatNumber(device.stats.last24h) + '</td>' +
-            '<td class="number">' + escapeHtml(formatTime(device.stats.lastMessageAt)) + '</td>' +
+            '<td class="number col-last">' + escapeHtml(formatTime(device.stats.lastMessageAt)) + '</td>' +
           '</tr>';
         }).join('');
       }
@@ -508,10 +560,11 @@
       var top = trafficDevices.slice().sort(function(a, b) {
         return (b.stats.currentHour || 0) - (a.stats.currentHour || 0);
       })[0];
-      document.getElementById('device-count').textContent = formatNumber(trafficDevices.length);
+      document.getElementById('device-count').textContent =
+        formatNumber(trafficDevices.length) + ' / ' + formatNumber(totalDevices);
       document.getElementById('message-total').textContent = formatNumber(total);
       document.getElementById('current-hour-total').textContent = formatNumber(currentHourTotal);
-      document.getElementById('top-talker').textContent = top ? top.name : '—';
+      document.getElementById('top-talker').textContent = top ? top.name : '-';
     }
 
     function renderRejoins() {
@@ -557,7 +610,8 @@
               '<tr><td colspan="5" class="state">' + escapeHtml(translate('settings.failed_load')) + ' ' +
               escapeHtml(error.message || error) + '</td></tr>';
           } else {
-            trafficDevices = Array.isArray(result) ? result : [];
+            trafficDevices = Array.isArray(result && result.devices) ? result.devices : [];
+            totalDevices = Number(result && result.totalDevices) || trafficDevices.length;
             renderTraffic();
           }
         }

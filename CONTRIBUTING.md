@@ -20,7 +20,7 @@ Capable programmers should always attempt to investigate and fix problems themse
 
 ## A great bug report contains
 
-* Context – what were you trying to achieve?
+* Context - what were you trying to achieve?
 * Detailed steps to reproduce the error from scratch. Try isolating the minimal amount of code needed to reproduce the error.
 * Any applicable log files or ID's.
 * Evidence you've looked into solving the problem and ideally, a theory on the cause and a possible solution.
@@ -30,7 +30,7 @@ Capable programmers should always attempt to investigate and fix problems themse
 * The current situation.
 * How and why the current situation is problematic.
 * A detailed proposal or pull request that demonstrates how the problem could be solved.
-* A use case – who needs this feature and why?
+* A use case - who needs this feature and why?
 * Any caveats.
 
 ## A great pull request contains

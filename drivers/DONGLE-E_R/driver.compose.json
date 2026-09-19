@@ -7,7 +7,7 @@
     "de": "Sonoff Zigbee-Dongle E"
   },
   "class": "other",
-  "capabilities": ["is_availability"],
+  "capabilities": [],
   "zigbee": {
     "manufacturerName": ["SONOFF"],
     "productId": ["DONGLE-E_R"],

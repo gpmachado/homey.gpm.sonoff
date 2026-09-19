@@ -1,24 +1,21 @@
 'use strict';
 
 const { ZigBeeDevice } = require('homey-zigbeedriver');
-const { debug, CLUSTER } = require('zigbee-clusters');
+const { CLUSTER } = require('zigbee-clusters');
 const { writeAttributesVerbose, installNamedLogging } = require('../lib/zclDebug');
-const { ZCL_DEBUG } = require('../lib/constants');
-
-if (ZCL_DEBUG) {
-  debug(true);
-}
+const { DEBUG_LEVEL } = require('../lib/constants');
+const ActivePoll = require('../lib/ActivePoll');
 
 /**
- * SonoffBase — shared base class for Sonoff Zigbee device drivers.
+ * SonoffBase - shared base class for Sonoff Zigbee device drivers.
  * Provides battery-report wiring, retrying attribute reads, filtered
  * attribute writes, and idempotent teardown on uninit/delete.
  *
  * Deliberately does NOT bind anything on the OTA cluster (0x0019): Homey
- * ≥13.2 has its own native Zigbee firmware-update mechanism (Device Updates,
+ * >=13.2 has its own native Zigbee firmware-update mechanism (Device Updates,
  * see https://apps.developer.homey.app/wireless/zigbee/zigbee-firmware-updates)
  * that talks to the device's OTA client directly. An app-level BoundCluster
- * answering queryNextImageRequest itself would race with — and could block —
+ * answering queryNextImageRequest itself would race with - and could block -
  * that native flow.
  */
 class SonoffBase extends ZigBeeDevice {
@@ -28,17 +25,18 @@ class SonoffBase extends ZigBeeDevice {
     this.log(`NodeInit SonoffBase: ${this.getName()}`);
     options = options || {};
 
-    if (ZCL_DEBUG) {
+    if (DEBUG_LEVEL >= 2) {
       this.enableDebug();
     }
     this.printNode();
 
     if (options.noAttribCheck !== true) {
       if ('powerConfiguration' in zclNode.endpoints[1].clusters) {
-        // Battery-powered devices report proactively — listen and update capability.
+        // Battery-powered devices report proactively - listen and update capability.
         // Remove-then-add guards against duplicate listeners if onNodeInit runs
         // again on a reused cluster object (node reuse happens on re-init).
         this._onBatteryReport ??= (value) => {
+          this._markSeen();
           this.log(`[Battery] ${value / 2}%`);
           this.setCapabilityValue('measure_battery', value / 2).catch(this.error);
         };
@@ -48,11 +46,11 @@ class SonoffBase extends ZigBeeDevice {
       }
     }
 
-    // Homey's own native Device Updates feature (≥13.2) polls basic.swBuildId
+    // Homey's own native Device Updates feature (>=13.2) polls basic.swBuildId
     // directly over the shared Zigbee radio, bypassing our zclNode entirely.
     // Our own 'basic' cluster instance still sees the response frame (shared
-    // radio traffic) but has no pending request matching it — no driver here
-    // ever reads from 'basic' itself — so it logs 'unknown_command_received'.
+    // radio traffic) but has no pending request matching it - no driver here
+    // ever reads from 'basic' itself - so it logs 'unknown_command_received'.
     // Accurate (we really didn't ask), but noisy. Drop only frames with no
     // matching _trxHandlers entry, so a genuine future read (ours or the
     // framework's own) is never swallowed.
@@ -77,6 +75,17 @@ class SonoffBase extends ZigBeeDevice {
     }
   }
 
+  // Feeds Homey's native "last seen" on real device activity, at most once per
+  // 5 min. For sleepy sensors with no heartbeat there is no availability watchdog
+  // here on purpose (a closed door can stay silent for days): whoever reads
+  // lastSeenAt decides with its own per-device threshold.
+  _markSeen() {
+    const now = Date.now();
+    if (now - (this._lastSeenPushed ?? 0) < 5 * 60 * 1000) return;
+    this._lastSeenPushed = now;
+    if (typeof this.setLastSeenAt === 'function') this.setLastSeenAt().catch(() => {});
+  }
+
   // Read an attribute once, only on the device's first-ever init (not on every restart).
   async initAttribute(cluster, attr, handler) {
     if (!this.isFirstInit()) return;
@@ -84,31 +93,24 @@ class SonoffBase extends ZigBeeDevice {
   }
 
   /**
-   * Periodically read the Basic cluster (zclVersion — universal, cheap) and
+   * Periodically read the Basic cluster (zclVersion - universal, cheap) and
    * feed the result to this._availability as an explicit activity signal.
    * Use for devices with no other frequent traffic of their own (ZBMINIR2,
-   * dongles/repeaters) — see AvailabilityManagerPassive/Callback in
+   * dongles/repeaters) - see AvailabilityManagerPassive/Callback in
    * lib/AvailabilityManager.js, which already covers devices that already
    * poll something else on a short interval (energy meters).
    */
   _startActivePoll(intervalMs = 5 * 60 * 1000) {
-    if (this._activePollInterval || this._activePollStart) return; // already running (re-init guard)
-    const poll = async () => {
-      if (!this.zclNode) return;
-      try {
-        await this.zclNode.endpoints[1].clusters.basic.readAttributes(['zclVersion']);
-        this._availability?.notifyActivity('active-poll');
-      } catch (err) {
-        this.log('[Active poll] failed:', err.message);
-      }
-    };
-    // Random start offset within one interval so devices initialised together
-    // at boot don't all poll (and hit the mesh) in the same instant.
-    this._activePollStart = this.homey.setTimeout(() => {
-      this._activePollStart = null;
-      this._activePollInterval = this.homey.setInterval(poll, intervalMs);
-      poll();
-    }, Math.floor(Math.random() * intervalMs));
+    this._activePoll ??= new ActivePoll(this, { intervalMs });
+    this._activePoll.start();
+  }
+
+  // A power-cycled device announces itself on the network: proof of life, so it
+  // restores availability at once instead of waiting for the next frame or poll.
+  // Subclasses with their own handler (sleepy sensors) override this.
+  onEndDeviceAnnounce() {
+    super.onEndDeviceAnnounce();
+    this._availability?.notifyActivity('announce');
   }
 
   // Read one or more attributes with exponential backoff + jitter retry.
@@ -125,11 +127,11 @@ class SonoffBase extends ZigBeeDevice {
         return;
       } catch (e) {
         if (attempt < maxRetries) {
-          const delay = baseDelay * Math.pow(2, attempt) * (0.5 + Math.random()); // jitter ±50%
+          const delay = baseDelay * Math.pow(2, attempt) * (0.5 + Math.random()); // jitter +/-50%
           this.log(`Retry read attr ${attr} in ${Math.round(delay / 1000)}s (attempt ${attempt + 1}/${maxRetries})`);
           await new Promise(r => this.homey.setTimeout(r, delay));
         } else {
-          this.log('Device unreachable — attr read skipped:', attr);
+          this.log('Device unreachable - attr read skipped:', attr);
         }
       }
     }
@@ -172,7 +174,7 @@ class SonoffBase extends ZigBeeDevice {
   // zigbee-clusters' Cluster#configureReporting throws `new Error(status)` where
   // status is the raw ZCL status string returned by the device. Some of those
   // are definitive ("this attribute/cluster will never support that config")
-  // and retrying them changes nothing — only silence/timeout is worth retrying
+  // and retrying them changes nothing - only silence/timeout is worth retrying
   // opportunistically on the next sign of device activity.
   static isDefinitiveZclRejection(err) {
     return [
@@ -186,7 +188,7 @@ class SonoffBase extends ZigBeeDevice {
   }
 
   // Several Sonoff manufacturer-specific attributes (e.g. acCurrentPowerValue)
-  // are transmitted two's-complement but declared/read as uint32 — convert.
+  // are transmitted two's-complement but declared/read as uint32 - convert.
   _toSignedInt32(raw) {
     return raw > 0x7fffffff ? raw - 0x100000000 : raw;
   }
@@ -290,18 +292,11 @@ class SonoffBase extends ZigBeeDevice {
     this.log('sonoff device removed');
   }
 
-  // Idempotent cleanup — safe to call from both onUninit and onDeleted.
+  // Idempotent cleanup - safe to call from both onUninit and onDeleted.
   async _teardown() {
     this.zclNode?.endpoints?.[1]?.clusters?.[CLUSTER.POWER_CONFIGURATION.NAME]
       ?.removeListener('attr.batteryPercentageRemaining', this._onBatteryReport);
-    if (this._activePollStart) {
-      this.homey.clearTimeout(this._activePollStart);
-      this._activePollStart = null;
-    }
-    if (this._activePollInterval) {
-      this.homey.clearInterval(this._activePollInterval);
-      this._activePollInterval = null;
-    }
+    this._activePoll?.stop();
   }
 
 }

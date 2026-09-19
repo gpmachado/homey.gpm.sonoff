@@ -3,6 +3,8 @@
 const SonoffBase = require('../sonoffbase');
 const { CLUSTER } = require('zigbee-clusters');
 const IASZoneHelper = require('../../lib/IASZoneHelper');
+const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
+const { HEARTBEAT_MEDIUM_MS } = require('../../lib/constants');
 
 const OccupancySensing = CLUSTER.OCCUPANCY_SENSING;
 
@@ -16,7 +18,7 @@ class SonoffSNZB06P extends SonoffBase {
       await this.addCapability('alarm_motion');
     }
 
-    // IAS Zone — enrolled by Homey 13.4 stack during pairing; we only install
+    // IAS Zone - enrolled by Homey 13.4 stack during pairing; we only install
     // listeners and read initial state. The SNZB-06P firmware 1.0.6 does not
     // reliably emit zoneStatusChangeNotification for this device, so the
     // occupancySensing cluster is the primary motion channel (below).
@@ -30,11 +32,11 @@ class SonoffSNZB06P extends SonoffBase {
     });
     await this._iasZone.init(zclNode);
 
-    // Occupancy cluster — primary presence channel for SNZB-06P firmware 1.0.6.
-    // Configure attribute reporting so the device pushes occupancy changes.
+    // Occupancy cluster - primary presence channel for SNZB-06P firmware 1.0.6.
+    // No configureReporting on purpose: on real hardware the device answers the
+    // request with UNSUP_CLUSTER_COMMAND every time. It pushes occupancy on its own,
+    // which the passive listener below picks up.
     const occCluster = zclNode.endpoints[1].clusters[OccupancySensing.NAME];
-    occCluster.configureReporting([{ occupancy: { minInterval: 0, maxInterval: 600 } }])
-      .catch(err => this.log('[SNZB06P] occupancy configureReporting failed:', err.message));
 
     this._onOccupancyReport = value => {
       this.log('[SNZB06P] occupancy:', value);
@@ -51,6 +53,14 @@ class SonoffSNZB06P extends SonoffBase {
         this.log('[SNZB06P] Initial settings read deferred:', error.message);
       });
     }, 5000);
+
+    // USB-powered and always listening, but it only sends occupancy changes (a
+    // 52 min gap without any frame was seen), so the watchdog leans on an active
+    // Basic-cluster poll. 90 min stays generous until it is confirmed that the
+    // device answers that read and honours the occupancy reporting above.
+    this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_MEDIUM_MS });
+    await this._availability.install();
+    this._startActivePoll();
 
     this.log(`[SNZB06P] initialized (firmware ${this.getSetting('zb_sw_build_id') || 'unknown'})`);
   }
@@ -104,13 +114,17 @@ class SonoffSNZB06P extends SonoffBase {
       this._settingsReadTimer = null;
     }
 
+    await super._teardown?.(); // stops the active poll before the manager goes away
+
     this._iasZone?.dispose();
+    await this._availability?.uninstall().catch(() => {});
 
-    const endpoint = this.zclNode?.endpoints?.[1];
-    endpoint?.clusters?.[OccupancySensing.NAME]
-      ?.removeListener('attr.occupancy', this._onOccupancyReport);
-
-    await super._teardown?.();
+    // Undefined when the device is removed before onNodeInit got that far, and
+    // removeListener(undefined) throws.
+    if (this._onOccupancyReport) {
+      this.zclNode?.endpoints?.[1]?.clusters?.[OccupancySensing.NAME]
+        ?.removeListener('attr.occupancy', this._onOccupancyReport);
+    }
   }
 
 }

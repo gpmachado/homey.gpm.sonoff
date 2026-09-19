@@ -28,7 +28,7 @@ class SonoffS60ZBTPF extends SonoffBase {
         this.log(`handle report (cluster: onOff, capability: onoff), parsed payload: ${value}`);
         this.setCapabilityValue('onoff', value).catch(this.error);
         // The device keeps reporting a stale non-zero power/current reading
-        // for a moment after being turned off — force both to 0 here too.
+        // for a moment after being turned off - force both to 0 here too.
         if (!value) {
           if (this.hasCapability('measure_power')) this.setCapabilityValue('measure_power', 0).catch(this.error);
           if (this.hasCapability('measure_current')) this.setCapabilityValue('measure_current', 0).catch(this.error);
@@ -38,7 +38,7 @@ class SonoffS60ZBTPF extends SonoffBase {
       _onOffCluster.on('attr.onOff', this._onOnOff);
 
       this.registerCapabilityListener('onoff', async value => {
-        this.log(`set onoff → ${value} (cluster: onOff, endpoint: 1)`);
+        this.log(`set onoff -> ${value} (cluster: onOff, endpoint: 1)`);
         if (value) return _onOffCluster.setOn({}, { waitForResponse: false });
         return _onOffCluster.setOff({}, { waitForResponse: false });
       });
@@ -46,7 +46,7 @@ class SonoffS60ZBTPF extends SonoffBase {
 
     // Live voltage/power/current are exposed via Sonoff's manufacturer-specific
     // cluster (acCurrentVoltageValue/acCurrentPowerValue/acCurrentCurrentValue),
-    // NOT the standard Electrical Measurement cluster — confirmed against
+    // NOT the standard Electrical Measurement cluster - confirmed against
     // zigbee-herdsman-converters. Raw values are milli-units (divide by 1000).
     const sonoffCluster = zclNode.endpoints[1].clusters[SonoffCluster.NAME];
     if (sonoffCluster) {
@@ -54,7 +54,7 @@ class SonoffS60ZBTPF extends SonoffBase {
         this.setCapabilityValue('measure_voltage', value / 1000).catch(this.error);
       });
       sonoffCluster.on('attr.acCurrentPowerValue', (value) => {
-        // Device keeps reporting a non-zero value after turning off — force 0.
+        // Device keeps reporting a non-zero value after turning off - force 0.
         const isOn = this.getCapabilityValue('onoff');
         this.setCapabilityValue('measure_power', isOn ? value / 1000 : 0).catch(this.error);
       });
@@ -85,7 +85,7 @@ class SonoffS60ZBTPF extends SonoffBase {
       });
     }
 
-    // Passive reports alone can be unreliable — poll actively as a fallback.
+    // Passive reports alone can be unreliable - poll actively as a fallback.
     // Same 120s base interval as the smartplug driver in nova.digital.homeyapp.
     if (this._pollInterval) this.homey.clearInterval(this._pollInterval);
     this.pollMeasurements();
@@ -131,7 +131,7 @@ class SonoffS60ZBTPF extends SonoffBase {
   }
 
   // Builds a strictly-increasing total kWh counter from the device's daily
-  // counter (which resets at midnight) — this model has no native cumulative
+  // counter (which resets at midnight) - this model has no native cumulative
   // total attribute (unlike MINI-ZB1GP/GSP's totalEnergyConsumption). Homey
   // Energy requires a cumulative meter_power that never decreases. State is
   // persisted via setStoreValue so app restarts don't lose the running total.
@@ -142,7 +142,7 @@ class SonoffS60ZBTPF extends SonoffBase {
 
     let delta;
     if (lastTodayKwh === null || lastTodayKwh === undefined) {
-      // First reading after install or app upgrade — anchor without backfilling.
+      // First reading after install or app upgrade - anchor without backfilling.
       delta = 0;
     } else if (newTodayKwh >= lastTodayKwh) {
       delta = newTodayKwh - lastTodayKwh;

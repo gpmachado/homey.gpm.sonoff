@@ -31,6 +31,7 @@ class SonoffSNZB03 extends SonoffBase {
         if (powerConfig) {
             this._absorbLateGlobalResponses(powerConfig);
             this._onBatteryPercentage ??= value => {
+                this._markSeen();
                 const pct = Math.round(value / 2);
                 this.log(`[Battery] ${pct}% (raw=${value})`);
                 this.setCapabilityValue('measure_battery', pct).catch(this.error);
@@ -71,6 +72,7 @@ class SonoffSNZB03 extends SonoffBase {
     }
 
     _handleWakeActivity(source) {
+        this._markSeen();
         this._retryEnrollAndRead().catch(err => {
             this.log('[IAS] Wake enrollment retry failed:', err.message);
         });
@@ -95,6 +97,7 @@ class SonoffSNZB03 extends SonoffBase {
     }
 
     onEndDeviceAnnounce() {
+        this._markSeen();
         this.log('Device rejoined network (End Device Announce)');
         // Retry enrollment when device wakes up. Battery is handled by
         // autonomous reports/read attempts, not configureReporting.

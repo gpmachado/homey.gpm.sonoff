@@ -8,11 +8,11 @@ const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
 const { HEARTBEAT_FAST_MS } = require('../../lib/constants');
 
 /**
- * SonoffMINIZB1GP — driver for the Sonoff MINI-ZB1GP energy meter.
+ * SonoffMINIZB1GP - driver for the Sonoff MINI-ZB1GP energy meter.
  *
  * The device's SonoffCluster (0xFC11) reportAttributes frames use a wire format
  * the zigbee-clusters auto-parser can't decode (type mismatches), so this driver
- * intercepts raw frames at the node level and parses them manually — see
+ * intercepts raw frames at the node level and parses them manually - see
  * {@link SonoffBase#_installClusterReportInterceptor}.
  */
 class SonoffMINIZB1GP extends SonoffBase {
@@ -26,14 +26,14 @@ class SonoffMINIZB1GP extends SonoffBase {
     await this._addEnergyCounterCapabilities();
     await this._syncExportedEnergyCapability();
 
-    // Standard capabilities via electricalMeasurement — device returns 0xFFFF
+    // Standard capabilities via electricalMeasurement - device returns 0xFFFF
     // but configuring reporting wakes it up periodically so SonoffCluster reports flow.
     this._registerStandardCapabilities();
 
     // Sonoff-specific settings via custom cluster
     this._registerSonoffListeners();
 
-    // Maintenance action button (Advanced Settings) — same reset as the
+    // Maintenance action button (Advanced Settings) - same reset as the
     // mini_zb1gp_reset_consumption flow card, reachable without a flow.
     if (!this.hasCapability('button.reset_consumption')) await this.addCapability('button.reset_consumption');
     this.registerCapabilityListener('button.reset_consumption', () => this._resetConsumption());
@@ -54,19 +54,13 @@ class SonoffMINIZB1GP extends SonoffBase {
     // The device resets energyToday/energyMonth internally at the day/month
     // boundary (and generally updates energy/power counters) but only
     // *reports* a new value once real consumption triggers a fresh
-    // calculation — a passive report can lag behind an actual change by
+    // calculation - a passive report can lag behind an actual change by
     // hours. Poll actively instead of waiting on reports alone. Same 120s
     // base interval as the smartplug driver in nova.digital.homeyapp.
     if (this._energyPollInterval) this.homey.clearInterval(this._energyPollInterval);
     this._energyPollInterval = this.homey.setInterval(() => {
       this.checkAttributes().catch(err => this.error('[MINI-ZB1GP] periodic poll failed:', err.message));
     }, 120_000);
-
-    // Migrate already-paired devices: driver.compose.json only applies
-    // capabilities to newly-paired devices.
-    if (!this.hasCapability('is_availability')) {
-      await this.addCapability('is_availability').catch(() => {});
-    }
 
     // Active poll runs every 120s (see above); 25 min gives a wide margin.
     this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_FAST_MS });
@@ -85,7 +79,7 @@ class SonoffMINIZB1GP extends SonoffBase {
   }
 
   // meter_power.exported only makes sense if the load/line wiring is reversed
-  // (device measures energy fed back instead of consumed) — hidden by default,
+  // (device measures energy fed back instead of consumed) - hidden by default,
   // shown only when the user opts in via the "show_exported_energy" setting.
   async _syncExportedEnergyCapability() {
     const shouldShow = Boolean(this.getSetting('show_exported_energy'));
@@ -153,7 +147,7 @@ class SonoffMINIZB1GP extends SonoffBase {
       reportOpts: {
         configureAttributeReporting: {
           minInterval: 60,
-          maxInterval: 120, // was 300s — observed ~5min lag on real hardware, testing 2min
+          maxInterval: 120, // was 300s - observed ~5min lag on real hardware, testing 2min
           minChange: 1, // 1Wh change
         },
       },
@@ -183,7 +177,7 @@ class SonoffMINIZB1GP extends SonoffBase {
 
   }
 
-  // Exported (fed-back) total — separate dedicated counter on the wire, not
+  // Exported (fed-back) total - separate dedicated counter on the wire, not
   // a sign flip of totalEnergyConsumption. Populates when the device is
   // wired for export (reversed line/load); reads 0 otherwise. Homey pairs
   // this with meter_power via energy.meterPowerExportedCapability. Only
@@ -207,7 +201,7 @@ class SonoffMINIZB1GP extends SonoffBase {
 
   /**
    * Reject the device's sentinel "no reading" values.
-   * Used for every electricalMeasurement/energy attribute this driver reads —
+   * Used for every electricalMeasurement/energy attribute this driver reads -
    * they all share the same 16-/32-bit "unset" sentinels.
    * @param {number} value - Raw or converted numeric reading.
    * @returns {boolean} True if the reading is usable.
@@ -233,7 +227,7 @@ class SonoffMINIZB1GP extends SonoffBase {
       if (this._isValidReading(value)) this.setCapabilityValue('measure_voltage', value / 1000).catch(this.error);
     };
     this._onAcPower ??= value => {
-      // acCurrentPowerValue is signed — negative means the device is
+      // acCurrentPowerValue is signed - negative means the device is
       // exporting (feeding power back), matching Homey's measure_power
       // convention. Validate the raw unsigned value against the sentinels
       // first; the converted watts value is legitimately negative on export.
@@ -291,7 +285,7 @@ class SonoffMINIZB1GP extends SonoffBase {
       if (Object.keys(settings).length) this.setSettings(settings).catch(this.error);
     });
 
-    // Energy reads — manufacturer-specific (mfrCode 0x1286)
+    // Energy reads - manufacturer-specific (mfrCode 0x1286)
     // zigbee-clusters v2+ requires an array as first argument to readAttributes
     this.log('[MINI-ZB1GP] checkAttributes: attempting mfr read...');
     const sonoffCluster = this.zclNode.endpoints[1].clusters[SonoffCluster.NAME];
