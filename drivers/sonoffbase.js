@@ -3,7 +3,7 @@
 const { ZigBeeDevice } = require('homey-zigbeedriver');
 const { CLUSTER } = require('zigbee-clusters');
 const { writeAttributesVerbose, installNamedLogging } = require('../lib/zclDebug');
-const { DEBUG_LEVEL } = require('../lib/constants');
+const { ZCL_DEBUG } = require('../lib/constants');
 const ActivePoll = require('../lib/ActivePoll');
 
 /**
@@ -25,7 +25,7 @@ class SonoffBase extends ZigBeeDevice {
     this.log(`NodeInit SonoffBase: ${this.getName()}`);
     options = options || {};
 
-    if (DEBUG_LEVEL >= 2) {
+    if (ZCL_DEBUG) {
       this.enableDebug();
     }
     this.printNode();

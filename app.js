@@ -4,7 +4,7 @@ const Homey = require('homey');
 const { Cluster, TimeCluster, debug } = require('zigbee-clusters');
 const SonoffCluster = require('./lib/SonoffCluster');
 const SonoffOnOffCluster = require('./lib/SonoffOnOffCluster');
-const { DEBUG_LEVEL } = require('./lib/constants');
+const { ZCL_DEBUG } = require('./lib/constants');
 
 module.exports = class MyApp extends Homey.App {
 
@@ -12,9 +12,8 @@ module.exports = class MyApp extends Homey.App {
    * onInit is called when the app is initialized.
    */
   async onInit() {
-    // Raw ZCL frame dumps follow the single DEBUG key in env.json (level 2, see
-    // lib/constants.js) - the only switch, nothing to edit here.
-    debug(DEBUG_LEVEL >= 2);
+    // zigbee-clusters frame dumps follow the single ZCL_DEBUG switch in lib/constants.js.
+    debug(ZCL_DEBUG);
 
     // Must run before any device's onNodeInit - registers SonoffCluster
     // (0xFC11) globally so zclNode.endpoints[1].clusters['SonoffCluster']
