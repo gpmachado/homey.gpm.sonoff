@@ -34,7 +34,8 @@ const REPORTING = {
 
 /**
  * Shared base for the SNZB-04P and SNZB-04PR2 door/window sensors (identical
- * behaviour, only the driver id differs). Sleepy IAS Zone end-device with no
+ * behaviour, only the driver id differs) and the SNZB-05P water leak sensor (same
+ * IAS Zone + battery reporting, no tamper). Sleepy IAS Zone end-device with no
  * confirmed heartbeat, so no availability tracking here.
  */
 class DoorWindowSensor extends SonoffBase {
@@ -83,10 +84,12 @@ class DoorWindowSensor extends SonoffBase {
         // No `get`/getOpts either: the attribute always answers
         // UNSUPPORTED_ATTRIBUTE, so a getOnStart/getOnOnline read would just fail
         // every time. The passive `report` listener is the only mechanism that works.
-        this.registerCapability('alarm_tamper', SonoffCluster, {
-            report: 'tamper',
-            reportParser: value => { this._markSeen(); return Boolean(value); },
-        });
+        if (this.hasCapability('alarm_tamper')) {
+            this.registerCapability('alarm_tamper', SonoffCluster, {
+                report: 'tamper',
+                reportParser: value => { this._markSeen(); return Boolean(value); },
+            });
+        }
 
         this.log(`${this.driver.id} initialized`);
     }

@@ -1,0 +1,50 @@
+{
+  "id": "SNZB-05P",
+  "name": {
+    "en": "Water Leak Sensor SNZB-05P",
+    "es": "Sensor de fugas de agua SNZB-05P",
+    "it": "Sensore di perdite d'acqua SNZB-05P",
+    "de": "Wasserleck-Sensor SNZB-05P"
+  },
+  "class": "sensor",
+  "capabilities": [
+    "alarm_water",
+    "alarm_battery",
+    "measure_battery"
+  ],
+  "energy": {
+    "batteries": [
+      "CR2477"
+    ]
+  },
+  "icon": "{{driverAssetsPath}}/icon.svg",
+  "zigbee": {
+    "manufacturerName": [
+      "SONOFF"
+    ],
+    "productId": [
+      "SNZB-05P"
+    ],
+    "endpoints": {
+      "1": {
+        "clusters": [
+          1,
+          1280
+        ],
+        "bindings": []
+      }
+    },
+    "learnmode": {
+      "image": "{{driverAssetsPath}}/learn.svg",
+      "instruction": {
+        "en": "Press the button inside the device for approx 10 seconds until the red LED starts blinking.",
+        "es": "Pulsa el botón dentro del dispositivo durante aprox. 10 segundos hasta que el LED rojo empiece a parpadear.",
+        "it": "Premi il pulsante all'interno del dispositivo per circa 10 secondi fino a quando il LED rosso inizia a lampeggiare.",
+        "de": "Drücke die Taste im Gerät ca. 10 Sekunden, bis die rote LED zu blinken beginnt."
+      }
+    }
+  },
+  "$extends": [
+    "zigbee-local"
+  ]
+}

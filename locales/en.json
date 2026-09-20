@@ -35,7 +35,7 @@
     "sort_current_hour": "Most messages - current hour",
     "sort_previous_hour": "Most messages - previous hour",
     "sort_recent": "Most recent activity",
-    "footnote": "\"Frames\" are raw Zigbee messages (mains-powered devices). \"Activity\" represents explicit callbacks from battery/sleepy sensors. Data is persisted at most once every five minutes. Devices without a heartbeat (SNZB-03, SNZB-04P, SNZB-04PR2, SNZB-09P, MINI-ZBD...) are counted in \"installed\" but have no traffic row.",
+    "footnote": "\"Frames\" are raw Zigbee messages (mains-powered devices). \"Activity\" represents explicit callbacks from battery/sleepy sensors. Data is persisted at most once every five minutes. Devices without a heartbeat (SNZB-03, SNZB-04P, SNZB-04PR2, SNZB-05P, SNZB-09P, MINI-ZBD...) are counted in \"installed\" but have no traffic row.",
     "rejoins": "Rejoins",
     "rejoins_since": "Tracked since",
     "reset_rejoins": "Reset rejoins",
