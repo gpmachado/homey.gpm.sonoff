@@ -7,14 +7,36 @@
     "de": "Tür-/Fenstersensor SNZB-04PR2"
   },
   "class": "sensor",
-  "capabilities": ["alarm_contact", "alarm_tamper", "measure_battery"],
-  "energy": { "batteries": ["CR2477"] },
+  "capabilities": [
+    "alarm_contact",
+    "alarm_tamper",
+    "measure_battery"
+  ],
+  "energy": {
+    "batteries": [
+      "CR2477"
+    ]
+  },
   "icon": "{{driverAssetsPath}}/icon.svg",
   "zigbee": {
-    "manufacturerName": ["SONOFF"],
-    "productId": ["SNZB-04PR2"],
+    "manufacturerName": [
+      "SONOFF"
+    ],
+    "productId": [
+      "SNZB-04PR2"
+    ],
     "endpoints": {
-      "1": { "clusters": [1, 1280, 64529], "bindings": [] }
+      "1": {
+        "clusters": [
+          1,
+          32,
+          1280,
+          64529
+        ],
+        "bindings": [
+          32
+        ]
+      }
     },
     "learnmode": {
       "image": "{{driverAssetsPath}}/learn.svg",
@@ -26,5 +48,7 @@
       }
     }
   },
-  "$extends": ["zigbee-local"]
+  "$extends": [
+    "zigbee-local"
+  ]
 }

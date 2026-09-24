@@ -5,13 +5,17 @@ const { CLUSTER } = require('zigbee-clusters');
 const SonoffCluster = require('../lib/SonoffCluster');
 const { writeAttributesVerbose } = require('../lib/zclDebug');
 const { AvailabilityManagerCallback } = require('../lib/AvailabilityManager');
-const { HEARTBEAT_SLOW_MS } = require('../lib/constants');
+const { HEARTBEAT_MEDIUM_MS } = require('../lib/constants');
+const { bindPollControl } = require('../lib/pollControlHeartbeat');
 
 /**
  * Shared base for the SNZB-02LD (temperature only) and SNZB-02WD
  * (temperature + humidity) drivers. Humidity support is auto-detected from
  * the cluster list, so the same code serves both models.
  */
+// At most one re-sync per this long, counted from the last successful one.
+const RESYNC_MIN_INTERVAL_MS = 3 * 60 * 60 * 1000;
+
 class TempHumiditySensor extends SonoffBase {
 
     async onNodeInit({ zclNode }) {
@@ -49,24 +53,40 @@ class TempHumiditySensor extends SonoffBase {
             humidityCluster.on('attr.measuredValue', this._onHumidityReport);
         }
 
+        // Heartbeat: a Device Announce every ~29 min (field log, 8 h: 1739-1743 s apart,
+        // the device's checkInInterval) plus temperature reports, so 90 min = ~3 cycles.
         // Battery/sleepy end device - no handleFrame-based passive tracking
         // (see AvailabilityManagerPassive's doc). notifyActivity is called
         // explicitly from the temperature/humidity report handlers below and
         // from onEndDeviceAnnounce, since a temperature/humidity report is
         // the actual proof this device is alive and reporting normally.
-        this._availability = new AvailabilityManagerCallback(this, { timeout: HEARTBEAT_SLOW_MS });
+        this._availability = new AvailabilityManagerCallback(this, { timeout: HEARTBEAT_MEDIUM_MS });
         await this._availability.install();
+
+        bindPollControl(this);
 
         this.log(`${this.driver.id} initialized`);
     }
 
     // A battery pull/rejoin resets the device's own calibration back to 0 -
     // reconfigure reporting and re-write the stored offset so it isn't lost.
+    // The device also announces itself every ~29 min as a heartbeat, and it is asleep
+    // again by the time the requests go out (a third of them failed, with [err] stacks):
+    // re-sync at most every RESYNC_MIN_INTERVAL_MS, retry on the next announce if it failed.
     async onEndDeviceAnnounce() {
-        this.log('endDeviceAnnounce - re-syncing reporting config and calibration');
         this._markAliveFromAvailability?.('rejoin');
-        await this._configureReporting().catch(err => this.error('Failed to re-configure reporting on rejoin', err));
-        await this._reassertCalibration().catch(err => this.error('Failed to reassert calibration on rejoin', err));
+        if (Date.now() - (this._lastResyncAt ?? 0) < RESYNC_MIN_INTERVAL_MS) {
+            this.log('endDeviceAnnounce - heartbeat, re-sync not due');
+            return;
+        }
+        this.log('endDeviceAnnounce - re-syncing reporting config and calibration');
+        try {
+            await this._configureReporting();
+            await this._reassertCalibration();
+            this._lastResyncAt = Date.now();
+        } catch (err) {
+            this.log('Re-sync after announce failed (device asleep?), retrying on a later announce:', err.message);
+        }
     }
 
     async _configureReporting() {

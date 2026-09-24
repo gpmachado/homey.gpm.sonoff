@@ -14,7 +14,7 @@
     "manufacturerName": ["eWeLink"],
     "productId": ["SNZB-04P"],
     "endpoints": {
-      "1": { "clusters": [1, 1280, 64529], "bindings": [] }
+      "1": { "clusters": [1, 32, 1280, 64529], "bindings": [32] }
     },
     "learnmode": {
       "image": "{{driverAssetsPath}}/learn.svg",

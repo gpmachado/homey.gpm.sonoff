@@ -4,6 +4,7 @@ const Homey = require('homey');
 const { Cluster, TimeCluster, debug } = require('zigbee-clusters');
 const SonoffCluster = require('./lib/SonoffCluster');
 const SonoffOnOffCluster = require('./lib/SonoffOnOffCluster');
+const SonoffPollControlCluster = require('./lib/SonoffPollControlCluster');
 const { ZCL_DEBUG } = require('./lib/constants');
 
 module.exports = class MyApp extends Homey.App {
@@ -29,6 +30,10 @@ module.exports = class MyApp extends Homey.App {
     // powerOnBehavior attribute - must run before any device's onNodeInit,
     // same as SonoffCluster above.
     Cluster.addCluster(SonoffOnOffCluster);
+
+    // Overrides the built-in Poll Control cluster (0x0020) with the check-in
+    // commands it lacks (SNZB-04PR2 hourly check-in) - same timing as above.
+    Cluster.addCluster(SonoffPollControlCluster);
 
     this.log('MyApp has been initialized');
 
