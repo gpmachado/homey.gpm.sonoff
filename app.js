@@ -52,25 +52,6 @@ module.exports = class MyApp extends Homey.App {
         return true;
       });
 
-    // SNZB-09P siren flow cards.
-    this.homey.flow.getActionCard('siren_play')
-      .registerRunListener(async (args) => {
-        await args.device._startSiren({
-          soundType: parseInt(args.sound_type, 10),
-          duration: args.duration,
-        });
-        return true;
-      });
-
-    this.homey.flow.getActionCard('siren_stop')
-      .registerRunListener(async (args) => {
-        await args.device._stopSiren();
-        return true;
-      });
-
-    this.homey.flow.getConditionCard('is_playing')
-      .registerRunListener(async (args) => Boolean(args.device.getCapabilityValue('onoff')));
-
   }
 
 };
