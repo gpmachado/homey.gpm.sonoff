@@ -4,6 +4,7 @@ const SonoffCluster = require('../../lib/SonoffCluster');
 const { Cluster, CLUSTER, BoundCluster } = require('zigbee-clusters');
 const SonoffBase = require('../sonoffbase');
 const RejoinManager = require('../../lib/RejoinManager');
+const { writeAttributesVerbose } = require('../../lib/zclDebug');
 
 // Handles external switch commands (detach_mode) sent directly to the hub
 class MyOnOffBoundCluster extends BoundCluster {
@@ -155,7 +156,7 @@ class SonoffMINIZBD extends SonoffBase {
     async onSettings({ oldSettings, newSettings, changedKeys }) {
         if (changedKeys.includes("power_on_behavior")) {
             try {
-                await this.zclNode.endpoints[1].clusters.onOff.writeAttributes({ powerOnBehavior: newSettings.power_on_behavior });
+                await writeAttributesVerbose(this, this.zclNode.endpoints[1].clusters.onOff, { powerOnBehavior: newSettings.power_on_behavior });
             } catch (error) {
                 this.log("Error updating the power on behavior:", error.message);
             }

@@ -114,6 +114,8 @@ class SonoffBase extends ZigBeeDevice {
   }
 
   // Read one or more attributes with exponential backoff + jitter retry.
+  // readAttribute/writeAttributes target this._endpointId (default 1) - set by
+  // multi-gang drivers whose sub-devices live on another endpoint.
   async readAttribute(cluster, attr, handler, maxRetries = 3, baseDelay = 3000) {
     if ('NAME' in cluster) cluster = cluster.NAME;
     if (!Array.isArray(attr)) attr = [attr];
@@ -121,7 +123,7 @@ class SonoffBase extends ZigBeeDevice {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         this.log('Ask attribute', attr);
-        const value = await this.zclNode.endpoints[1].clusters[cluster].readAttributes(attr);
+        const value = await this.zclNode.endpoints[this._endpointId ?? 1].clusters[cluster].readAttributes(attr);
         this.log('Got attr', attr, value);
         handler(value);
         return;
@@ -150,7 +152,7 @@ class SonoffBase extends ZigBeeDevice {
     let items = {};
     try {
       if ('NAME' in cluster) cluster = cluster.NAME;
-      const clust = this.zclNode.endpoints[1].clusters[cluster];
+      const clust = this.zclNode.endpoints[this._endpointId ?? 1].clusters[cluster];
       items = {};
       for (const key in attribs) {
         if (filter && !filter.includes(key)) continue;

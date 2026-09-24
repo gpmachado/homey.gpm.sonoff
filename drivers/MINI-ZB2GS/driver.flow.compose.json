@@ -1,0 +1,23 @@
+{
+  "triggers": [
+    {
+      "$extends": "device_rejoined",
+      "$id": "MINI-ZB2GS_device_rejoined"
+    },
+    {
+      "id": "MINI-ZB2GS:click",
+      "title": {
+        "en": "Single click",
+        "de": "Einzelklick",
+        "es": "Pulsación única",
+        "it": "Pressione singola"
+      },
+      "hint": {
+        "en": "This trigger fires when this channel's physical switch is pressed and the 'Detach Relay' setting is enabled.",
+        "de": "Dieser Auslöser wird aktiviert, wenn der physische Schalter dieses Kanals gedrückt wird und die Einstellung 'Relais trennen' aktiviert ist.",
+        "es": "Este disparador se activa cuando se pulsa el interruptor físico de este canal y la opción 'Separar relé' está activada.",
+        "it": "Questo trigger si attiva quando l'interruttore fisico di questo canale viene premuto e l'impostazione 'Scollega relè' è abilitata."
+      }
+    }
+  ]
+}
