@@ -7,6 +7,12 @@ const { SonoffTimeServerBoundCluster } = require('../../lib/TimeCluster');
 const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
 const { HEARTBEAT_FAST_MS } = require('../../lib/constants');
 
+// zigbee-herdsman-converters faultCodeMiniZb1gsp({hasSwitch: false}) bit map.
+const FAULT_BITS = {
+  'alarm_generic.metering_error': 0b010,
+  'alarm_generic.overload_protection': 0b100,
+};
+
 /**
  * SonoffMINIZB1GP - driver for the Sonoff MINI-ZB1GP energy meter.
  *
@@ -25,6 +31,7 @@ class SonoffMINIZB1GP extends SonoffBase {
     // Add the new counters explicitly so users do not need to pair again.
     await this._addEnergyCounterCapabilities();
     await this._syncExportedEnergyCapability();
+    await this._addFaultCapabilities();
 
     // Standard capabilities via electricalMeasurement - device returns 0xFFFF
     // but configuring reporting wakes it up periodically so SonoffCluster reports flow.
@@ -67,6 +74,32 @@ class SonoffMINIZB1GP extends SonoffBase {
     await this._availability.install();
 
     this.log('[MINI-ZB1GP] energy meter driver ready');
+  }
+
+  // Fault code (0x0010): the metering-communication-error and overload-protection bits
+  // that the z2m/ZHA "Metering communication error" / "Electrical Status" entities show.
+  // Existing paired devices keep their capability list, so add them explicitly.
+  async _addFaultCapabilities() {
+    for (const capability of Object.keys(FAULT_BITS)) {
+      if (!this.hasCapability(capability)) await this.addCapability(capability);
+    }
+  }
+
+  /**
+   * The value is a TLV in the top bytes (type 0x07, length 0x02, seen as 0x0702xxxx on this
+   * unit) with the fault bits in the low 16 bits. Anything else is ignored. The overheat
+   * bit (0b001) is not used: this model has no relay.
+   */
+  _handleFaultCode(value) {
+    if (!Number.isFinite(value)) return;
+    const tlv = value >>> 0;
+    if (((tlv >>> 24) & 0xff) !== 0x07 || ((tlv >>> 16) & 0xff) !== 0x02) return;
+    const faults = tlv & 0xffff;
+    for (const [capability, bit] of Object.entries(FAULT_BITS)) {
+      if (this.hasCapability(capability)) {
+        this.setCapabilityValue(capability, (faults & bit) !== 0).catch(this.error);
+      }
+    }
   }
 
   async _addEnergyCounterCapabilities() {
@@ -252,7 +285,11 @@ class SonoffMINIZB1GP extends SonoffBase {
       if (this._isValidReading(value)) this.setCapabilityValue('meter_power.month', value / 1000).catch(this.error);
     };
 
+    this._onFaultCode ??= value => this._handleFaultCode(value);
+
     cluster.removeListener('attr.network_led', this._onNetworkLed);
+    cluster.removeListener('attr.fault_code', this._onFaultCode);
+    cluster.on('attr.fault_code', this._onFaultCode);
     cluster.on('attr.network_led', this._onNetworkLed);
     cluster.removeListener('attr.TurboMode', this._onTurboMode);
     cluster.on('attr.TurboMode', this._onTurboMode);
@@ -295,11 +332,12 @@ class SonoffMINIZB1GP extends SonoffBase {
           [
             'acCurrentVoltageValue', 'acCurrentPowerValue', 'acCurrentCurrentValue',
             'energyToday', 'energyMonth', 'totalEnergyConsumption',
-            'totalOutputEnergyConsumption',
+            'totalOutputEnergyConsumption', 'fault_code',
           ],
           { manufacturerCode: 0x1286 }
         );
         this.log('[MINI-ZB1GP] SonoffCluster energy (mfr):', energy);
+        if (energy.fault_code !== undefined) this._handleFaultCode(energy.fault_code);
         if (energy.acCurrentVoltageValue !== undefined && this._isValidReading(energy.acCurrentVoltageValue)) {
           this.setCapabilityValue('measure_voltage', energy.acCurrentVoltageValue / 1000).catch(() => {});
         }

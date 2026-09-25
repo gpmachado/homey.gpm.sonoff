@@ -13,7 +13,7 @@ Requires Homey firmware `>=12.4.0`.
 | ZBMINI | ZBMINI switch | tested |
 | ZBMINIR2 | ZBMINI-R2 switch | tested; power-cut trigger; TurboMode setting |
 | MINI-ZBD | MINI-ZBD dry contact | tested; power-cut trigger |
-| MINI-ZB1GP | Energy meter (no relay) | tested; power, voltage, current, energy today/month, reset button |
+| MINI-ZB1GP | Energy meter (no relay) | tested; power, voltage, current, energy today/month, reset button, metering-error and overload alarms |
 | MINI-ZB2GS | 2-gang switch | tested; each channel is its own Homey device |
 | BASICZBR3 | Basic ZBR3 switch | tested |
 | SNZB-02WD | Temperature and humidity sensor | tested |

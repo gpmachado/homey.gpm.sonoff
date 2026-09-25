@@ -439,7 +439,9 @@
         "meter_power.month",
         "measure_current",
         "measure_voltage",
-        "button.reset_consumption"
+        "button.reset_consumption",
+        "alarm_generic.metering_error",
+        "alarm_generic.overload_protection"
       ],
       "capabilitiesOptions": {
         "meter_power.today": {
@@ -464,6 +466,16 @@
           },
           "desc": {
             "en": "Resets the device's total energy counter to zero."
+          }
+        },
+        "alarm_generic.metering_error": {
+          "title": {
+            "en": "Metering communication error"
+          }
+        },
+        "alarm_generic.overload_protection": {
+          "title": {
+            "en": "Electrical status (overload protection)"
           }
         }
       },
