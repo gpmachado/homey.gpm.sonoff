@@ -4,7 +4,7 @@ const SonoffBase = require('./sonoffbase');
 const SonoffCluster = require('../lib/SonoffCluster');
 const IASZoneHelper = require('../lib/IASZoneHelper');
 const { CLUSTER } = require('zigbee-clusters');
-const { bindPollControl } = require('../lib/pollControlHeartbeat');
+const { bindPollControl, retryPollControlIfPending } = require('../lib/pollControlHeartbeat');
 const { AvailabilityManagerCallback } = require('../lib/AvailabilityManager');
 
 // Sniffer-confirmed (snzb04p-pareamento.pcapng, frames 313-315 & 372-374):
@@ -90,7 +90,7 @@ class DoorWindowSensor extends SonoffBase {
             readInitialState: true,
             configureCieAddress: false,
             onStatus: zoneStatus => this._zoneStatusChangeNotification(zoneStatus),
-            onActivity: () => { this._markSeen(); this._retryPendingReporting(); },
+            onActivity: () => { this._markSeen(); this._retryPendingReporting(); retryPollControlIfPending(this); },
         });
         await this._iasZone.init(zclNode);
 
@@ -167,6 +167,7 @@ class DoorWindowSensor extends SonoffBase {
 
     onEndDeviceAnnounce() {
         this._markSeen();
+        retryPollControlIfPending(this);
         // The SNZB-04P announces itself every 60 min as its heartbeat (field log, 8 h:
         // 3600 s apart), and a real rejoin (battery pull) looks the same. Resending the
         // whole reporting config at every announce is wasteful, so redo it at most every

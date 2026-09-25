@@ -6,7 +6,7 @@ const SonoffCluster = require('../lib/SonoffCluster');
 const { writeAttributesVerbose } = require('../lib/zclDebug');
 const { AvailabilityManagerCallback } = require('../lib/AvailabilityManager');
 const { HEARTBEAT_MEDIUM_MS } = require('../lib/constants');
-const { bindPollControl } = require('../lib/pollControlHeartbeat');
+const { bindPollControl, retryPollControlIfPending } = require('../lib/pollControlHeartbeat');
 
 /**
  * Shared base for the SNZB-02LD (temperature only) and SNZB-02WD
@@ -75,6 +75,7 @@ class TempHumiditySensor extends SonoffBase {
     // re-sync at most every RESYNC_MIN_INTERVAL_MS, retry on the next announce if it failed.
     async onEndDeviceAnnounce() {
         this._markAliveFromAvailability?.('rejoin');
+        retryPollControlIfPending(this);
         if (Date.now() - (this._lastResyncAt ?? 0) < RESYNC_MIN_INTERVAL_MS) {
             this.log('endDeviceAnnounce - heartbeat, re-sync not due');
             return;
@@ -168,6 +169,7 @@ class TempHumiditySensor extends SonoffBase {
 
     onTemperatureMeasuredAttributeReport(measuredValue) {
         this._markAliveFromAvailability?.('temperature');
+        retryPollControlIfPending(this);
         const parsedValue = this._parseReportedValue(measuredValue, 'temperature_decimals');
         this.setCapabilityValue('measure_temperature', parsedValue).catch(this.error);
     }
