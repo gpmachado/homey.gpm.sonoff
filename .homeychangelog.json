@@ -15,9 +15,12 @@
     "en": "SNZP04PR2 fix"
   },
   "1.0.5": {
-    "en": "Availability tracking for mains-powered devices (ZBMINI, ZBMINIR2, MINI-ZB1GP/GSP, SNZB-06P, Zigbee Dongle E/P) and for the battery sensors (SNZB-02LD/WD, SNZB-04P/PR2), using each sensor's own heartbeat, with a Traffic and Rejoins overview in the app settings. New devices: MINI-ZB2GS 2-gang switch, SNZB-05P water leak sensor and SNZB-09P siren. SNZB-04P battery reporting and SNZB-06P fixes. Re-pair the SNZB-04P/04PR2 and SNZB-02LD/WD to enable the Poll Control heartbeat."
+    "en": "Availability tracking for mains-powered devices (ZBMINI, ZBMINIR2, MINI-ZB1GP/GSP, SNZB-06P, Zigbee Dongle E/P), with a Traffic and Rejoins overview in the app settings. New devices: MINI-ZB2GS 2-gang switch, SNZB-05P water leak sensor and SNZB-09P siren. SNZB-04P battery reporting and SNZB-06P fixes."
   },
   "1.0.6": {
-    "en": "Fix icons"
+    "en": "Fix icons. Availability tracking for the battery sensors (SNZB-02LD/WD, SNZB-04P/PR2), using each sensor's own heartbeat."
+  },
+  "1.0.7": {
+    "en": "Battery sensors: if a SNZB-04P/04PR2 or SNZB-02LD/WD shows as unavailable while idle, remove and re-pair it. MINI-ZB1GP: metering-error and overload alarms. BASICZBR3: availability tracking. Poll Control read is retried when the sensor wakes. Removed the MINI-ZB1GSP, SNZB-05P, SNZB-09P and S60ZBTPF drivers (no hardware to test them)."
   }
 }
