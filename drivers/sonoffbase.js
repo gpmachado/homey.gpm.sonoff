@@ -121,21 +121,30 @@ class SonoffBase extends ZigBeeDevice {
     if (!Array.isArray(attr)) attr = [attr];
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      let value;
       try {
         this.log('Ask attribute', attr);
-        const value = await this.zclNode.endpoints[this._endpointId ?? 1].clusters[cluster].readAttributes(attr);
+        value = await this.zclNode.endpoints[this._endpointId ?? 1].clusters[cluster].readAttributes(attr);
         this.log('Got attr', attr, value);
-        handler(value);
-        return;
       } catch (e) {
         if (attempt < maxRetries) {
           const delay = baseDelay * Math.pow(2, attempt) * (0.5 + Math.random()); // jitter +/-50%
           this.log(`Retry read attr ${attr} in ${Math.round(delay / 1000)}s (attempt ${attempt + 1}/${maxRetries})`);
           await new Promise(r => this.homey.setTimeout(r, delay));
-        } else {
-          this.log('Device unreachable - attr read skipped:', attr);
+          continue;
         }
+        this.log('Device unreachable - attr read skipped:', attr);
+        return;
       }
+
+      // The read succeeded: an error in the caller's handler is not a radio failure and
+      // must not trigger another read.
+      try {
+        handler(value);
+      } catch (e) {
+        this.error('Read handler failed for', attr, e.message);
+      }
+      return;
     }
   }
 
@@ -143,7 +152,7 @@ class SonoffBase extends ZigBeeDevice {
   async writeAttribute(cluster, attr, value) {
     const data = {};
     data[attr] = value;
-    this.writeAttributes(cluster, data);
+    return this.writeAttributes(cluster, data);
   }
 
   // Write multiple attributes, silently dropping any key the cluster doesn't

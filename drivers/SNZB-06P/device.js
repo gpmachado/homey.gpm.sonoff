@@ -47,7 +47,8 @@ class SonoffSNZB06P extends SonoffBase {
     occCluster.removeListener('attr.occupancy', this._onOccupancyReport);
     occCluster.on('attr.occupancy', this._onOccupancyReport);
 
-    // Defer initial read until device wakes up (it reports on first occupancy)
+    // Read the settings shortly after init, once the node is ready. The device is USB-powered
+    // and always listening, so there is no wake window to wait for; a failure is retried later.
     this._settingsReadTimer = this.homey.setTimeout(() => {
       this._readSettings().catch(error => {
         this.log('[SNZB06P] Initial settings read deferred:', error.message);

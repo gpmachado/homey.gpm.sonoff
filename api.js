@@ -138,7 +138,15 @@ module.exports = {
       }
     }
 
-    await Promise.allSettled(writes);
+    const results = await Promise.allSettled(writes);
+    const failures = results.filter(result => result.status === 'rejected');
+
+    if (failures.length > 0) {
+      throw new Error(
+        `Failed to reset ${failures.length} of ${results.length} rejoin counters`,
+      );
+    }
+
     homey.settings.set('rejoin_tracking_since', Date.now());
 
     return { since: homey.settings.get('rejoin_tracking_since') };
