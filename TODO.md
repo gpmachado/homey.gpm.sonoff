@@ -104,7 +104,10 @@ undercount the Traffic tab (a swallower ahead of `AVAILABILITY` hides frames fro
   indicator off, TurboMode on - caused zero false rejoins, and a later real power cut on two ZBMINIR2 sharing a
   circuit fired the trigger once per device, no duplicates, no interference with the other 28 devices running).
   ZBMINIR2's own ACK-drop (cmdId 0x0B) moved to a small handler at `FRAME_PRIORITY.CLUSTER_REPORT`.
-  MINI-ZBD and MINI-ZB2GS still carry their own separate inline copy - not migrated yet, see below.
+  MINI-ZBD got the exact same migration, plus availability tracking and an active poll it never had (same firmware
+  as the ZBMINIR2 - z2m lists MINI-ZBD as a white-label of the same device definition - so the same tier applies);
+  **not yet confirmed on a real MINI-ZBD unit** (the user testing has none; a friend who owns one will test later).
+  MINI-ZB2GS still carries its own separate inline copy - not migrated yet, see below.
 - `lib/availabilityHooks.js`'s inbound hook (every driver using `AvailabilityManagerPassive`) runs on it at
   `FRAME_PRIORITY.AVAILABILITY`; the outbound `sendFrame` hook is untouched, a different function outside
   FrameMiddleware's scope. `_originalHandleFrame`/`_substituteHandleFrame` are gone, the middleware owns that
@@ -146,8 +149,11 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
 
 - Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
   300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
-  A shared base (onOff wiring, reporting, rejoin, availability) would remove most of that, but needs the same
-  hardware pass (partida, power cut, removal, restart) on all three before landing. Not started.
+  Confirmed why: it is the same firmware (MINI-ZBD is a white-label of the ZBMINIR2 in z2m's own device database),
+  kept as separate Homey drivers on purpose, for a distinct icon and name per model in the app - a shared base must
+  keep the driver folders (and their `driver.compose.json`/icons) separate and only share the `device.js` logic
+  (a common superclass or mixin), not merge them into one driver with several product IDs. Needs the same hardware
+  pass (partida, power cut, removal, restart) on all three before landing. Not started.
 - Availability on/off switch as a global app setting (design agreed, not implemented): stop marking devices
   unavailable when off, keep the Traffic and Rejoins statistics, restore devices to available when switched
   off, and do not fire the availability flow cards on the switch.

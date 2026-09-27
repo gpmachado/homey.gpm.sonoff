@@ -5,6 +5,10 @@ const { Cluster, CLUSTER, BoundCluster } = require('zigbee-clusters');
 const SonoffBase = require('../sonoffbase');
 const RejoinManager = require('../../lib/RejoinManager');
 const { writeAttributesVerbose } = require('../../lib/zclDebug');
+const { installRejoinDetection } = require('../../lib/rejoinDetection');
+const { FrameMiddleware, FRAME_PRIORITY } = require('../../lib/FrameMiddleware');
+const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
+const { HEARTBEAT_MEDIUM_MS } = require('../../lib/constants');
 
 // Handles external switch commands (detach_mode) sent directly to the hub
 class MyOnOffBoundCluster extends BoundCluster {
@@ -101,58 +105,43 @@ class SonoffMINIZBD extends SonoffBase {
 
         this.zclNode.endpoints[1].bind(CLUSTER.ON_OFF.NAME, new MyOnOffBoundCluster(this));
 
-        // Unified handleFrame hook (node-level: frame is a raw Buffer, not a parsed object).
-        //   ZCL frame layout (non-manufacturer-specific): [frameCtrl, seqNum, cmdId, ...payload]
-        //   ZCL frame layout (manufacturer-specific):     [frameCtrl, mfrLo, mfrHi, seqNum, cmdId, ...payload]
-        //   Bit 2 of frameCtrl = manufacturer-specific flag.
-        //
-        //   1. Filter Sonoff ACK frames (cmdId 0x0B, mfr-specific) that zigbee-clusters can't route
-        //      via BoundCluster. Covers: SonoffCluster inching ACK and stray defaultResponse on onOff.
-        //   2. Track OnOff (0x0006) Report Attributes timestamp - boot-dump corroborator.
-        //   3. Rejoin detection: 0xFC11 Report Attributes + 0x0006 Report Attributes within 200ms.
-        //      On power restore both clusters report together (sniffer confirmed: ~8ms apart).
-        //      Periodic 0xFC11 heartbeats arrive without a 0x0006 companion -> no false positive.
-        this._onOffReportTs = 0; // timestamp of last 0x0006 Report Attributes (boot-dump corroborator)
-        // Guarded against re-installing on re-init: this.node can be reused by the
-        // framework across an onNodeInit re-run, and wrapping handleFrame again on
-        // the same node would stack interceptors indefinitely (see SonoffBase#_installClusterReportInterceptor).
-        if (this.node._minizbdFrameHookInstalled) {
-            this.log('[MINI-ZBD] handleFrame hook already installed (shared node)');
-        } else {
-            this.node._minizbdFrameHookInstalled = true;
-            const _hook = this.node.handleFrame.bind(this.node);
-            this.node.handleFrame = (...args) => {
-                const [, clusterId, frame] = args;
-                const _now = Date.now();
-                if (Buffer.isBuffer(frame) && frame.length >= 3) {
-                    const mfrSpecific = frame[0] & 0x04;
-                    const cmdId = mfrSpecific ? (frame.length >= 5 ? frame[4] : -1) : frame[2];
-                    // 1. Drop Sonoff manufacturer ACK (0x0B) - prevents unknown_command_received errors
-                    if (cmdId === 0x0B && (clusterId === SonoffCluster.ID || clusterId === 6)) return Promise.resolve();
-                    if (cmdId === 0x0A && !mfrSpecific) {
-                        // 2. Record OnOff (0x0006) report time - used to corroborate FC11 boot dump
-                        if (clusterId === 6) {
-                            this._onOffReportTs = _now;
-                        }
-                        // 3. Fire rejoin only when 0xFC11 0x0A is paired with a recent 0x0006 0x0A.
-                        //    Sniffer: real boot dump has 0x0006 arriving ~8ms before 0xFC11.
-                        //    Heartbeat: 0xFC11 arrives alone (gap >> 200ms) -> suppressed.
-                        else if (clusterId === SonoffCluster.ID) {
-                            if ((_now - this._onOffReportTs) < 200 && _now - (this._lastSonoffWriteAt ?? 0) >= 30_000) {
-                                this._notifyRejoin();
-                            }
-                        }
-                    }
-                }
-                return _hook(...args);
-            };
-        }
+        // Power-cut detection: OnOff report + SonoffCluster report within 200 ms (sniffer confirmed:
+        // ~8ms apart on real boot dumps; periodic 0xFC11 heartbeats arrive alone, gap >> 200ms).
+        // Shared helper (lib/FrameMiddleware.js, FRAME_PRIORITY.REJOIN). The write guard reproduces
+        // the old inline hook's behaviour exactly: a settings write's own report burst can otherwise
+        // match the same pattern, so a match within 30 s of our last write is ignored - checked
+        // before the module's own cooldown is touched, so that false match never consumes it.
+        installRejoinDetection(this, {
+            sonoffClusterId: SonoffCluster.ID,
+            windowMs: 200,
+            cooldownMs: 30_000,
+            writeGuardMs: 30_000,
+            getLastWriteAt: () => this._lastSonoffWriteAt ?? 0,
+        });
+
+        // Drop Sonoff manufacturer ACK (cmdId 0x0B) that zigbee-clusters cannot route via
+        // BoundCluster (inching ACK on 0xFC11, stray defaultResponse on OnOff) - prevents
+        // unknown_command_received log spam. Installed once per node (shared by re-init).
+        this._installAckSuppressHandler();
 
         // Read initial data so the settings UI reflects the device's actual
         // configuration rather than Homey's stored defaults.
         await this.checkAttributes();
 
+        // Confirmed same firmware as the ZBMINIR2 (z2m lists MINI-ZBD as a white-label of the
+        // same device definition): the onOff report cadence and boot-dump behaviour are the
+        // device's own, not driver-specific, so the same tier and active poll apply here.
+        // Not yet verified with hours of real-hardware logs on this exact unit (see TODO.md).
+        this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_MEDIUM_MS });
+        await this._availability.install();
+        this._startActivePoll();
+
         this.log('MINI-ZBD initialized');
+    }
+
+    async _teardown() {
+        await super._teardown(); // stops the active poll before the manager goes away
+        await this._availability?.uninstall().catch(() => {});
     }
 
     async onSettings({ oldSettings, newSettings, changedKeys }) {
@@ -253,6 +242,31 @@ class SonoffMINIZBD extends SonoffBase {
     }
 
     /**
+     * Swallow manufacturer / OnOff ACK frames (cmdId 0x0B) that would log unknown_command_received.
+     * Registered once per Zigbee node (see the node-level flag - a multi-device node would
+     * otherwise get one duplicate handler per device instance calling onNodeInit).
+     */
+    _installAckSuppressHandler() {
+        const node = this.node;
+        if (!node) return;
+        if (node._minizbdAckSuppressInstalled) {
+            this.log('[MINI-ZBD] ACK suppress handler already installed (shared node)');
+            return;
+        }
+        node._minizbdAckSuppressInstalled = true;
+        FrameMiddleware.for(node).register(
+            'minizbd-suppress-ack',
+            FRAME_PRIORITY.CLUSTER_REPORT,
+            (endpointId, clusterId, frame) => {
+                if (!Buffer.isBuffer(frame) || frame.length < 3) return;
+                const mfrSpecific = (frame[0] & 0x04) !== 0;
+                const cmdId = mfrSpecific ? (frame.length >= 5 ? frame[4] : -1) : frame[2];
+                if (cmdId === 0x0B && (clusterId === SonoffCluster.ID || clusterId === 6)) return false;
+            },
+        );
+    }
+
+    /**
      * Fires the device_rejoined flow trigger.
      * Guard: 30s cooldown deduplicates burst reports from the same rejoin event.
      */
@@ -268,9 +282,9 @@ class SonoffMINIZBD extends SonoffBase {
         RejoinManager.triggerRejoin(this);
     }
 
-    // Rejoin is detected from the SonoffCluster boot dump (see handleFrame hook
-    // above), not from ZDO Device Announce - the base class's default
-    // onEndDeviceAnnounce() (just a log line) is fine as-is.
+    // Rejoin is detected from the SonoffCluster boot dump (installRejoinDetection above),
+    // not from ZDO Device Announce - the base class's default onEndDeviceAnnounce()
+    // (just a log line) is fine as-is.
 
     async checkAttributes() {
         this.readAttribute(CLUSTER.ON_OFF, ['powerOnBehavior'], (data) => {
@@ -294,6 +308,7 @@ class SonoffMINIZBD extends SonoffBase {
     }
 
     async onDeleted() {
+        await this._teardown();
         this.log('MINI-ZBD removed');
     }
 

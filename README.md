@@ -73,8 +73,10 @@ Heartbeats seen in logs (hours of capture per model):
 | BASICZBR3 | onOff report every 5 min (300 s) | 25 min |
 | MINI-ZB1GP | onOff / metering reports | 25 min |
 | ZBMINIR2, MINI-ZB2GS, SNZB-06P, dongles | periodic reports / manufacturer frames | 90 min |
+| MINI-ZBD | same firmware as the ZBMINIR2 (z2m lists it as a white-label of that device) | 90 min |
 
-No availability tracking: MINI-ZBD and SNZB-03.
+MINI-ZBD's tracking is new and not yet confirmed with hours of real-hardware logs on a unit of that model (the
+user testing it does not own one). No availability tracking: SNZB-03.
 
 The SNZB-04P is the weak case: its only periodic sign of life is the hourly announce, and a closed door sends nothing. If a re-paired SNZB-04P still shows no activity in the **Traffic** tab after a few hours, tracking for it should be removed.
 
@@ -86,7 +88,7 @@ The tiers are in [lib/constants.js](lib/constants.js); the logic is in [lib/Avai
 
 ## Power-cut detection (rejoin)
 
-When ZBMINIR2, MINI-ZBD, MINI-ZB2GS or MINI-ZB1GP regain power, they send a burst of Report Attributes on the manufacturer cluster `0xFC11` and on OnOff (`0x0006`), 8 ms apart on the relays and 14 to 50 ms on the MINI-ZB1GP. The periodic `0xFC11` heartbeat arrives alone. The drivers require both within 200 ms, ignore frames right after their own writes, and merge a burst with a 30 s cool-down. The result is the flow trigger **Reconnected after power cut** for the device, plus a rejoin counter and timestamp. See [lib/RejoinManager.js](lib/RejoinManager.js); the MINI-ZB1GP uses the shared detector in [lib/rejoinDetection.js](lib/rejoinDetection.js) (cooldown 5 s, so power cuts 9 s apart count separately; the relays keep their own copy with a 30 s cooldown). A cut shorter than the device's boot and rejoin gives no signature and no trigger.
+When ZBMINIR2, MINI-ZBD, MINI-ZB2GS or MINI-ZB1GP regain power, they send a burst of Report Attributes on the manufacturer cluster `0xFC11` and on OnOff (`0x0006`), 8 ms apart on the relays and 14 to 50 ms on the MINI-ZB1GP. The periodic `0xFC11` heartbeat arrives alone. The drivers require both within 200 ms, ignore frames right after their own writes, and merge a burst with a 30 s cool-down. The result is the flow trigger **Reconnected after power cut** for the device, plus a rejoin counter and timestamp. See [lib/RejoinManager.js](lib/RejoinManager.js). MINI-ZB1GP, ZBMINIR2 and MINI-ZBD use the shared detector in [lib/rejoinDetection.js](lib/rejoinDetection.js) - a 5 s cooldown on the MINI-ZB1GP (no relay, no frequent settings writes), 30 s plus a write guard on the relays (a settings write's own report burst can otherwise look like a rejoin; a match within 30 s of the driver's last write is ignored). MINI-ZB2GS still carries its own separate copy of this pattern. A cut shorter than the device's boot and rejoin gives no signature and no trigger.
 
 ## App settings
 
