@@ -14,7 +14,8 @@
   ],
   "energy": {
     "batteries": [
-      "CR2477"
+      "AAA",
+      "AAA"
     ]
   },
   "icon": "{{driverAssetsPath}}/icon.svg",

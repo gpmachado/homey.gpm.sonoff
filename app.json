@@ -2054,7 +2054,8 @@
       ],
       "energy": {
         "batteries": [
-          "CR2477"
+          "AAA",
+          "AAA"
         ]
       },
       "icon": "/drivers/SNZB-04PR2/assets/icon.svg",
