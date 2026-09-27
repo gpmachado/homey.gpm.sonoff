@@ -46,6 +46,12 @@ class SonoffBase extends ZigBeeDevice {
       }
     }
 
+    // Frame hooks: several layers wrap node.handleFrame (this Basic filter, the per-driver
+    // frame hooks of ZBMINIR2/MINI-ZBD/MINI-ZB2GS, _installClusterReportInterceptor and the
+    // availability manager). Order: this Basic filter first, then the driver's own hook, and
+    // the availability manager LAST. The availability manager restores the handler it found
+    // when it was installed, so it must be uninstalled first (it is, in _teardown); the
+    // others stay for the life of the node and guard against re-wrapping with a flag.
     // Homey's own native Device Updates feature (>=13.2) polls basic.swBuildId
     // directly over the shared Zigbee radio, bypassing our zclNode entirely.
     // Our own 'basic' cluster instance still sees the response frame (shared
