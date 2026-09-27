@@ -80,6 +80,18 @@ conclusion of the first probe.
 
 ## Other open items
 
+- Frame hooks (needs hardware tests on ZBMINI, ZBMINIR2, MINI-ZBD, MINI-ZB2GS, MINI-ZB1GP and the sensors before
+  and after): several layers wrap `node.handleFrame` today: the Basic filter in `SonoffBase`, the per-driver hooks of
+  ZBMINIR2 / MINI-ZBD / MINI-ZB2GS, `_installClusterReportInterceptor` (MINI-ZB1GP) and the availability manager.
+  It works because the availability manager is installed last and removed first (order documented in
+  `drivers/sonoffbase.js`), and the flags on the node stop re-wrapping. Idea: one ordered hook list on the node with a
+  single `handleFrame` that iterates it, so each layer removes only itself; that would also let the Basic filter
+  (never removed today) be uninstalled. No bug was observed, so this is a cleanup, not a fix.
+- `AvailabilityManager.js` split (needs the same hardware tests): `HourlyMessageStats` is already out
+  (`lib/HourlyMessageStats.js`). Next candidate is the inbound/outbound hooks (`_installHandleFrameHook`,
+  `_installSendFailureHook`, `_cleanup`) as a mixin or `lib/availabilityHooks.js`. Keep the timeout policy,
+  poll-before-offline and the sibling cascade in one module, so availability state is not spread over several files.
+  Not worth splitting Passive and Callback into separate files before the hooks are out.
 - Availability on/off switch as a global app setting (design agreed, not implemented): stop marking devices
   unavailable when off, keep the Traffic and Rejoins statistics, restore devices to available when switched
   off, and do not fire the availability flow cards on the switch.
