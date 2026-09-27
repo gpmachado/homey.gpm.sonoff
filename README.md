@@ -55,7 +55,7 @@ Tested on physical units paired with Homey, with logs kept for hours: BASICZBR3,
 Notes per device:
 - **ZBMINIR2**: TurboMode setting; power-cut trigger.
 - **MINI-ZBD, MINI-ZB2GS**: power-cut trigger.
-- **MINI-ZB1GP**: power, voltage, current, energy today/month, reset-consumption button, metering-error and overload alarms.
+- **MINI-ZB1GP**: power, voltage, current, energy today/month, reset-consumption button, metering-error and overload alarms, power-cut trigger.
 - **SNZB-06P**: the device does not measure lux. It only reports bright/dark, and only while presence is detected (Sonoff's own iHost does not expose it either), so the driver does not offer an illuminance value.
 
 ## Availability
@@ -86,7 +86,7 @@ The tiers are in [lib/constants.js](lib/constants.js); the logic is in [lib/Avai
 
 ## Power-cut detection (rejoin)
 
-When ZBMINIR2, MINI-ZBD or MINI-ZB2GS regain power, they send a burst of Report Attributes on the manufacturer cluster `0xFC11` and on OnOff (`0x0006`), about 8 ms apart. The periodic `0xFC11` heartbeat arrives alone. The drivers require both within 200 ms, ignore frames right after their own writes, and merge a burst with a 30 s cool-down. The result is the flow trigger **Reconnected after power cut** for the device, plus a rejoin counter and timestamp. See [lib/RejoinManager.js](lib/RejoinManager.js).
+When ZBMINIR2, MINI-ZBD, MINI-ZB2GS or MINI-ZB1GP regain power, they send a burst of Report Attributes on the manufacturer cluster `0xFC11` and on OnOff (`0x0006`), 8 ms apart on the relays and 14 to 50 ms on the MINI-ZB1GP. The periodic `0xFC11` heartbeat arrives alone. The drivers require both within 200 ms, ignore frames right after their own writes, and merge a burst with a 30 s cool-down. The result is the flow trigger **Reconnected after power cut** for the device, plus a rejoin counter and timestamp. See [lib/RejoinManager.js](lib/RejoinManager.js); the MINI-ZB1GP uses the shared detector in [lib/rejoinDetection.js](lib/rejoinDetection.js) (cooldown 5 s, so power cuts 9 s apart count separately; the relays keep their own copy with a 30 s cooldown). A cut shorter than the device's boot and rejoin gives no signature and no trigger.
 
 ## App settings
 

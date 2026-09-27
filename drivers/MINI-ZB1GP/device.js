@@ -5,6 +5,8 @@ const SonoffCluster = require('../../lib/SonoffCluster');
 const { CLUSTER } = require('zigbee-clusters');
 const { SonoffTimeServerBoundCluster } = require('../../lib/TimeCluster');
 const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
+const RejoinManager = require('../../lib/RejoinManager');
+const { installRejoinDetection } = require('../../lib/rejoinDetection');
 const { HEARTBEAT_FAST_MS } = require('../../lib/constants');
 
 // zigbee-herdsman-converters faultCodeMiniZb1gsp({hasSwitch: false}) bit map.
@@ -51,6 +53,15 @@ class SonoffMINIZB1GP extends SonoffBase {
     // suppresses cmdId 1/3 clusterSpecific commands that have no BoundCluster handler
     // and would otherwise log "binding_unavailable" errors.
     this._installClusterReportInterceptor(SonoffCluster, { suppressCmdIds: [0x01, 0x03] });
+
+    // Power cut: the device sends an OnOff report and, ~15-30 ms later, a 0xFC11 report when it
+    // comes back (measured on this model). Fires the "Reconnected after power cut" flow card and
+    // counts the rejoin (Rejoins tab in the app settings). The store value is set here so the
+    // device is listed there before its first rejoin.
+    if (this.getStoreValue('rejoin_count') === undefined) {
+      await this.setStoreValue('rejoin_count', 0).catch(() => {});
+    }
+    installRejoinDetection(this, { sonoffClusterId: SonoffCluster.ID, cooldownMs: 5000 });
 
     // Suppress Time cluster (0x000A) binding_unavailable errors
     this.zclNode.endpoints[1].bind(CLUSTER.TIME.NAME, new SonoffTimeServerBoundCluster());
@@ -422,6 +433,12 @@ class SonoffMINIZB1GP extends SonoffBase {
     } catch (e) {
       this.log('[MINI-ZB1GP] post-reset read failed:', e.message);
     }
+  }
+
+  // Called by the rejoin detection (lib/rejoinDetection.js).
+  _notifyRejoin() {
+    this.log('[MINI-ZB1GP] Power-up signature (OnOff + 0xFC11 report): device rejoined');
+    RejoinManager.triggerRejoin(this);
   }
 
   async _teardown() {

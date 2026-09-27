@@ -80,6 +80,7 @@ conclusion of the first probe.
 
 ## Other open items
 
+- Rejoin detection: ZBMINIR2, MINI-ZBD and MINI-ZB2GS still carry their own copy (about 40 lines each, 30 s cooldown, a write guard). `lib/rejoinDetection.js` was written for the MINI-ZB1GP; moving the three onto it needs the power-cut test on each, and a decision on the cooldown (30 s merges cuts closer than that).
 - Frame hooks (needs hardware tests on ZBMINI, ZBMINIR2, MINI-ZBD, MINI-ZB2GS, MINI-ZB1GP and the sensors before
   and after): several layers wrap `node.handleFrame` today: the Basic filter in `SonoffBase`, the per-driver hooks of
   ZBMINIR2 / MINI-ZBD / MINI-ZB2GS, `_installClusterReportInterceptor` (MINI-ZB1GP) and the availability manager.

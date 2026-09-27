@@ -117,6 +117,28 @@
     ],
     "triggers": [
       {
+        "id": "MINI-ZB1GP_device_rejoined",
+        "title": {
+          "en": "Reconnected after power cut",
+          "de": "Nach Stromausfall wieder verbunden",
+          "es": "Reconectado tras un corte de energía",
+          "it": "Riconnesso dopo un'interruzione di corrente"
+        },
+        "hint": {
+          "en": "Fires when this device reconnects to the Zigbee network after a power cut.",
+          "de": "Wird ausgelöst, wenn sich dieses Gerät nach einem Stromausfall erneut mit dem Zigbee-Netzwerk verbindet.",
+          "es": "Se activa cuando este dispositivo se reconecta a la red Zigbee tras un corte de energía.",
+          "it": "Si attiva quando questo dispositivo si riconnette alla rete Zigbee dopo un'interruzione di corrente."
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=MINI-ZB1GP"
+          }
+        ]
+      },
+      {
         "id": "MINI-ZB2GS_device_rejoined",
         "title": {
           "en": "Reconnected after power cut",

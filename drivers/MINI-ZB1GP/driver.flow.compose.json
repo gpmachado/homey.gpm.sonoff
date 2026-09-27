@@ -1,0 +1,8 @@
+{
+  "triggers": [
+    {
+      "$extends": "device_rejoined",
+      "$id": "MINI-ZB1GP_device_rejoined"
+    }
+  ]
+}

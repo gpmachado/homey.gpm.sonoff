@@ -49,7 +49,7 @@ Decision: keep the tracking, ask that user to re-pair the sensors and check the 
 
 ### Rejoin (power-cut) detection
 
-When ZBMINIR2, MINI-ZBD or MINI-ZB2GS regain power they send a burst of Report Attributes on `0xFC11` and on OnOff, about 8 ms apart. The periodic `0xFC11` heartbeat arrives alone. The drivers require both within 200 ms, ignore frames right after their own writes and merge bursts with a 30 s cool-down. The result is a per-device flow trigger, used to resynchronise lights with the switch after a power cut, plus a counter and timestamp in the settings Rejoins tab.
+When ZBMINIR2, MINI-ZBD, MINI-ZB2GS or MINI-ZB1GP regain power they send a burst of Report Attributes on `0xFC11` and on OnOff, about 8 ms apart. The periodic `0xFC11` heartbeat arrives alone. The drivers require both within 200 ms, ignore frames right after their own writes and merge bursts with a 30 s cool-down. The result is a per-device flow trigger, used to resynchronise lights with the switch after a power cut, plus a counter and timestamp in the settings Rejoins tab. The MINI-ZB1GP was added later with a shared detector (`lib/rejoinDetection.js`) after six cuts showed the same pair, 14 to 28 ms apart in five of them and 50 ms in the sixth, followed by a 20 s configuration dump at 0.8 s per frame (`0x7016` and several array attributes no other project documents). Its cooldown is 5 s because the cuts tested were 9 and 13 s apart; a cut too short for the device to boot and rejoin leaves no signature.
 
 ### Reporting re-sync on announce
 
