@@ -88,6 +88,8 @@ class SonoffMINIZBD extends SonoffBase {
         }
 
         // Deferred 30 s: mesh routes are stale immediately after boot.
+        // Plus 0-60 s of random spread: with 21 relays the fixed 30 s fired 21 writes in 240 ms, and
+        // once all of them failed with 'Could not reach device' at the same time.
         // Firing configureAttributeReporting before the route is established generates
         // [err] stack traces from homey-zigbeedriver's executeMethod - harmless but noisy.
         this.homey.setTimeout(() => {
@@ -95,7 +97,7 @@ class SonoffMINIZBD extends SonoffBase {
             this.zclNode.endpoints[1].clusters.onOff.configureReporting({
                 onOff: { minInterval: 0, maxInterval: 1800, minChange: 1 }, // 30 min
             }).catch(err => this.log('[Reporting] boot config failed:', err.message));
-        }, 30_000);
+        }, 30_000 + Math.floor(Math.random() * 60_000));
 
         this.zclNode.endpoints[1].bind(CLUSTER.ON_OFF.NAME, new MyOnOffBoundCluster(this));
 
