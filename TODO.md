@@ -80,7 +80,15 @@ conclusion of the first probe.
 
 ## Other open items
 
-- Rejoin detection: ZBMINIR2, MINI-ZBD and MINI-ZB2GS still carry their own copy (about 40 lines each, 30 s cooldown, a write guard). `lib/rejoinDetection.js` was written for the MINI-ZB1GP; moving the three onto it needs the power-cut test on each, and a decision on the cooldown (30 s merges cuts closer than that).
+- Rejoin detection: ZBMINIR2, MINI-ZBD and MINI-ZB2GS still carry their own copy (about 40 lines each, 30 s cooldown, a
+  write guard). `lib/rejoinDetection.js` was written for the MINI-ZB1GP; moving the three onto it needs the
+  power-cut test on each, and a decision on the cooldown (30 s merges cuts closer than that). **Confirmed
+  2026-09-27**: the write guard (`_lastSonoffWriteAt` on ZBMINIR2/MINI-ZBD, `node._zb2gsLastSonoffWriteAt` on
+  MINI-ZB2GS - node-scoped there because the two gangs share the node) suppresses the burst a settings write itself
+  causes, and `lib/rejoinDetection.js` has no equivalent - it never needed one for the MINI-ZB1GP, which has no
+  relay and so no user-triggered SonoffCluster writes frequent enough to collide. A unification has to add this as
+  an optional parameter (node-scoped or device-scoped), not just swap the wrapper for the shared module; a first
+  external-review sketch of a `FrameMiddleware`-based unification missed this.
 - Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
   300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
   A shared base (onOff wiring, reporting, rejoin, availability) would remove most of that, but needs the same
