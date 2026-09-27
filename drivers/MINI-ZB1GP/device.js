@@ -77,7 +77,7 @@ class SonoffMINIZB1GP extends SonoffBase {
     // base interval as the smartplug driver in nova.digital.homeyapp.
     if (this._energyPollInterval) this.homey.clearInterval(this._energyPollInterval);
     this._energyPollInterval = this.homey.setInterval(() => {
-      this.checkAttributes().catch(err => this.error('[MINI-ZB1GP] periodic poll failed:', err.message));
+      this._readEnergy().catch(err => this.error('[MINI-ZB1GP] periodic poll failed:', err.message));
     }, 120_000);
 
     // Active poll runs every 120s (see above); 25 min gives a wide margin.
@@ -143,7 +143,10 @@ class SonoffMINIZB1GP extends SonoffBase {
     this.registerCapability('measure_power', CLUSTER.ELECTRICAL_MEASUREMENT, {
       reportParser: value => (this._isValidReading(value) ? value : null),
       getParser: value => (this._isValidReading(value) ? value : null),
-      getOpts: { getOnStart: true, getOnOnline: true, pollInterval: 300000 },
+      // No getOpts: the 120 s _readEnergy poll (see onNodeInit) already covers this attribute;
+      // getOpts.pollInterval created homey-zigbeedriver's own internal timer, doubling the reads
+      // and, worse, one kept firing every 5 min for over 20 min after the device was removed
+      // (Missing Zigbee Node's IEEE Address), because it is not tied to our _teardown().
       reportOpts: {
         configureAttributeReporting: {
           minInterval: 10,
@@ -157,7 +160,10 @@ class SonoffMINIZB1GP extends SonoffBase {
     this.registerCapability('measure_current', CLUSTER.ELECTRICAL_MEASUREMENT, {
       reportParser: value => (this._isValidReading(value) ? value / 1000 : null),
       getParser: value => (this._isValidReading(value) ? value / 1000 : null),
-      getOpts: { getOnStart: true, getOnOnline: true, pollInterval: 300000 },
+      // No getOpts: the 120 s _readEnergy poll (see onNodeInit) already covers this attribute;
+      // getOpts.pollInterval created homey-zigbeedriver's own internal timer, doubling the reads
+      // and, worse, one kept firing every 5 min for over 20 min after the device was removed
+      // (Missing Zigbee Node's IEEE Address), because it is not tied to our _teardown().
       reportOpts: {
         configureAttributeReporting: {
           minInterval: 10,
@@ -171,7 +177,10 @@ class SonoffMINIZB1GP extends SonoffBase {
     this.registerCapability('measure_voltage', CLUSTER.ELECTRICAL_MEASUREMENT, {
       reportParser: value => (this._isValidReading(value) ? value / 10 : null),
       getParser: value => (this._isValidReading(value) ? value / 10 : null),
-      getOpts: { getOnStart: true, getOnOnline: true, pollInterval: 300000 },
+      // No getOpts: the 120 s _readEnergy poll (see onNodeInit) already covers this attribute;
+      // getOpts.pollInterval created homey-zigbeedriver's own internal timer, doubling the reads
+      // and, worse, one kept firing every 5 min for over 20 min after the device was removed
+      // (Missing Zigbee Node's IEEE Address), because it is not tied to our _teardown().
       reportOpts: {
         configureAttributeReporting: {
           minInterval: 60,
@@ -187,7 +196,10 @@ class SonoffMINIZB1GP extends SonoffBase {
       report: 'totalEnergyConsumption',
       reportParser: value => (this._isValidReading(value) ? value / 1000 : null),
       getParser: value => (this._isValidReading(value) ? value / 1000 : null),
-      getOpts: { getOnStart: true, getOnOnline: true, pollInterval: 300000 },
+      // No getOpts: the 120 s _readEnergy poll (see onNodeInit) already covers this attribute;
+      // getOpts.pollInterval created homey-zigbeedriver's own internal timer, doubling the reads
+      // and, worse, one kept firing every 5 min for over 20 min after the device was removed
+      // (Missing Zigbee Node's IEEE Address), because it is not tied to our _teardown().
       reportOpts: {
         configureAttributeReporting: {
           minInterval: 60,
@@ -208,7 +220,10 @@ class SonoffMINIZB1GP extends SonoffBase {
         report: attribute,
         reportParser: value => (this._isValidReading(value) ? value / 1000 : null),
         getParser: value => (this._isValidReading(value) ? value / 1000 : null),
-        getOpts: { getOnStart: true, getOnOnline: true, pollInterval: 300000 },
+        // No getOpts: the 120 s _readEnergy poll (see onNodeInit) already covers this attribute;
+        // getOpts.pollInterval created homey-zigbeedriver's own internal timer, doubling the reads
+        // and, worse, one kept firing every 5 min for over 20 min after the device was removed
+        // (Missing Zigbee Node's IEEE Address), because it is not tied to our _teardown().
         reportOpts: {
           configureAttributeReporting: {
             minInterval: 60,
@@ -232,7 +247,10 @@ class SonoffMINIZB1GP extends SonoffBase {
       report: 'totalOutputEnergyConsumption',
       reportParser: value => (this._isValidReading(value) ? value / 1000 : null),
       getParser: value => (this._isValidReading(value) ? value / 1000 : null),
-      getOpts: { getOnStart: true, getOnOnline: true, pollInterval: 300000 },
+      // No getOpts: the 120 s _readEnergy poll (see onNodeInit) already covers this attribute;
+      // getOpts.pollInterval created homey-zigbeedriver's own internal timer, doubling the reads
+      // and, worse, one kept firing every 5 min for over 20 min after the device was removed
+      // (Missing Zigbee Node's IEEE Address), because it is not tied to our _teardown().
       reportOpts: {
         configureAttributeReporting: {
           minInterval: 60,
@@ -320,8 +338,16 @@ class SonoffMINIZB1GP extends SonoffBase {
     cluster.on('attr.energyMonth', this._onEnergyMonth);
   }
 
+  // Full read, at start: the two device settings, then the energy attributes.
   async checkAttributes() {
-    // Settings reads (standard)
+    await this._readSettings();
+    await this._readEnergy();
+  }
+
+  // The network LED and TurboMode only change when the user changes them (the settings page, or
+  // an attr report handled by _registerSonoffListeners), so they are read at start and not with
+  // the 120 s energy poll. Doing it every 2 min doubled the requests sent to this device.
+  async _readSettings() {
     await this.readAttribute(SonoffCluster, [
       'network_led',
       'TurboMode',
@@ -332,7 +358,9 @@ class SonoffMINIZB1GP extends SonoffBase {
       if (data.TurboMode !== undefined) settings.TurboMode = Number(data.TurboMode) === 20;
       if (Object.keys(settings).length) this.setSettings(settings).catch(this.error);
     });
+  }
 
+  async _readEnergy() {
     // Energy reads - manufacturer-specific (mfrCode 0x1286)
     // zigbee-clusters v2+ requires an array as first argument to readAttributes
     this.log('[MINI-ZB1GP] checkAttributes: attempting mfr read...');
