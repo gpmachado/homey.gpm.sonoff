@@ -105,6 +105,13 @@ conclusion of the first probe.
   that device produced the same restore sequence as before, zero residual activity or errors for 8.5 min after,
   and the other 29 devices kept working. Left: `SonoffBase`'s Basic filter and cluster-report interceptor - the
   only piece every driver goes through, so the largest blast radius; no urgency, no bug observed.
+  **A second external sketch, reviewed 2026-09-27, still had the exact bug the first draft did**: `register()`
+  calling `unregister()` on the same id trips the "handlers went empty" auto-restore mid-replace, silently killing
+  the wrapper (reproduced: registering the same id twice left the handler never running again). It also added a
+  `dispose()` that clears every handler on the node, not just the caller's - a real footgun once two concerns
+  share a node (rejoin + availability, our actual MINI-ZB1GP case: calling `dispose()` where `unregister(id)` was
+  meant silently stops the other one too, confirmed). Kept our `lib/FrameMiddleware.js` as is; adopted only its
+  harmless `listHandlers()` diagnostic.
 - Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
   300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
   A shared base (onOff wiring, reporting, rejoin, availability) would remove most of that, but needs the same
