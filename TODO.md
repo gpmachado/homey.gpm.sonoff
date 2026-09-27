@@ -80,95 +80,68 @@ conclusion of the first probe.
 
 ## Other open items
 
-- Rejoin detection: ZBMINIR2, MINI-ZBD and MINI-ZB2GS still carry their own copy (about 40 lines each, 30 s cooldown, a
-  write guard). `lib/rejoinDetection.js` was written for the MINI-ZB1GP; moving the three onto it needs the
-  power-cut test on each, and a decision on the cooldown (30 s merges cuts closer than that). **Confirmed
-  2026-09-27**: the write guard (`_lastSonoffWriteAt` on ZBMINIR2/MINI-ZBD, `node._zb2gsLastSonoffWriteAt` on
-  MINI-ZB2GS - node-scoped there because the two gangs share the node) suppresses the burst a settings write itself
-  causes, and `lib/rejoinDetection.js` has no equivalent - it never needed one for the MINI-ZB1GP, which has no
-  relay and so no user-triggered SonoffCluster writes frequent enough to collide. A unification has to add this as
-  an optional parameter (node-scoped or device-scoped), not just swap the wrapper for the shared module; a first
-  external-review sketch of a `FrameMiddleware`-based unification missed this.
-  **2026-09-27: stage 1 and 2 done.** `lib/FrameMiddleware.js` exists (unit-tested standalone, not wired into
-  `SonoffBase`/`availabilityHooks.js` yet) and `lib/rejoinDetection.js` (MINI-ZB1GP) now runs on it at
-  `FRAME_PRIORITY.REJOIN`, verified on hardware: same "Power-up signature" detection, same flow trigger, zero
-  `[FrameMiddleware]` errors, no effect on the other devices sharing the app. The write-guard gap above still
-  applies before ZBMINIR2/MINI-ZBD/MINI-ZB2GS can move onto the same module. Next: `availabilityHooks.js`, then
-  `SonoffBase`'s Basic filter and cluster-report interceptor.
-  **2026-09-27 (later the same day): stage 3 done.** `availabilityHooks.js`'s inbound hook now registers on
-  `FrameMiddleware` too, at `FRAME_PRIORITY.AVAILABILITY` (last); the outbound `sendFrame` hook is unchanged (a
-  different function, outside FrameMiddleware's scope). `_originalHandleFrame`/`_substituteHandleFrame` are gone -
-  the middleware owns that state. Verified against the pre-migration module on 16 simulated scenarios (identical
-  behaviour and log lines) and, new for this stage, rejoin + availability coexisting on one node (priority order
-  rejoin-then-availability, both see every frame, rejoin survives an availability uninstall). On hardware
-  (teste9.log): 30 clean installs, a real power cut on the MINI-ZB1GP fired the rejoin trigger normally, removing
-  that device produced the same restore sequence as before, zero residual activity or errors for 8.5 min after,
-  and the other 29 devices kept working. Left: `SonoffBase`'s Basic filter and cluster-report interceptor - the
-  only piece every driver goes through, so the largest blast radius; no urgency, no bug observed.
-  **A second external sketch, reviewed 2026-09-27, still had the exact bug the first draft did**: `register()`
-  calling `unregister()` on the same id trips the "handlers went empty" auto-restore mid-replace, silently killing
-  the wrapper (reproduced: registering the same id twice left the handler never running again). It also added a
-  `dispose()` that clears every handler on the node, not just the caller's - a real footgun once two concerns
-  share a node (rejoin + availability, our actual MINI-ZB1GP case: calling `dispose()` where `unregister(id)` was
-  meant silently stops the other one too, confirmed). Kept our `lib/FrameMiddleware.js` as is; adopted only its
-  harmless `listHandlers()` diagnostic.
-  **A proposed SonoffBase + ZBMINIR2 migration, reviewed 2026-09-27, is not safe to apply as given**: it puts
-  `BASIC_FILTER`/`CLUSTER_REPORT` (which can swallow) at priority 10/20 and `AVAILABILITY`/`REJOIN` (which never
-  swallow) at 50/100. In this dispatch model (stops at the first `false`) that is backwards: a swallower running
-  before an observer hides that frame from it entirely. Confirmed by simulation:
-  (1) `_notifyAliveOnSwallow`'s compensation (`notifyActivity()`) only restores the availability timeout, not the
-  Traffic tab's message count (`notifyActivity` on `AvailabilityManagerPassive` deliberately skips `_recordMessage`
-  - see its own comment - because today it is only ever called as a fallback from a report parser, after the
-  frame already reached availability's own handler; once a swallower could intercept it first, the count silently
-  stops advancing for whatever gets swallowed);
-  (2) worse, MINI-ZB1GP's rejoin detection needs to see the exact SonoffCluster report a migrated cluster-report
-  interceptor would swallow to parse it - at `CLUSTER_REPORT: 20` ahead of `REJOIN: 50`, the interceptor eats the
-  frame first and "Reconnected after power cut" silently stops firing (reproduced with a simulated node: 0 detections
-  where 1 was expected).
-  Fixed in `lib/FrameMiddleware.js` regardless of whether the migration proceeds: `AVAILABILITY: 0`, `REJOIN: 5`,
-  both below `BASIC_FILTER: 10` / `CLUSTER_REPORT: 20`, with the general rule documented (an observer's number must
-  be lower than any swallower's). Verified this does not change anything currently shipped (rejoin + availability
-  composition re-tested, identical results) and that it does fix both scenarios above in a simulated node. The
-  SonoffBase/ZBMINIR2 patch itself is still not applied - it would need updating to the corrected priorities (and
-  dropping `_notifyAliveOnSwallow` entirely, since with observers running first it is no longer needed) before it
-  is worth a hardware pass.
+### FrameMiddleware migration (frame hooks)
+
+Goal: one `node.handleFrame` per node (`lib/FrameMiddleware.js`), with named, prioritized handlers, instead of each
+concern wrapping the previous one by hand. No bug was ever observed in the old per-layer wrapping - this is about
+removing a hand-maintained ordering invariant before a future mistake breaks it, not fixing something broken today.
+
+**Rule that governs every priority number**: a handler that never returns `false` (an "observer") must have a
+lower number than any handler that can swallow a frame it needs to see - the dispatch loop stops at the first
+`false`. Current values, in `lib/FrameMiddleware.js`: `AVAILABILITY: 0`, `REJOIN: 5`, `BASIC_FILTER: 10`,
+`CLUSTER_REPORT: 20`. Getting this backwards is not cosmetic: verified by simulation that it would silently break
+the "Reconnected after power cut" trigger (a swallower ahead of `REJOIN` eats the exact frame rejoin needs) and
+undercount the Traffic tab (a swallower ahead of `AVAILABILITY` hides frames from `_recordMessage`; a naive
+"notify activity on swallow" compensation only patches the availability timeout, not that count - see
+`AvailabilityManagerPassive.notifyActivity()`'s own comment for why it deliberately skips `_recordMessage`).
+
+**Done, hardware-tested:**
+- `lib/FrameMiddleware.js` itself (21 simulated scenarios, including the MINI-ZB2GS multi-device-per-node case).
+- `lib/rejoinDetection.js` (MINI-ZB1GP only) runs on it at `FRAME_PRIORITY.REJOIN` (teste8.log: real power cut,
+  same detection and flow trigger as before the migration).
+- `lib/availabilityHooks.js`'s inbound hook (every driver using `AvailabilityManagerPassive`) runs on it at
+  `FRAME_PRIORITY.AVAILABILITY`; the outbound `sendFrame` hook is untouched, a different function outside
+  FrameMiddleware's scope. `_originalHandleFrame`/`_substituteHandleFrame` are gone, the middleware owns that
+  state. teste9.log: 30 clean installs, a real power cut + rejoin trigger, a device removal with zero residual
+  activity or errors for 8.5 min after, the other 29 devices unaffected throughout.
+- `HourlyMessageStats` extracted to its own file (`lib/HourlyMessageStats.js`) - unrelated to FrameMiddleware, same
+  cleanup effort, done and verified identical to the pre-extraction module.
+
+**Not done, no hardware pass yet:**
+- `SonoffBase`'s Basic filter and cluster-report interceptor - the piece every driver goes through, so the
+  largest blast radius. Two independent external patch proposals for this were reviewed and rejected: both had the
+  priority order backwards (see the rule above); the first also had `_installClusterReportInterceptor`'s
+  behaviour changed in ways not verified against the current implementation. If this is attempted again, don't
+  reuse `_notifyAliveOnSwallow`-style compensation - with the corrected priorities, `AVAILABILITY` already sees
+  every frame before anything can swallow it, so no compensation is needed.
+- ZBMINIR2, MINI-ZBD and MINI-ZB2GS's own inline rejoin + ACK-drop code - still raw-wrapped, not on
+  `lib/rejoinDetection.js`. Blocked on generalizing the write guard: `_lastSonoffWriteAt` (ZBMINIR2/MINI-ZBD) and
+  `node._zb2gsLastSonoffWriteAt` (MINI-ZB2GS, node-scoped since the two gangs share the node) suppress the burst a
+  settings write itself causes; `lib/rejoinDetection.js` has no equivalent (never needed one for the MINI-ZB1GP,
+  which has no relay and so no frequent user-triggered writes). A unification needs this as an optional parameter
+  (node-scoped or device-scoped depending on the driver), not just a wrapper swap - confirmed by reading the
+  actual write-guard code in all three drivers. MINI-ZB2GS's 30 s rejoin cooldown is required (both gang
+  endpoints dump on boot within milliseconds of each other); a shorter one would still merge those two frames into
+  one event.
+- Two external review sketches of `FrameMiddleware.js` itself were compared against ours and not adopted beyond
+  the harmless `listHandlers()` diagnostic: both had the same reproducible bug (`register()` calling
+  `unregister()` on a same-id replace trips the "handlers went empty" auto-restore mid-replace, silently killing
+  the wrapper - our own first draft had this too, caught by its own test suite before shipping), and one added a
+  `dispose()` that clears every handler on the node instead of just the caller's, a footgun once two concerns
+  share a node (confirmed: calling it where `unregister(id)` was meant silently breaks the other handler too).
+
+**Convention for handler ids**: node-level (same string regardless of which device instance installs it, e.g.
+`'availability'`, `'rejoin'`) for anything that must exist once per node no matter how many devices share it -
+`installRejoinDetection` already does this right (node-level flag, device pointer updated on re-init). A
+multi-gang node (MINI-ZB2GS) runs `onNodeInit` once per gang, so a per-device id for a node-level concern installs
+one duplicate handler per gang - confirmed by simulation, not just a hypothetical.
+
+### Other items
+
 - Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
   300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
   A shared base (onOff wiring, reporting, rejoin, availability) would remove most of that, but needs the same
   hardware pass (partida, power cut, removal, restart) on all three before landing. Not started.
-- Frame hooks (needs hardware tests on ZBMINI, ZBMINIR2, MINI-ZBD, MINI-ZB2GS, MINI-ZB1GP and the sensors before
-  and after): several layers wrap `node.handleFrame` today: the Basic filter in `SonoffBase`, the per-driver hooks of
-  ZBMINIR2 / MINI-ZBD / MINI-ZB2GS, `_installClusterReportInterceptor` (MINI-ZB1GP) and the availability manager.
-  It works because the availability manager is installed last and removed first (order documented in
-  `drivers/sonoffbase.js`), and the flags on the node stop re-wrapping. Idea: one ordered hook list on the node with a
-  single `handleFrame` that iterates it, so each layer removes only itself; that would also let the Basic filter
-  (never removed today) be uninstalled. No bug was observed, so this is a cleanup, not a fix.
-  Audit of the install order (2026-09-27): in every driver the frame hooks (own wrapper, `_installClusterReportInterceptor`,
-  `installRejoinDetection`) run before `AvailabilityManagerPassive.install()`, which stays last; MINI-ZB2GS looks
-  reversed by line number but calls `_installFrameHook()` (l.129) before the install (l.140). MINI-ZB2GS needs its 30 s
-  rejoin cooldown because both gang endpoints dump on boot; a shorter one would still merge those (they arrive within ms).
-  **Design sketched by an external review (not yet built or tested)**: `lib/FrameMiddleware.js`, one `node.handleFrame`
-  per node with prioritized handlers (`register(id, priority, fn)`, `fn` returns `false` to swallow a frame),
-  so each layer removes only its own entry instead of restoring a saved "original" function. Priorities suggested:
-  Basic filter (10) -> cluster-report interceptor (20) -> rejoin (50) -> availability (100, last, never swallows).
-  One correctness note for whoever builds it: the Basic filter in `SonoffBase` and `installRejoinDetection` on
-  MINI-ZB2GS must stay keyed by the **node** (today: `node._basicReadResponseHookInstalled`,
-  `node._rejoinDetectionInstalled`), not by `this.getData().id` — a multi-gang node has one device instance per
-  gang calling `onNodeInit`, and a per-device id would register one duplicate handler per gang instead of one per
-  node, which is exactly the stacking the guards exist to prevent. `installRejoinDetection` already gets this
-  right (node-level flag, device pointer updated on re-init); a `FrameMiddleware` port needs the same. Suggested
-  order, smallest first: (1) `FrameMiddleware.js` alone, unit-tested standalone, wired into nothing yet;
-  (2) migrate `installRejoinDetection` onto it, since it already isolates cleanly and MINI-ZB1GP's real hardware
-  gives a fast test; (3) migrate `availabilityHooks.js`, hardware-tested the same way as the current split
-  (partida, power cut, removal, restart); (4) `SonoffBase`'s Basic filter and cluster-report interceptor last,
-  since every driver goes through it.
-- `AvailabilityManager.js` split: `HourlyMessageStats` is out (`lib/HourlyMessageStats.js`) and so are the inbound and
-  outbound hooks (`lib/availabilityHooks.js`, applied to the Passive manager). The timeout policy, poll-before-offline
-  and the sibling cascade stay in `AvailabilityManager.js` on purpose, so availability state is not spread over several
-  files, and Passive and Callback stay together. Verified: old and new modules behave identically on a simulated
-  node, and on hardware the hooks install once per node for 27 devices with no errors. **Still to test on hardware**:
-  cut the power of one ZBMINIR2 (Send failed x/3, unavailable, back to available), remove one device (handleFrame
-  hook restored, the others keep counting), restart the app.
 - Availability on/off switch as a global app setting (design agreed, not implemented): stop marking devices
   unavailable when off, keep the Traffic and Rejoins statistics, restore devices to available when switched
   off, and do not fire the availability flow cards on the switch.
@@ -177,4 +150,4 @@ conclusion of the first probe.
   show only the uuid.
 - Post the notes for the upstream fork owner (macmonty): issues are disabled there, so use the e-mail.
   Draft in the session scratchpad; put the full notes in a gist or `docs/` and link them.
-- Sentinels (`gpm.statistic.tracker`): the `MEMORY_LOG` constant change is not committed yet.
+
