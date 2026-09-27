@@ -89,6 +89,12 @@ conclusion of the first probe.
   relay and so no user-triggered SonoffCluster writes frequent enough to collide. A unification has to add this as
   an optional parameter (node-scoped or device-scoped), not just swap the wrapper for the shared module; a first
   external-review sketch of a `FrameMiddleware`-based unification missed this.
+  **2026-09-27: stage 1 and 2 done.** `lib/FrameMiddleware.js` exists (unit-tested standalone, not wired into
+  `SonoffBase`/`availabilityHooks.js` yet) and `lib/rejoinDetection.js` (MINI-ZB1GP) now runs on it at
+  `FRAME_PRIORITY.REJOIN`, verified on hardware: same "Power-up signature" detection, same flow trigger, zero
+  `[FrameMiddleware]` errors, no effect on the other devices sharing the app. The write-guard gap above still
+  applies before ZBMINIR2/MINI-ZBD/MINI-ZB2GS can move onto the same module. Next: `availabilityHooks.js`, then
+  `SonoffBase`'s Basic filter and cluster-report interceptor.
 - Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
   300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
   A shared base (onOff wiring, reporting, rejoin, availability) would remove most of that, but needs the same
