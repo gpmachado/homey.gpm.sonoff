@@ -185,6 +185,34 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   unchanged, disabled-path never marks unavailable/never polls, stale offline state not reapplied at install,
   `markAvailable()` still restores while the switch is off. This app is meant to be the reference implementation
   for the same switch in Moes/Tuya/NovaDigital - see `~/HomeyApp/ARQUITETURA_DISPONIBILIDADE_REJOIN.md`.
+  Confirmed on real hardware (`teste16.log`): toggling off/on while the app was running logged the change
+  correctly, no errors, no false unavailable marks.
+  A `/code-review max` pass (3 subagents, 15 findings, 10 CONFIRMED/5 PLAUSIBLE) then found the first version's
+  gating was per-call-site rather than at the one real chokepoint - a TOCTOU: the switch was checked once before
+  `_pollDevice()` (up to ~15s) but never rechecked before `_markAllUnavailable()` actually ran, so toggling off
+  mid-poll could still mark a device unavailable. Fixed by moving the authoritative check inside
+  `_markAllUnavailable()` itself (the call every path - watchdog, `_onSendFailure`, and the public
+  `markUnavailable()` - funnels through), keeping the early per-call-site checks only as a cheap "skip a
+  pointless poll" optimization. Also fixed in the same pass: `markUnavailable()` was entirely ungated (closed by
+  the same chokepoint fix); MINI-ZB2GS's secondary gang mirrors the main gang's unavailable state via a raw
+  `setUnavailable()` call that bypassed the switch (now also checks `main._availability._isGloballyEnabled()`);
+  `_reapplyUnavailable()` left a stale `availability_unavailable_reason` in the store when declining to reapply
+  it; `api.js`'s `Boolean(body?.enabled)` inverted intent for a JSON string `"false"` and silently disabled
+  tracking for a bodyless request (now `typeof body?.enabled !== 'boolean'` throws instead); `setAvailabilitySetting`
+  persisted the setting before a restore step that could throw, leaving the settings page unable to tell "nothing
+  changed" from "changed, but a restore partially failed" - now returns `{ enabled, restoreFailures }` and never
+  throws for a partial restore, and the client no longer reverts the toggle on that path; two concurrent toggle
+  calls could double-fire `onBecameAvailable()`/`onBecameUnavailable()` for one device (closed with a re-entrancy
+  guard on `_markAllAvailable`/`_markAllUnavailable`); the settings page had no request-ordering guard on the
+  availability GET/POST (added, matching `loadStats()`'s existing `latestRequest` pattern) and defaulted the
+  toggle to OFF on a malformed-but-successful API response (now requires `typeof result.enabled === 'boolean'`).
+  Also deduplicated `api.js`'s five near-identical `homey.drivers.getDrivers()` loops into one `allDevices()`
+  generator. Not fixed, left for later (lower severity / architectural): restore latency scales with how many
+  devices are down (`Promise.allSettled` already runs them concurrently, so this is a response-time nicety, not
+  a correctness gap); the force-restore loop scopes on `!device.getAvailable()` rather than on whether the
+  watchdog specifically caused it - latent today since nothing else in the app calls `setUnavailable()` for an
+  unrelated reason. All fixes re-verified with an extended standalone simulation plus a dedicated `api.js` test
+  (validation, restore-failure reporting, the `allDevices()` refactor) - both passing - before committing.
 - Device name in the log lines: `this.log` cannot be replaced on an SDK device. Only option is a `nlog()`
   helper and a mechanical replacement of about 190 calls, and SDK/homey-zigbeedriver lines would still
   show only the uuid.

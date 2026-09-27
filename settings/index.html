@@ -506,6 +506,7 @@
     var rejoinDevices = [];
     var currentSort = 'name-asc';
     var latestRequest = 0;
+    var latestAvailabilityRequest = 0;
     var resetInFlight = false;
 
     function translate(key) {
@@ -810,29 +811,41 @@
 
     function loadAvailabilitySetting() {
       if (!homeyApi) return;
+      var requestId = ++latestAvailabilityRequest;
       homeyApi.api('GET', '/availability-setting?t=' + Date.now(), {}, function(error, result) {
-        if (error) return; // leave the toggle at its default (checked) rather than guess
-        document.getElementById('availability-toggle').checked = Boolean(result && result.enabled);
+        if (requestId !== latestAvailabilityRequest) return; // a newer GET or the user's own toggle already landed
+        if (error || !result || typeof result.enabled !== 'boolean') return; // leave the toggle as-is rather than guess
+        document.getElementById('availability-toggle').checked = result.enabled;
       });
     }
 
     function setAvailabilitySetting(enabled) {
+      var requestId = ++latestAvailabilityRequest;
       var toggle = document.getElementById('availability-toggle');
       var errorLabel = document.getElementById('availability-error');
       toggle.disabled = true;
       errorLabel.hidden = true;
 
       homeyApi.api('POST', '/availability-setting', { enabled: enabled }, function(error, result) {
+        if (requestId !== latestAvailabilityRequest) return; // superseded by a later toggle
         toggle.disabled = false;
 
         if (error) {
-          toggle.checked = !enabled; // revert to the state before this click
+          toggle.checked = !enabled; // the setting was never persisted for this exact error path
           errorLabel.hidden = false;
           errorLabel.textContent = translate('settings.availability_switch_failed') + ' ' + (error.message || error);
           return;
         }
 
-        toggle.checked = Boolean(result && result.enabled);
+        // The setting itself always took effect by this point (the server persists it before
+        // attempting any restore) - reflect that even if some restores below failed, rather
+        // than reverting the toggle to a state that no longer matches the server.
+        toggle.checked = typeof result?.enabled === 'boolean' ? result.enabled : enabled;
+        if (result && result.restoreFailures > 0) {
+          errorLabel.hidden = false;
+          errorLabel.textContent = translate('settings.availability_switch_partial_restore')
+            .replace('{n}', result.restoreFailures);
+        }
         loadStats(); // an unavailable device may have just been force-restored
       });
     }

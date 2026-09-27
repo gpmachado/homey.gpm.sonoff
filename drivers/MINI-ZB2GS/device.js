@@ -147,8 +147,12 @@ class SonoffMINIZB2GS extends SonoffBase {
             if (main) main._propagateGlobalLabels();
 
             // Homey marks every device available on init - if the main gang
-            // already knows the node is offline, follow it.
-            if (main && main._availability && !main.getAvailable()) {
+            // already knows the node is offline, follow it. Also checks the same
+            // global availability switch the main gang's own AvailabilityManager
+            // gates on (lib/AvailabilityManager.js#_isGloballyEnabled) - this direct
+            // mirror is the one path in the app that reaches setUnavailable() without
+            // going through the manager, so it has to consult the switch itself.
+            if (main && main._availability && !main.getAvailable() && main._availability._isGloballyEnabled()) {
                 this.setUnavailable(main.getStoreValue('availability_unavailable_reason') || 'Device unreachable').catch(() => {});
             }
         }

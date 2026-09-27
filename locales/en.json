@@ -8,6 +8,7 @@
     "availability_switch": "Availability tracking",
     "availability_switch_hint": "When off, devices are never marked unavailable by timeout - Traffic and Rejoins statistics keep recording, and any device currently unavailable is restored right away.",
     "availability_switch_failed": "Failed to change:",
+    "availability_switch_partial_restore": "Switched off, but {n} device(s) could not be restored right away - they should catch up on their own soon.",
     "waiting_for_data": "Waiting for data...",
     "updated_at": "Updated at",
     "failed_load": "Failed to load:",
