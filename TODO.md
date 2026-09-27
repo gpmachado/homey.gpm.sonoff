@@ -147,13 +147,26 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
 
 ### Other items
 
-- Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
-  300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
-  Confirmed why: it is the same firmware (MINI-ZBD is a white-label of the ZBMINIR2 in z2m's own device database),
-  kept as separate Homey drivers on purpose, for a distinct icon and name per model in the app - a shared base must
-  keep the driver folders (and their `driver.compose.json`/icons) separate and only share the `device.js` logic
-  (a common superclass or mixin), not merge them into one driver with several product IDs. Needs the same hardware
-  pass (partida, power cut, removal, restart) on all three before landing. Not started.
+- Duplication between the switch drivers: **done for ZBMINIR2 and MINI-ZBD** (were 94% identical, 318/300 lines).
+  `drivers/relaySwitchBase.js` now holds all the shared logic (onOff wiring, reporting, rejoin, ACK-drop,
+  availability, inching, settings); both `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 11-line empty
+  subclasses. Driver-specific strings (flow card id, log prefixes) come from `this.driver.id` at runtime, which
+  matches each driver's own manifest `id` exactly. The driver folders (`driver.compose.json`, icons, settings)
+  stay separate on purpose - confirmed why: same firmware (MINI-ZBD is a white-label of the ZBMINIR2 in z2m's own
+  device database), kept as two Homey drivers only for a distinct icon and name per model.
+  Verified with a simulated node running the actual classes (not a reimplementation): ACK swallowed, a
+  settings-write-induced burst suppressed, a real cut fires, a lone periodic report does not - identical for both.
+  **Still needs a hardware pass** on both models (partida, power cut, removal, restart) before this is trusted the
+  same way the pre-extraction code was.
+  `MINI-ZB2GS` (80-90% shared with the other two) is not folded in - it is a multi-gang node (main + sub device),
+  which `RelaySwitchBase` does not handle. A reference worth reusing when that is attempted: this app's own
+  `~/HomeyApp/nova.digital.homeyapp/lib/TuyaZclBase.js` already generalizes N-gang ZCL switches (a generic
+  `_endpoint`/`epId` instead of hardcoded gang numbers, siblings via `getNodeDevices()` - which this app already
+  has too, in `lib/connectedDevices.js` and `RejoinManager.js` - availability delegated to the main sibling, and
+  a `_configureOnOffReporting(zclNode, endpointIds)` that loops over however many endpoints exist). It is a
+  different protocol (Tuya, not Sonoff's manufacturer cluster) so nothing copies verbatim, but the shape - generic
+  endpoint list plus sibling iteration, instead of a `_isMainDevice`/hardcoded-two-gangs split - is the right
+  target for a `RelayMultiGangBase` later.
 - Availability on/off switch as a global app setting (design agreed, not implemented): stop marking devices
   unavailable when off, keep the Traffic and Rejoins statistics, restore devices to available when switched
   off, and do not fire the availability flow cards on the switch.
