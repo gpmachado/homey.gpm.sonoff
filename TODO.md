@@ -97,8 +97,14 @@ undercount the Traffic tab (a swallower ahead of `AVAILABILITY` hides frames fro
 
 **Done, hardware-tested:**
 - `lib/FrameMiddleware.js` itself (21 simulated scenarios, including the MINI-ZB2GS multi-device-per-node case).
-- `lib/rejoinDetection.js` (MINI-ZB1GP only) runs on it at `FRAME_PRIORITY.REJOIN` (teste8.log: real power cut,
-  same detection and flow trigger as before the migration).
+- `lib/rejoinDetection.js` gained an optional write guard (`writeGuardMs` + `getLastWriteAt`, checked before the
+  module's own cooldown is touched, so a write-induced false match never consumes it). MINI-ZB1GP runs on it
+  unchanged (no write guard needed - no relay, no frequent writes); ZBMINIR2 now runs on it too, with the guard
+  (teste8.log: real power cut on the MINI-ZB1GP; teste12.log: two settings writes on two different ZBMINIR2 - LED
+  indicator off, TurboMode on - caused zero false rejoins, and a later real power cut on two ZBMINIR2 sharing a
+  circuit fired the trigger once per device, no duplicates, no interference with the other 28 devices running).
+  ZBMINIR2's own ACK-drop (cmdId 0x0B) moved to a small handler at `FRAME_PRIORITY.CLUSTER_REPORT`.
+  MINI-ZBD and MINI-ZB2GS still carry their own separate inline copy - not migrated yet, see below.
 - `lib/availabilityHooks.js`'s inbound hook (every driver using `AvailabilityManagerPassive`) runs on it at
   `FRAME_PRIORITY.AVAILABILITY`; the outbound `sendFrame` hook is untouched, a different function outside
   FrameMiddleware's scope. `_originalHandleFrame`/`_substituteHandleFrame` are gone, the middleware owns that
@@ -114,9 +120,9 @@ undercount the Traffic tab (a swallower ahead of `AVAILABILITY` hides frames fro
   behaviour changed in ways not verified against the current implementation. If this is attempted again, don't
   reuse `_notifyAliveOnSwallow`-style compensation - with the corrected priorities, `AVAILABILITY` already sees
   every frame before anything can swallow it, so no compensation is needed.
-- ZBMINIR2, MINI-ZBD and MINI-ZB2GS's own inline rejoin + ACK-drop code - still raw-wrapped, not on
-  `lib/rejoinDetection.js`. Blocked on generalizing the write guard: `_lastSonoffWriteAt` (ZBMINIR2/MINI-ZBD) and
-  `node._zb2gsLastSonoffWriteAt` (MINI-ZB2GS, node-scoped since the two gangs share the node) suppress the burst a
+- MINI-ZBD and MINI-ZB2GS's own inline rejoin + ACK-drop code - still raw-wrapped, not on `lib/rejoinDetection.js`
+  (ZBMINIR2 is done, see above; the write guard it needed is now a module option). MINI-ZB2GS additionally needs
+  `node._zb2gsLastSonoffWriteAt` (node-scoped since the two gangs share the node) to suppress the burst a
   settings write itself causes; `lib/rejoinDetection.js` has no equivalent (never needed one for the MINI-ZB1GP,
   which has no relay and so no frequent user-triggered writes). A unification needs this as an optional parameter
   (node-scoped or device-scoped depending on the driver), not just a wrapper swap - confirmed by reading the
