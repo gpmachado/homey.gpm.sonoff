@@ -87,11 +87,13 @@ conclusion of the first probe.
   `drivers/sonoffbase.js`), and the flags on the node stop re-wrapping. Idea: one ordered hook list on the node with a
   single `handleFrame` that iterates it, so each layer removes only itself; that would also let the Basic filter
   (never removed today) be uninstalled. No bug was observed, so this is a cleanup, not a fix.
-- `AvailabilityManager.js` split (needs the same hardware tests): `HourlyMessageStats` is already out
-  (`lib/HourlyMessageStats.js`). Next candidate is the inbound/outbound hooks (`_installHandleFrameHook`,
-  `_installSendFailureHook`, `_cleanup`) as a mixin or `lib/availabilityHooks.js`. Keep the timeout policy,
-  poll-before-offline and the sibling cascade in one module, so availability state is not spread over several files.
-  Not worth splitting Passive and Callback into separate files before the hooks are out.
+- `AvailabilityManager.js` split: `HourlyMessageStats` is out (`lib/HourlyMessageStats.js`) and so are the inbound and
+  outbound hooks (`lib/availabilityHooks.js`, applied to the Passive manager). The timeout policy, poll-before-offline
+  and the sibling cascade stay in `AvailabilityManager.js` on purpose, so availability state is not spread over several
+  files, and Passive and Callback stay together. Verified: old and new modules behave identically on a simulated
+  node, and on hardware the hooks install once per node for 27 devices with no errors. **Still to test on hardware**:
+  cut the power of one ZBMINIR2 (Send failed x/3, unavailable, back to available), remove one device (handleFrame
+  hook restored, the others keep counting), restart the app.
 - Availability on/off switch as a global app setting (design agreed, not implemented): stop marking devices
   unavailable when off, keep the Traffic and Rejoins statistics, restore devices to available when switched
   off, and do not fire the availability flow cards on the switch.
