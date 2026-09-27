@@ -81,6 +81,10 @@ conclusion of the first probe.
 ## Other open items
 
 - Rejoin detection: ZBMINIR2, MINI-ZBD and MINI-ZB2GS still carry their own copy (about 40 lines each, 30 s cooldown, a write guard). `lib/rejoinDetection.js` was written for the MINI-ZB1GP; moving the three onto it needs the power-cut test on each, and a decision on the cooldown (30 s merges cuts closer than that).
+- Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
+  300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
+  A shared base (onOff wiring, reporting, rejoin, availability) would remove most of that, but needs the same
+  hardware pass (partida, power cut, removal, restart) on all three before landing. Not started.
 - Frame hooks (needs hardware tests on ZBMINI, ZBMINIR2, MINI-ZBD, MINI-ZB2GS, MINI-ZB1GP and the sensors before
   and after): several layers wrap `node.handleFrame` today: the Basic filter in `SonoffBase`, the per-driver hooks of
   ZBMINIR2 / MINI-ZBD / MINI-ZB2GS, `_installClusterReportInterceptor` (MINI-ZB1GP) and the availability manager.
@@ -92,6 +96,21 @@ conclusion of the first probe.
   `installRejoinDetection`) run before `AvailabilityManagerPassive.install()`, which stays last; MINI-ZB2GS looks
   reversed by line number but calls `_installFrameHook()` (l.129) before the install (l.140). MINI-ZB2GS needs its 30 s
   rejoin cooldown because both gang endpoints dump on boot; a shorter one would still merge those (they arrive within ms).
+  **Design sketched by an external review (not yet built or tested)**: `lib/FrameMiddleware.js`, one `node.handleFrame`
+  per node with prioritized handlers (`register(id, priority, fn)`, `fn` returns `false` to swallow a frame),
+  so each layer removes only its own entry instead of restoring a saved "original" function. Priorities suggested:
+  Basic filter (10) -> cluster-report interceptor (20) -> rejoin (50) -> availability (100, last, never swallows).
+  One correctness note for whoever builds it: the Basic filter in `SonoffBase` and `installRejoinDetection` on
+  MINI-ZB2GS must stay keyed by the **node** (today: `node._basicReadResponseHookInstalled`,
+  `node._rejoinDetectionInstalled`), not by `this.getData().id` — a multi-gang node has one device instance per
+  gang calling `onNodeInit`, and a per-device id would register one duplicate handler per gang instead of one per
+  node, which is exactly the stacking the guards exist to prevent. `installRejoinDetection` already gets this
+  right (node-level flag, device pointer updated on re-init); a `FrameMiddleware` port needs the same. Suggested
+  order, smallest first: (1) `FrameMiddleware.js` alone, unit-tested standalone, wired into nothing yet;
+  (2) migrate `installRejoinDetection` onto it, since it already isolates cleanly and MINI-ZB1GP's real hardware
+  gives a fast test; (3) migrate `availabilityHooks.js`, hardware-tested the same way as the current split
+  (partida, power cut, removal, restart); (4) `SonoffBase`'s Basic filter and cluster-report interceptor last,
+  since every driver goes through it.
 - `AvailabilityManager.js` split: `HourlyMessageStats` is out (`lib/HourlyMessageStats.js`) and so are the inbound and
   outbound hooks (`lib/availabilityHooks.js`, applied to the Passive manager). The timeout policy, poll-before-offline
   and the sibling cascade stay in `AvailabilityManager.js` on purpose, so availability state is not spread over several
