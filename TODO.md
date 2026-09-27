@@ -88,6 +88,10 @@ conclusion of the first probe.
   `drivers/sonoffbase.js`), and the flags on the node stop re-wrapping. Idea: one ordered hook list on the node with a
   single `handleFrame` that iterates it, so each layer removes only itself; that would also let the Basic filter
   (never removed today) be uninstalled. No bug was observed, so this is a cleanup, not a fix.
+  Audit of the install order (2026-09-27): in every driver the frame hooks (own wrapper, `_installClusterReportInterceptor`,
+  `installRejoinDetection`) run before `AvailabilityManagerPassive.install()`, which stays last; MINI-ZB2GS looks
+  reversed by line number but calls `_installFrameHook()` (l.129) before the install (l.140). MINI-ZB2GS needs its 30 s
+  rejoin cooldown because both gang endpoints dump on boot; a shorter one would still merge those (they arrive within ms).
 - `AvailabilityManager.js` split: `HourlyMessageStats` is out (`lib/HourlyMessageStats.js`) and so are the inbound and
   outbound hooks (`lib/availabilityHooks.js`, applied to the Passive manager). The timeout policy, poll-before-offline
   and the sibling cascade stay in `AvailabilityManager.js` on purpose, so availability state is not spread over several
