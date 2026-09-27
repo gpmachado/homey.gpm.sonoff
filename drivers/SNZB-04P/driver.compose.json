@@ -17,7 +17,7 @@
       "1": { "clusters": [1, 32, 1280, 64529], "bindings": [32] }
     },
     "learnmode": {
-      "image": "{{driverAssetsPath}}/learn.svg",
+      "image": "{{driverAssetsPath}}/icon.svg",
       "instruction": {
         "en": "Press the button for approx 10 seconds until the red LED starts blinking.",
         "es": "Pulsa el botón durante aprox. 10 segundos hasta que el LED rojo empiece a parpadear.",

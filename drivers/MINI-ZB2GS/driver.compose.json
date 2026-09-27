@@ -378,7 +378,7 @@
       }
     },
     "learnmode": {
-      "image": "{{driverAssetsPath}}/learn.svg",
+      "image": "{{driverAssetsPath}}/icon.svg",
       "instruction": {
         "en": "Press the button on the top for approx 10 seconds until the green LED blinks rapidly. Two devices will be created, one per channel.",
         "es": "Pulsa el botón de la parte superior durante aprox. 10 segundos hasta que el LED verde parpadee rápidamente. Se crearán dos dispositivos, uno por canal.",

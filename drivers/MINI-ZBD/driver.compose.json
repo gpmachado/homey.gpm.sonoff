@@ -35,7 +35,7 @@
       }
     },
     "learnmode": {
-      "image": "{{driverAssetsPath}}/learn.svg",
+      "image": "{{driverAssetsPath}}/icon.svg",
       "instruction": {
         "en": "This device has no physical button. Toggle the connected external switch on/off 10 times in a row to enter pairing mode.",
         "es": "Este dispositivo no tiene botón físico. Alterna el interruptor externo conectado 10 veces seguidas para entrar en modo de emparejamiento.",

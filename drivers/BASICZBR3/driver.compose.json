@@ -37,7 +37,7 @@
       }
     },
     "learnmode": {
-      "image": "{{driverAssetsPath}}/learn.svg",
+      "image": "{{driverAssetsPath}}/icon.svg",
       "instruction": {
         "en": "Push the button for approx 8 seconds until the LED blinks rapidly.",
         "es": "Pulsa el botón durante aprox. 8 segundos hasta que el LED parpadee rápidamente.",
