@@ -112,6 +112,26 @@ conclusion of the first probe.
   share a node (rejoin + availability, our actual MINI-ZB1GP case: calling `dispose()` where `unregister(id)` was
   meant silently stops the other one too, confirmed). Kept our `lib/FrameMiddleware.js` as is; adopted only its
   harmless `listHandlers()` diagnostic.
+  **A proposed SonoffBase + ZBMINIR2 migration, reviewed 2026-09-27, is not safe to apply as given**: it puts
+  `BASIC_FILTER`/`CLUSTER_REPORT` (which can swallow) at priority 10/20 and `AVAILABILITY`/`REJOIN` (which never
+  swallow) at 50/100. In this dispatch model (stops at the first `false`) that is backwards: a swallower running
+  before an observer hides that frame from it entirely. Confirmed by simulation:
+  (1) `_notifyAliveOnSwallow`'s compensation (`notifyActivity()`) only restores the availability timeout, not the
+  Traffic tab's message count (`notifyActivity` on `AvailabilityManagerPassive` deliberately skips `_recordMessage`
+  - see its own comment - because today it is only ever called as a fallback from a report parser, after the
+  frame already reached availability's own handler; once a swallower could intercept it first, the count silently
+  stops advancing for whatever gets swallowed);
+  (2) worse, MINI-ZB1GP's rejoin detection needs to see the exact SonoffCluster report a migrated cluster-report
+  interceptor would swallow to parse it - at `CLUSTER_REPORT: 20` ahead of `REJOIN: 50`, the interceptor eats the
+  frame first and "Reconnected after power cut" silently stops firing (reproduced with a simulated node: 0 detections
+  where 1 was expected).
+  Fixed in `lib/FrameMiddleware.js` regardless of whether the migration proceeds: `AVAILABILITY: 0`, `REJOIN: 5`,
+  both below `BASIC_FILTER: 10` / `CLUSTER_REPORT: 20`, with the general rule documented (an observer's number must
+  be lower than any swallower's). Verified this does not change anything currently shipped (rejoin + availability
+  composition re-tested, identical results) and that it does fix both scenarios above in a simulated node. The
+  SonoffBase/ZBMINIR2 patch itself is still not applied - it would need updating to the corrected priorities (and
+  dropping `_notifyAliveOnSwallow` entirely, since with observers running first it is no longer needed) before it
+  is worth a hardware pass.
 - Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
   300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
   A shared base (onOff wiring, reporting, rejoin, availability) would remove most of that, but needs the same
