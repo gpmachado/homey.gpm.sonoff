@@ -106,7 +106,7 @@ class SonoffBase extends ZigBeeDevice {
    * lib/AvailabilityManager.js, which already covers devices that already
    * poll something else on a short interval (energy meters).
    */
-  _startActivePoll(intervalMs = 5 * 60 * 1000) {
+  _startActivePoll(intervalMs = 20 * 60 * 1000) {
     this._activePoll ??= new ActivePoll(this, { intervalMs });
     this._activePoll.start();
   }
