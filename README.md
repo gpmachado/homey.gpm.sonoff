@@ -84,6 +84,8 @@ The tiers are in [lib/constants.js](lib/constants.js); the logic is in [lib/Avai
 
 **Reporting re-sync.** Sleepy sensors announce every 29 to 60 minutes. Re-applying the whole reporting configuration at every announce is wasteful and fails while the sensor sleeps, so the thermometers and door sensors redo it at most once every 3 hours.
 
+**Reportable-change thresholds (SNZB-02LD/WD).** `minInterval`/`maxInterval` (5 s / 3600 s by default) match Sonoff's own iHost hub, confirmed by sniffer across four separate pairings/re-syncs of a real unit. The `minChange` thresholds are fixed to iHost's own values too - 0.5°C and 3% - independently of the temperature/humidity decimals setting, which is display formatting only. An earlier version tied `minChange` to the decimals setting (1 decimal → 0.1°C, 5x more sensitive than iHost), which measurably drove more Zigbee traffic and battery use than the reference hub for the same physical sensor. See [drivers/temphumiditysensor.js](drivers/temphumiditysensor.js).
+
 **Poll Control (0x0020).** Door and temperature sensors bind Poll Control and log its check-ins ([lib/SonoffPollControlCluster.js](lib/SonoffPollControlCluster.js), [lib/pollControlHeartbeat.js](lib/pollControlHeartbeat.js)). In tests the check-ins did not reach the app, so they are not relied on as a heartbeat. In the iHost pairing capture the SNZB-04PR2 sets a check-in interval of 1 hour. The binding to the coordinator is made at pairing.
 
 ## Power-cut detection (rejoin)

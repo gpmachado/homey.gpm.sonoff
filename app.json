@@ -1711,6 +1711,9 @@
             "it": "Decimali di temperatura",
             "de": "Temperatur-Dezimalstellen"
           },
+          "hint": {
+            "en": "Display only - does not change how often the device reports (fixed to match Sonoff's own iHost hub: 0.5°C)."
+          },
           "value": "1",
           "values": [
             {
@@ -1862,6 +1865,9 @@
             "it": "Decimali di temperatura",
             "de": "Temperatur-Dezimalstellen"
           },
+          "hint": {
+            "en": "Display only - does not change how often the device reports (fixed to match Sonoff's own iHost hub: 0.5°C)."
+          },
           "value": "1",
           "values": [
             {
@@ -1892,6 +1898,9 @@
             "es": "Decimales de humedad",
             "it": "Decimali di umidità",
             "de": "Luftfeuchtigkeit-Dezimalstellen"
+          },
+          "hint": {
+            "en": "Display only - does not change how often the device reports (fixed to match Sonoff's own iHost hub: 3%)."
           },
           "value": "0",
           "values": [

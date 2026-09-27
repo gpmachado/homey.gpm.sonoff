@@ -25,6 +25,9 @@
       "it": "Decimali di temperatura",
       "de": "Temperatur-Dezimalstellen"
     },
+    "hint": {
+      "en": "Display only - does not change how often the device reports (fixed to match Sonoff's own iHost hub: 0.5°C)."
+    },
     "value": "1",
     "values": [
       { "id": "0", "label": { "en": "0 (e.g. 21°C)" } },

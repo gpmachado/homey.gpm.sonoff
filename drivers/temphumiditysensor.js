@@ -16,6 +16,19 @@ const { bindPollControl, retryPollControlIfPending } = require('../lib/pollContr
 // At most one re-sync per this long, counted from the last successful one.
 const RESYNC_MIN_INTERVAL_MS = 3 * 60 * 60 * 1000;
 
+// Reportable-change thresholds, matching Sonoff's own iHost hub exactly - confirmed via
+// sniffer across 4 separate pairings/re-syncs of a real SNZB-02WD (Configure Reporting,
+// clusters 0x0402/0x0405): iHost always sends minInterval=5, maxInterval=3600, and these
+// two values, regardless of any display setting (it has no decimals option of its own).
+// Our previous default (1 decimal -> 10, i.e. 0.1 degC) was 5x more sensitive than this,
+// and 0 decimals for humidity -> 100 (1%) was 3x more sensitive - both drove far more
+// Zigbee traffic and battery drain than the reference hub for the same physical sensor.
+// Decoupled from temperature_decimals/humidity_decimals on purpose: those settings are
+// display formatting only (_parseReportedValue) and no longer affect how often the device
+// reports, matching how iHost treats them as separate concerns.
+const TEMP_MIN_CHANGE = 50; // 0.5 degC (TemperatureMeasurement is in units of 0.01 degC)
+const HUM_MIN_CHANGE = 300; // 3% (RelativeHumidity is in units of 0.01%)
+
 class TempHumiditySensor extends SonoffBase {
 
     async onNodeInit({ zclNode }) {
@@ -91,11 +104,7 @@ class TempHumiditySensor extends SonoffBase {
     }
 
     async _configureReporting() {
-        const tempDecimals = parseInt(this.getSetting('temperature_decimals') ?? '1', 10);
-        const humDecimals = parseInt(this.getSetting('humidity_decimals') ?? '0', 10);
         const maxInterval = parseInt(this.getSetting('reporting_interval') || '3600', 10);
-        const tempMinChange = Math.pow(10, 2 - tempDecimals); // 0dec=100, 1dec=10, 2dec=1
-        const humMinChange = Math.pow(10, 2 - humDecimals);
 
         const reportingConfigs = [
             {
@@ -104,7 +113,7 @@ class TempHumiditySensor extends SonoffBase {
                 attributeName: 'measuredValue',
                 minInterval: 5,
                 maxInterval,
-                minChange: tempMinChange,
+                minChange: TEMP_MIN_CHANGE,
             },
         ];
 
@@ -115,12 +124,12 @@ class TempHumiditySensor extends SonoffBase {
                 attributeName: 'measuredValue',
                 minInterval: 5,
                 maxInterval,
-                minChange: humMinChange,
+                minChange: HUM_MIN_CHANGE,
             });
         }
 
         await this.configureAttributeReporting(reportingConfigs);
-        this.log(`Reporting configured: maxInterval=${maxInterval}s tempMinChange=${tempMinChange} humMinChange=${humMinChange}`);
+        this.log(`Reporting configured: maxInterval=${maxInterval}s tempMinChange=${TEMP_MIN_CHANGE} humMinChange=${HUM_MIN_CHANGE}`);
     }
 
     async syncOffsetSettings() {
@@ -183,7 +192,11 @@ class TempHumiditySensor extends SonoffBase {
     }
 
     async onSettings({ newSettings, changedKeys }) {
-        if (changedKeys.includes('temperature_decimals') || changedKeys.includes('humidity_decimals') || changedKeys.includes('reporting_interval')) {
+        // temperature_decimals/humidity_decimals are display formatting only
+        // (_parseReportedValue) - they no longer affect the device's reporting
+        // config (see TEMP_MIN_CHANGE/HUM_MIN_CHANGE), so only a reporting_interval
+        // change needs to reach the device.
+        if (changedKeys.includes('reporting_interval')) {
             await this._configureReporting().catch(err => this.error('Failed to reconfigure reporting', err));
         }
 

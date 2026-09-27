@@ -213,6 +213,22 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   watchdog specifically caused it - latent today since nothing else in the app calls `setUnavailable()` for an
   unrelated reason. All fixes re-verified with an extended standalone simulation plus a dedicated `api.js` test
   (validation, restore-failure reporting, the `allDevices()` refactor) - both passing - before committing.
+- SNZB-02LD/WD reporting too often (Traffic tab: two SNZB-02LD units at ~280-293 msg/24h, more than a
+  SNZB-02WD at 136/24h despite reporting one attribute instead of two): **done**. Root cause confirmed by
+  sniffer, not environment/placement - `drivers/temphumiditysensor.js`'s `_configureReporting()` tied `minChange`
+  to the temperature/humidity decimals setting (1 decimal → 10 = 0.1°C, 0 decimals → 100 = 1%), 5x/3x more
+  sensitive than Sonoff's own iHost hub. Extracted the iHost reference values with `tshark` from
+  `_reference/sniffers/sonoff-snzb02/*.pcapng` (Configure Reporting frames on clusters 0x0402/0x0405,
+  confirmed identical across 4 separate pairings/re-syncs): `minInterval=5, maxInterval=3600` (already matched),
+  `minChange=50` (0.5°C) and `minChange=300` (3%) - fixed regardless of any display setting, since iHost has no
+  decimals option of its own. Fixed by decoupling: `TEMP_MIN_CHANGE`/`HUM_MIN_CHANGE` are now fixed constants
+  matching iHost exactly; `temperature_decimals`/`humidity_decimals` are display formatting only
+  (`_parseReportedValue`) and no longer reconfigure the device in `onSettings()` (only `reporting_interval`
+  still does). Settings hints updated to say so. Verified with a standalone simulation against the real
+  `TempHumiditySensor` class (a minimal `homey` module stub under `NODE_PATH`, since `homey-zigbeedriver`
+  requires the real Homey runtime at import time) - decimals no longer affect `minChange`, only
+  `reporting_interval` reconfigures. Not yet re-tested on real hardware (needs a fresh Traffic tab reset and a
+  few hours, same as the original observation).
 - Device name in the log lines: `this.log` cannot be replaced on an SDK device. Only option is a `nlog()`
   helper and a mechanical replacement of about 190 calls, and SDK/homey-zigbeedriver lines would still
   show only the uuid.
