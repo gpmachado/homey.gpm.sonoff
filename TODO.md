@@ -95,6 +95,16 @@ conclusion of the first probe.
   `[FrameMiddleware]` errors, no effect on the other devices sharing the app. The write-guard gap above still
   applies before ZBMINIR2/MINI-ZBD/MINI-ZB2GS can move onto the same module. Next: `availabilityHooks.js`, then
   `SonoffBase`'s Basic filter and cluster-report interceptor.
+  **2026-09-27 (later the same day): stage 3 done.** `availabilityHooks.js`'s inbound hook now registers on
+  `FrameMiddleware` too, at `FRAME_PRIORITY.AVAILABILITY` (last); the outbound `sendFrame` hook is unchanged (a
+  different function, outside FrameMiddleware's scope). `_originalHandleFrame`/`_substituteHandleFrame` are gone -
+  the middleware owns that state. Verified against the pre-migration module on 16 simulated scenarios (identical
+  behaviour and log lines) and, new for this stage, rejoin + availability coexisting on one node (priority order
+  rejoin-then-availability, both see every frame, rejoin survives an availability uninstall). On hardware
+  (teste9.log): 30 clean installs, a real power cut on the MINI-ZB1GP fired the rejoin trigger normally, removing
+  that device produced the same restore sequence as before, zero residual activity or errors for 8.5 min after,
+  and the other 29 devices kept working. Left: `SonoffBase`'s Basic filter and cluster-report interceptor - the
+  only piece every driver goes through, so the largest blast radius; no urgency, no bug observed.
 - Duplication between the switch drivers: `ZBMINIR2/device.js` and `MINI-ZBD/device.js` are 94% identical (318 and
   300 lines), their `driver.settings.compose.json` is byte-identical, and `MINI-ZB2GS` shares 80-90% of both with them.
   A shared base (onOff wiring, reporting, rejoin, availability) would remove most of that, but needs the same
