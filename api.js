@@ -13,7 +13,13 @@
  * getRejoinStats/resetRejoinStats cover devices with rejoin detection
  * (see lib/RejoinManager.js) independently - a device can have one, both,
  * or neither, so these stay separate endpoints/tabs.
+ *
+ * getAvailabilitySetting/setAvailabilitySetting cover the app-wide on/off switch
+ * (see lib/AvailabilityManager.js, "Global on/off switch") - turning it off also
+ * force-restores every device that is currently unavailable, in the same pass.
  */
+const { AVAILABILITY_ENABLED_SETTING_KEY } = require('./lib/constants');
+
 module.exports = {
   async getMessageStats({ homey }) {
     const rowsByPhysicalDevice = new Map();
@@ -150,5 +156,40 @@ module.exports = {
     homey.settings.set('rejoin_tracking_since', Date.now());
 
     return { since: homey.settings.get('rejoin_tracking_since') };
+  },
+
+  async getAvailabilitySetting({ homey }) {
+    return { enabled: homey.settings.get(AVAILABILITY_ENABLED_SETTING_KEY) !== false };
+  },
+
+  async setAvailabilitySetting({ homey, body }) {
+    const enabled = Boolean(body?.enabled);
+    homey.settings.set(AVAILABILITY_ENABLED_SETTING_KEY, enabled);
+
+    if (!enabled) {
+      // Force-restore every device that is currently unavailable: turning the switch
+      // off means "no device should be marked unavailable by timeout", which includes
+      // ones the watchdog already caught before this call.
+      const drivers = homey.drivers.getDrivers();
+      const restores = [];
+      for (const driver of Object.values(drivers)) {
+        for (const device of driver.getDevices()) {
+          const manager = device._availability;
+          if (manager && typeof manager.markAvailable === 'function' && !device.getAvailable()) {
+            restores.push(manager.markAvailable());
+          }
+        }
+      }
+
+      const results = await Promise.allSettled(restores);
+      const failures = results.filter(result => result.status === 'rejected');
+      if (failures.length > 0) {
+        throw new Error(
+          `Availability tracking is now off, but failed to restore ${failures.length} of ${results.length} devices`,
+        );
+      }
+    }
+
+    return { enabled };
   },
 };

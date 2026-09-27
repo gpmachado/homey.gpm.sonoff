@@ -92,6 +92,12 @@ When ZBMINIR2, MINI-ZBD, MINI-ZB2GS or MINI-ZB1GP regain power, they send a burs
 
 ## App settings
 
+A switch above the tabs turns availability tracking on/off app-wide (`availability_enabled` in `homey.settings`,
+`api.js`'s `getAvailabilitySetting`/`setAvailabilitySetting`). Off: no device is ever marked unavailable by the
+watchdog timeout or by a send failure, and any device currently unavailable is restored right away; Traffic and
+Rejoins statistics, and restoring a device on real activity, keep working unaffected either way. See
+[lib/AvailabilityManager.js](lib/AvailabilityManager.js), "Global on/off switch".
+
 The settings page has two tabs:
 - **Traffic**: Zigbee frames per device, by source (current hour and last 24 h). A device with no activity here is not talking to the app.
 - **Rejoins**: how many times each device rejoined and when, with a reset.

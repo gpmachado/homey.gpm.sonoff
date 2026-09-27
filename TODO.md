@@ -123,6 +123,8 @@ undercount the Traffic tab (a swallower ahead of `AVAILABILITY` hides frames fro
   behaviour changed in ways not verified against the current implementation. If this is attempted again, don't
   reuse `_notifyAliveOnSwallow`-style compensation - with the corrected priorities, `AVAILABILITY` already sees
   every frame before anything can swallow it, so no compensation is needed.
+  Decision (2026-09-27): no action for now - largest blast radius in the app, no bug observed, no pressing
+  need. Revisit only if a concrete bug or feature need shows up; don't refactor this speculatively.
 - MINI-ZBD and MINI-ZB2GS's own inline rejoin + ACK-drop code - still raw-wrapped, not on `lib/rejoinDetection.js`
   (ZBMINIR2 is done, see above; the write guard it needed is now a module option). MINI-ZB2GS additionally needs
   `node._zb2gsLastSonoffWriteAt` (node-scoped since the two gangs share the node) to suppress the burst a
@@ -167,9 +169,22 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   different protocol (Tuya, not Sonoff's manufacturer cluster) so nothing copies verbatim, but the shape - generic
   endpoint list plus sibling iteration, instead of a `_isMainDevice`/hardcoded-two-gangs split - is the right
   target for a `RelayMultiGangBase` later.
-- Availability on/off switch as a global app setting (design agreed, not implemented): stop marking devices
-  unavailable when off, keep the Traffic and Rejoins statistics, restore devices to available when switched
-  off, and do not fire the availability flow cards on the switch.
+- Availability on/off switch as a global app setting: **done**, not yet hardware-tested. `homey.settings` key
+  `availability_enabled` (`lib/constants.js`), read by `AvailabilityManagerBase._isGloballyEnabled()` and gating
+  the three paths that can mark a device unavailable - the watchdog timeout, `_onSendFailure`'s confirmation poll
+  (Passive), and `_reapplyUnavailable()` at install (so a stale offline reason from before an app restart isn't
+  reapplied while the switch is off). `_markAlive`/`_recordMessage` are never gated - activity tracking, Traffic
+  and Rejoins statistics, and restoring a device to available on real activity all keep working exactly as
+  before. `api.js`'s `getAvailabilitySetting`/`setAvailabilitySetting` (new `app.json` routes, added through
+  `.homeycompose/app.json` + `homey app build`) read/write the setting; turning it off also force-restores, in
+  the same call, every device that is currently unavailable (`manager.markAvailable()` per device, mirroring how
+  `resetMessageStats`/`resetRejoinStats` already iterate `homey.drivers.getDrivers()`). UI: a switch in the
+  settings page header (`settings/index.html`, above the Traffic/Rejoins tabs, since this applies to both) -
+  `locales/en.json` has the three new strings. Verified with a standalone simulation against the real
+  `AvailabilityManagerPassive` class (fake device/homey, watchdog tick driven manually): enabled-path behaviour
+  unchanged, disabled-path never marks unavailable/never polls, stale offline state not reapplied at install,
+  `markAvailable()` still restores while the switch is off. This app is meant to be the reference implementation
+  for the same switch in Moes/Tuya/NovaDigital - see `~/HomeyApp/ARQUITETURA_DISPONIBILIDADE_REJOIN.md`.
 - Device name in the log lines: `this.log` cannot be replaced on an SDK device. Only option is a `nlog()`
   helper and a mechanical replacement of about 190 calls, and SDK/homey-zigbeedriver lines would still
   show only the uuid.
