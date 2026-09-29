@@ -13,7 +13,8 @@ Based on [Homey.Sonoff.Zigbee](https://github.com/StyraHem/Homey.Sonoff.Zigbee) 
 - MINI-ZB1GP: **Metering communication error** and **Electrical status** (overload protection) alarms, decoded from the fault code (`0xFC11`, attribute `0x0010`). Existing devices get them without re-pairing.
 - BASICZBR3: availability tracking. The firmware rejects ZCL general commands but reports `onOff` every 300 s, so the passive frame hook is used with a 25 min timeout and no confirmation poll.
 - Poll Control: the interval read that fails at every app start (the sleepy sensor is asleep) stays pending and is retried on the next announce, report or activity, up to 6 attempts.
-- Removed the MINI-ZB1GSP, SNZB-05P, SNZB-09P and S60ZBTPF drivers: no physical unit to test them. They can be restored from the git history.
+- Removed the MINI-ZB1GSP, SNZB-09P and S60ZBTPF drivers: no physical unit to test them. They can be restored from the git history.
+- Restored the SNZB-05P water leak sensor driver (removed above for the same reason, no unit at the time) - back in for testing.
 - The 1.0.5 changelog no longer claims the battery-sensor availability: it only exists from 1.0.6.
 
 **v1.0.6**
@@ -47,8 +48,8 @@ Based on [Homey.Sonoff.Zigbee](https://github.com/StyraHem/Homey.Sonoff.Zigbee) 
 | v1.0.0 | BASICZBR3 (Basic switch), MINI-ZB1GP (Energy meter, no relay), MINI-ZBD (Dry contact), SNZB-03 (Motion sensor), SNZB-06P (Presence sensor), ZBMINIR2 (Switch) |
 | v1.0.1 | DONGLE-E_R / DONGLE-P (Zigbee dongles as routers), SNZB-04P (Door/window contact), SNZB-02LD (Thermometer), SNZB-02WD (Thermometer and humidity), ZBMINI (Switch) |
 | v1.0.2 | SNZB-04PR2 (Door/window contact) |
-| v1.0.5 | MINI-ZB2GS (2-gang switch) |
-| Removed in v1.0.7 | MINI-ZB1GSP (added v1.0.4), S60ZBTPF (added v1.0.4), SNZB-05P (added v1.0.5), SNZB-09P (added v1.0.5) |
+| v1.0.5 | MINI-ZB2GS (2-gang switch), SNZB-05P (Water leak sensor) |
+| Removed in v1.0.7 | MINI-ZB1GSP (added v1.0.4), S60ZBTPF (added v1.0.4), SNZB-09P (added v1.0.5) |
 
 Tested on physical units paired with Homey, with logs kept for hours: BASICZBR3, MINI-ZB1GP, MINI-ZBD, MINI-ZB2GS, SNZB-02LD, SNZB-02WD, SNZB-03, SNZB-04P, SNZB-04PR2, SNZB-06P, ZBMINI and ZBMINIR2. The dongles are owned and run as routers with the router firmware from Sonoff's site. The removed drivers were not tested.
 

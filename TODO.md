@@ -227,8 +227,16 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   still does). Settings hints updated to say so. Verified with a standalone simulation against the real
   `TempHumiditySensor` class (a minimal `homey` module stub under `NODE_PATH`, since `homey-zigbeedriver`
   requires the real Homey runtime at import time) - decimals no longer affect `minChange`, only
-  `reporting_interval` reconfigures. Not yet re-tested on real hardware (needs a fresh Traffic tab reset and a
-  few hours, same as the original observation).
+  `reporting_interval` reconfigures. **Confirmed on real hardware** (`teste18.log`): all three units logged
+  `Reporting configured: maxInterval=3600s tempMinChange=50 humMinChange=300`, and 24h message counts dropped
+  from ~293/280/136 to 66/64/103 - the SNZB-02WD is now correctly the highest of the three (it reports one more
+  attribute than the SNZB-02LD units), matching what the equal-threshold design predicts instead of the earlier,
+  decimals-driven imbalance.
+- SNZB-05P (water leak sensor): restored from git history (`git checkout 1dd7397~1 -- drivers/SNZB-05P`) - a
+  physical unit is available to test again after being removed in 1dd7397 for lack of one. Unchanged from the
+  pre-removal version: `doorwindowsensorbase.js`/`lib/IASZoneHelper.js` (`hasAlarm1`/`hasBatteryLow`) it depends
+  on are still current, and SNZB-04P/04PR2 already exercise the same base class. `homey app build` validates
+  clean, `node --check` passes. Not yet tested on real hardware - needs a pairing.
 - Device name in the log lines: `this.log` cannot be replaced on an SDK device. Only option is a `nlog()`
   helper and a mechanical replacement of about 190 calls, and SDK/homey-zigbeedriver lines would still
   show only the uuid.
