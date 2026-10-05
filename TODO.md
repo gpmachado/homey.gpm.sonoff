@@ -2,7 +2,7 @@
 
 ## MINI-ZB1GP: Electrical Monitoring (power protector, attribute 0x7016)
 
-Status: researched and confirmed readable on the real unit, **not implemented**. The two fault alarms
+Status: **read fixed and shown read-only** (2026-10-05, simulated against the real bytes, not yet run on the unit); editing not implemented. The two fault alarms
 (metering error, overload) that come from the same feature area are already in the driver.
 
 ### What it is
@@ -54,11 +54,18 @@ conclusion of the first probe.
 
 ### To do
 
-1. **Fix the read.** Either make the `ZCLUint8Array` parser return the elements and the correct length
-   (element type byte + 2-byte count + data), or read the raw response frame and parse it directly.
-   Check it against the captured bytes in `teste-overmonitor3.log` before trusting it.
-2. **Show the current limits** in the device settings, read-only first (labels like the HA ones:
-   Overcurrent / Overpower / Overvoltage / Undervoltage Monitoring).
+1. **Fix the read.** DONE. `ZCLUint8Array.fromBuffer` returned a bare Buffer; zigbee-clusters' record parser
+   calls it with `returnLength` and expects `{ result, length }` for a variable-length type, so the value
+   came back `undefined`. It now reads the array header (element type + 2-byte count) and returns the
+   elements. Checked against the real bytes in `teste-overmonitor3.log` (first 50 of 70 captured, the rest
+   padded): the record parser gives id `0x7016`, SUCCESS, 63 elements, and `parsePowerProtectorPayload()`
+   gives 16 A, 3840 W, overvoltage on 277 V, undervoltage on 165 V - the values in the table above. The
+   original code, same input, gives `undefined`.
+2. **Show the current limits** in the device settings, read-only first. DONE: `_readElectricalMonitoring()`
+   in `drivers/MINI-ZB1GP/device.js` reads `0x7016` once at start (with `manufacturerCode: 0x1286`) and writes
+   four read-only labels (Overcurrent / Overpower / Overvoltage / Undervoltage monitoring) in a settings group.
+   A failed read only logs a line. Simulated with the real class (fake cluster that runs the captured bytes
+   through zigbee-clusters' own record parser); needs one run on the unit to see the labels.
 3. **Allow editing** only after 1 and 2 work and with an explicit decision per setting. Writing changes
    the device configuration. Use `createPowerProtectorPayload()` with the values read back, change one
    field, and read again to confirm. Keep the ranges above. Note the write path was never exercised on

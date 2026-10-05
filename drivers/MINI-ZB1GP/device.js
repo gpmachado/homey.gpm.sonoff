@@ -358,6 +358,31 @@ class SonoffMINIZB1GP extends SonoffBase {
       if (data.TurboMode !== undefined) settings.TurboMode = Number(data.TurboMode) === 20;
       if (Object.keys(settings).length) this.setSettings(settings).catch(this.error);
     });
+    await this._readElectricalMonitoring();
+  }
+
+  /**
+   * Electrical Monitoring limits (the "power protector" scene, manufacturer attribute 0x7016),
+   * shown as read-only labels in the settings. On this model there is no relay to open: it only
+   * monitors, and a breach shows up in the fault code (Electrical status alarm). Read once at
+   * start; the limits only change when set from another controller.
+   */
+  async _readElectricalMonitoring() {
+    const cluster = this.zclNode.endpoints[1].clusters[SonoffCluster.NAME];
+    try {
+      const data = await cluster.readAttributes(['local_fast_scene_configuration'], { manufacturerCode: 0x1286 });
+      const scene = SonoffCluster.parsePowerProtectorPayload(data.local_fast_scene_configuration);
+      if (!scene) return;
+      const volts = (enabled, value) => (enabled ? `${value} V` : 'off');
+      await this.setSettings({
+        electrical_overcurrent: `${scene.maxCurrentProtect} A`,
+        electrical_overpower: `${scene.maxPowerProtect} W`,
+        electrical_overvoltage: volts(scene.maxVoltageProtectEnabled, scene.maxVoltageProtect),
+        electrical_undervoltage: volts(scene.minVoltageProtectEnabled, scene.minVoltageProtect),
+      });
+    } catch (err) {
+      this.log('[MINI-ZB1GP] Electrical monitoring read failed:', err.message);
+    }
   }
 
   async _readEnergy() {
