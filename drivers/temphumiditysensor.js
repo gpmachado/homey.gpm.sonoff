@@ -44,7 +44,7 @@ class TempHumiditySensor extends SonoffBase {
             if (data?.batteryPercentageRemaining !== undefined) {
                 this.setCapabilityValue('measure_battery', data.batteryPercentageRemaining / 2).catch(this.error);
             }
-        });
+        }, 0); // one attempt: the sensor is asleep, a retry chain only costs TX (see TODO.md, Poll Control)
 
         if (this.isFirstInit()) {
             await this._configureReporting().catch(err => this.error('Failed to configure reporting', err));
@@ -152,7 +152,7 @@ class TempHumiditySensor extends SonoffBase {
                 settingsData.humidity_offset = data.humidityCalibration / 100;
             }
             if (Object.keys(settingsData).length) this.setSettings(settingsData).catch(this.error);
-        });
+        }, 0); // one attempt: the sensor is asleep, a retry chain only costs TX (see TODO.md, Poll Control)
     }
 
     async _reassertCalibration() {

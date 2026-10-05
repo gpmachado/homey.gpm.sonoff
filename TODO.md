@@ -233,6 +233,15 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   check-in stay, and so does `SonoffPollControlCluster` as cluster knowledge. Verify later with the
   Developer Tools: note TX / TX Error of the SNZB sensors, leave the app running 24 h without restarting,
   compare the increase. Not yet run on the sensors.
+- Init reads of the battery sensors (SNZB-02LD/WD, SNZB-04P/04PR2: battery, and the thermometers' calibration)
+  now make one attempt instead of up to four. They ran at every app start while the sensors were asleep:
+  24 `Retry read attr` lines in the first minute of every log (18 in teste16, 24 in teste18, 24 again on
+  2026-10-05), almost all failing. A missed battery value arrives with the next battery report; the
+  calibration is re-read on the next announce re-sync (at most every 3 h). Mains devices keep the retry. One
+  ZBMINIR2 ("Escada Lateral Aux", 59c3c576) also retried on 2026-10-05: not a code change, the unit is off the
+  network (0 answers in the logs of that night, Last Seen 7 hours in the Developer Tools, answering in the
+  logs of 2026-09-28) - note that, with nothing persisted, a dead device shows as available again after every
+  app restart until the 90 min silence timeout or 5 failed sends mark it again.
 - Multi-gang unification (MINI-ZB2GS into a shared relay base, see the nova.digital `TuyaZclBase.js`
   reference above) is blocked by hardware: no MINI-ZB2GS and no 3-gang unit to test with. The 2026-10-05 edits
   to `drivers/MINI-ZB2GS/device.js` (secondary gang no longer mirrors the main gang's stored reason at boot)

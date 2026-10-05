@@ -66,7 +66,7 @@ class DoorWindowSensor extends SonoffBase {
             if (data?.batteryPercentageRemaining !== undefined) {
                 this.setCapabilityValue('measure_battery', data.batteryPercentageRemaining / 2).catch(this.error);
             }
-        });
+        }, 0); // one attempt: the sensor is asleep, a retry chain only costs TX (see TODO.md, Poll Control)
 
         // This is a sleepy end-device: a configureReporting request sent right now
         // (onNodeInit, outside its wake window) commonly gets no ACK at all - not a
