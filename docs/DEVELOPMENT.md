@@ -45,7 +45,7 @@ Decision: keep the tracking, ask that user to re-pair the sensors and check the 
 
 - The stock cluster lacks the `checkIn` / `checkInResponse` commands, so `SonoffPollControlCluster` adds them. In the iHost pairing capture the SNZB-04PR2 sets a check-in interval of 14400 quarter-seconds (1 h).
 - **Check-ins never reached the app in tests** (possibly consumed by the Homey stack), so they are not used as a heartbeat. The device announce and the battery reports are.
-- The interval read at app start fails almost every time because the sensor is asleep. It is now kept pending and retried when the sensor is next heard from, up to 6 attempts.
+- **No reads.** The app used to read `checkInInterval` for the log only (at start, then retried up to 6 times when the sensor was next heard from); the sensor is almost always asleep, so most of those sends failed - the Developer Tools showed 58% TX errors on a SNZB-02LD. Removed: `pollControlHeartbeat` only binds the cluster and answers a check-in if one ever arrives.
 - Not built: answering a check-in with fast polling only when work is pending, as zigbee-herdsman does.
 
 ### Rejoin (power-cut) detection

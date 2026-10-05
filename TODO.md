@@ -224,6 +224,16 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   pre-removal version: `doorwindowsensorbase.js`/`lib/IASZoneHelper.js` (`hasAlarm1`/`hasBatteryLow`) it depends
   on are still current, and SNZB-04P/04PR2 already exercise the same base class. `homey app build` validates
   clean, `node --check` passes. Not yet tested on real hardware - needs a pairing.
+- Poll Control (0x0020) no longer sends anything: removed the `checkInInterval` read and its retry from
+  `lib/pollControlHeartbeat.js` (101 -> 49 lines; it was for the log only and cost TX to sleeping sensors; the
+  Developer Tools showed 58% TX errors on a SNZB-02LD, 49% on a SNZB-04PR2). The binding and the answer to a
+  check-in stay, and so does `SonoffPollControlCluster` as cluster knowledge. Verify later with the
+  Developer Tools: note TX / TX Error of the SNZB sensors, leave the app running 24 h without restarting,
+  compare the increase. Not yet run on the sensors.
+- Multi-gang unification (MINI-ZB2GS into a shared relay base, see the nova.digital `TuyaZclBase.js`
+  reference above) is blocked by hardware: no MINI-ZB2GS and no 3-gang unit to test with. The 2026-10-05 edits
+  to `drivers/MINI-ZB2GS/device.js` (secondary gang no longer mirrors the main gang's stored reason at boot)
+  were validated by syntax and `homey app build` only, never on the device.
 - Device name in the log lines: `this.log` cannot be replaced on an SDK device. Only option is a `nlog()`
   helper and a mechanical replacement of about 190 calls, and SDK/homey-zigbeedriver lines would still
   show only the uuid.
