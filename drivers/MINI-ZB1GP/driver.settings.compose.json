@@ -39,23 +39,15 @@
     },
     "children": [
       {
-        "id": "electrical_monitoring_info",
-        "type": "label",
-        "label": {
-          "en": "Limits stored in the device"
-        },
-        "hint": {
-          "en": "Read from the device when the app starts. This model only monitors: a breach shows in the Electrical status alarm, it does not cut the load. They cannot be changed here."
-        },
-        "value": " "
-      },
-      {
         "id": "electrical_overcurrent",
         "type": "label",
         "label": {
           "en": "Overcurrent monitoring"
         },
-        "value": "-"
+        "value": "-",
+        "hint": {
+          "en": "Limits stored in the device, read when the app starts. This model only monitors: a breach shows in the Electrical status alarm, it does not cut the load. They cannot be changed here."
+        }
       },
       {
         "id": "electrical_overpower",
