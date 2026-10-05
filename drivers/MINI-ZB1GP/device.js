@@ -364,11 +364,15 @@ class SonoffMINIZB1GP extends SonoffBase {
   /**
    * Electrical Monitoring limits (the "power protector" scene, manufacturer attribute 0x7016),
    * shown as read-only labels in the settings. On this model there is no relay to open: it only
-   * monitors, and a breach shows up in the fault code (Electrical status alarm). Read once at
-   * start; the limits only change when set from another controller.
+   * monitors, and a breach shows up in the fault code (Electrical status alarm). Read at start;
+   * the limits only change when set from another controller. The first attempt at start failed on
+   * the first real run (the response is ~70 bytes and the app is sending a lot in parallel while
+   * it boots, while the device answered another read 6 s later), so it is retried up to 3 times,
+   * 60 s and 120 s apart.
    */
-  async _readElectricalMonitoring() {
-    const cluster = this.zclNode.endpoints[1].clusters[SonoffCluster.NAME];
+  async _readElectricalMonitoring(attempt = 1) {
+    const cluster = this.zclNode?.endpoints?.[1]?.clusters?.[SonoffCluster.NAME];
+    if (!cluster) return;
     try {
       const data = await cluster.readAttributes(['local_fast_scene_configuration'], { manufacturerCode: 0x1286 });
       const scene = SonoffCluster.parsePowerProtectorPayload(data.local_fast_scene_configuration);
@@ -381,7 +385,13 @@ class SonoffMINIZB1GP extends SonoffBase {
         electrical_undervoltage: volts(scene.minVoltageProtectEnabled, scene.minVoltageProtect),
       });
     } catch (err) {
-      this.log('[MINI-ZB1GP] Electrical monitoring read failed:', err.message);
+      this.log(`[MINI-ZB1GP] Electrical monitoring read failed (attempt ${attempt}/3):`, err.message);
+      if (attempt < 3) {
+        this._electricalTimer = this.homey.setTimeout(() => {
+          this._electricalTimer = null;
+          this._readElectricalMonitoring(attempt + 1);
+        }, attempt * 60 * 1000);
+      }
     }
   }
 
@@ -495,6 +505,10 @@ class SonoffMINIZB1GP extends SonoffBase {
   }
 
   async _teardown() {
+    if (this._electricalTimer) {
+      this.homey.clearTimeout(this._electricalTimer);
+      this._electricalTimer = null;
+    }
     if (this._energyPollInterval) {
       this.homey.clearInterval(this._energyPollInterval);
       this._energyPollInterval = null;

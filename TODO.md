@@ -64,7 +64,8 @@ conclusion of the first probe.
 2. **Show the current limits** in the device settings, read-only first. DONE: `_readElectricalMonitoring()`
    in `drivers/MINI-ZB1GP/device.js` reads `0x7016` once at start (with `manufacturerCode: 0x1286`) and writes
    four read-only labels (Overcurrent / Overpower / Overvoltage / Undervoltage monitoring) in a settings group.
-   A failed read only logs a line. Simulated with the real class (fake cluster that runs the captured bytes
+   A failed read is retried twice (60 s and 120 s later; the first real run failed once at start with
+   "Could not reach device" while the app was busy booting, and the device answered another read 6 s later). Simulated with the real class (fake cluster that runs the captured bytes
    through zigbee-clusters' own record parser); needs one run on the unit to see the labels.
 3. **Allow editing** only after 1 and 2 work and with an explicit decision per setting. Writing changes
    the device configuration. Use `createPowerProtectorPayload()` with the values read back, change one
