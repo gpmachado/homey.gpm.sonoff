@@ -91,9 +91,9 @@ lower number than any handler that can swallow a frame it needs to see - the dis
 `false`. Current values, in `lib/FrameMiddleware.js`: `AVAILABILITY: 0`, `REJOIN: 5`, `BASIC_FILTER: 10`,
 `CLUSTER_REPORT: 20`. Getting this backwards is not cosmetic: verified by simulation that it would silently break
 the "Reconnected after power cut" trigger (a swallower ahead of `REJOIN` eats the exact frame rejoin needs) and
-undercount the Traffic tab (a swallower ahead of `AVAILABILITY` hides frames from `_recordMessage`; a naive
+undercount the Traffic tab (a swallower ahead of `AVAILABILITY` hides frames from the statistics; a naive
 "notify activity on swallow" compensation only patches the availability timeout, not that count - see
-`AvailabilityManagerPassive.notifyActivity()`'s own comment for why it deliberately skips `_recordMessage`).
+`AvailabilityManagerPassive.notifyActivity()`'s own comment for why it deliberately skips recording the message).
 
 **Done, hardware-tested:**
 - `lib/FrameMiddleware.js` itself (21 simulated scenarios, including the MINI-ZB2GS multi-device-per-node case).
@@ -180,7 +180,7 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   `_reapplyUnavailable`, the Store-persisted Traffic statistics (now in memory, footnote updated), the global
   `setTimeout`/`clearTimeout` (the poll that used them is gone), `setLastSeenAt`. The MINI-ZB2GS secondary gang
   no longer mirrors the main gang's stored reason at boot; the sibling cascade covers live transitions.
-  The global on/off switch stays (`availability_enabled`, gate inside `_markAllUnavailable`, which is the only
+  The global on/off switch stays (`availability_enabled`, gate inside `markUnavailable`, which is the only
   way to go unavailable; confirmed on hardware earlier), with the reentrancy guards on both `_markAll*`.
   Evidence behind the choices (ZBMINIR2 paired as "TEMP", availability forced off, logs in
   `logs/test-disponilidade.log`): Homey does not turn an unavailable device available again when it talks
@@ -192,7 +192,7 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   The older shared suite `_testes/disponibilidade` (01 to 04) targets the previous baseline (confirmation poll,
   1-minute `setLastSeenAt`) and fails on those by design.
   Earlier history of this switch: a `/code-review max` pass found the per-call-site gating had a TOCTOU race
-  (switch turned off while a confirmation poll was in flight); the single gate in `_markAllUnavailable` closed it.
+  (switch turned off while a confirmation poll was in flight); the single gate in `markUnavailable` closed it.
 - SNZB-02LD/WD reporting too often (Traffic tab: two SNZB-02LD units at ~280-293 msg/24h, more than a
   SNZB-02WD at 136/24h despite reporting one attribute instead of two): **done**. Root cause confirmed by
   sniffer, not environment/placement - `drivers/temphumiditysensor.js`'s `_configureReporting()` tied `minChange`
