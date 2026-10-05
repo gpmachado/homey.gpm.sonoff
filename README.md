@@ -77,7 +77,7 @@ Heartbeats seen in logs (hours of capture per model):
 | MINI-ZBD | same firmware as the ZBMINIR2 (z2m lists it as a white-label of that device) | 90 min |
 
 MINI-ZBD's tracking is new and not yet confirmed with hours of real-hardware logs on a unit of that model (the
-user testing it does not own one). No availability tracking: SNZB-03.
+user testing it does not own one). No availability tracking: SNZB-03 and SNZB-05P.
 
 The SNZB-04P is the weak case: its only periodic sign of life is the hourly announce, and a closed door sends nothing. If a re-paired SNZB-04P still shows no activity in the **Traffic** tab after a few hours, tracking for it should be removed.
 
