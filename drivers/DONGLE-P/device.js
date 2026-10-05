@@ -23,10 +23,8 @@ class SonoffDongleDevice extends ZigBeeDevice {
 
     // Routers relay other devices' mesh traffic at the MAC layer - that
     // never surfaces to this node's own handleFrame, so passive listening
-    // alone would rarely see activity. pollBeforeOffline (default on)
-    // becomes the real heartbeat here: a Basic-cluster read every time the
-    // device has been idle for the full timeout, acting as a periodic
-    // active ping instead of a one-off check.
+    // alone would rarely see activity. The active poll below is the real
+    // heartbeat here.
     this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_MEDIUM_MS });
     await this._availability.install();
 

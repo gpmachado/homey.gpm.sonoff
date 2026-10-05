@@ -29,8 +29,9 @@ The app is for internal use: the store already has a Sonoff app, so this one is 
 
 - **Two mechanisms.** `AvailabilityManagerPassive` hooks every inbound frame of a mains device. `AvailabilityManagerCallback` is for battery devices that ignore pings: the driver reports each sign of life explicitly.
 - **Timeout is about 2.5 times the device's own heartbeat**, so one missed report does not flip it. The tiers are in `lib/constants.js`: 10, 25, 90 and 150 minutes. The heartbeat of each model was measured from logs (see the table in the README), not assumed.
-- **Poll before offline only for mains devices**, with a random delay so devices do not all poll on the same tick after a power cut. Sleepy sensors are never polled.
-- **The unavailable state is persisted** and re-applied after a restart, because the base class marks a device available on every init.
+- **Three signals** (see MODELO_DISPONIBILIDADE_LEVE.md in the workspace root): any frame (seen, and it restores a device that was unavailable), silence past the timeout, and 5 failed sends in a row with no frame in between (mains devices only). No confirmation poll: the failed-send count and the `ActivePoll` already are the evidence.
+- **Nothing is persisted.** No `last_seen_ts`, no unavailable reason, no statistics in the Store, no re-applying after a restart (the base class marks a device available on every init and that is accepted: every device restarts as "seen now" with a 5 min boot grace). `setLastSeenAt` is not used; the node-level Last Seen is shown by Homey in Developer Tools.
+- **Homey does neither direction by itself.** Tested on a ZBMINIR2 whose availability was forced off: frames of every kind (Basic, onOff, 0xFC11, even after a power cut and rejoin) left `getAvailable()` false, so the restore on frame is required.
 - **A multi-gang node counts once.** The main device (EP1) owns availability, the active poll and rejoin detection; siblings follow it.
 - **Revisit** when a model's measured heartbeat changes with firmware.
 
@@ -77,9 +78,9 @@ The app does not implement OTA. Homey 13.2 and later has a native Zigbee firmwar
 ### Other device decisions
 
 - **MINI-ZB2GS**: each channel is its own Homey device (tiles), the main one owns the node-level behaviour.
-- **BASICZBR3**: the firmware rejects ZCL general commands (reporting cannot be configured, confirmation poll fails) but reports `onOff` every 300 s, so passive tracking with 25 min.
+- **BASICZBR3**: the firmware rejects ZCL general commands (reporting cannot be configured) but reports `onOff` every 300 s, so passive tracking with 25 min.
 - **SNZB-06P**: no illuminance. The device only reports bright/dark, and only while presence is detected; Sonoff's iHost does not expose it either.
-- **Four drivers removed in 1.0.7** (MINI-ZB1GSP, S60ZBTPF, SNZB-05P, SNZB-09P): no physical units to test. They are in the git history and can be restored.
+- **Three drivers removed in 1.0.7** (MINI-ZB1GSP, S60ZBTPF, SNZB-09P): no physical units to test. They are in the git history and can be restored. SNZB-05P was restored afterwards.
 - **`readAttributes(...attr)` in the shared base** threw synchronously with zigbee-clusters 3.x, which needs an array. It was fixed early (commit `b6962f5`); the upstream fork still works only because it pins 1.4.0 where the call is variadic.
 
 ## Mistakes worth remembering

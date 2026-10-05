@@ -61,7 +61,7 @@ Notes per device:
 
 ## Availability
 
-Each device is marked unavailable after a silence that depends on how often it talks by itself. A sleepy sensor gets a timeout of about 2.5 times its heartbeat, so one missed report does not flip it. Before marking a mains device offline the app polls it once, with a random delay so devices do not all poll at the same moment after a power cut. Sleepy sensors are not polled: they ignore pings.
+Each device is marked unavailable after a silence that depends on how often it talks by itself. A sleepy sensor gets a timeout of about 2.5 times its heartbeat, so one missed report does not flip it. A mains device is also marked unavailable when 5 commands in a row fail with no frame from it in between ("No response to commands"); any frame it sends brings it back. Sleepy sensors never use that rule: they miss most commands by design. Everything is kept in memory: after the app restarts each device starts as "seen now" with a 5 min grace, nothing is stored or re-applied. Homey does not mark a Zigbee device unavailable on silence, and does not mark it available when it talks again, so both directions are done here. The node-level "last seen" is already shown by Homey in Developer Tools.
 
 Heartbeats seen in logs (hours of capture per model):
 

@@ -169,50 +169,30 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   different protocol (Tuya, not Sonoff's manufacturer cluster) so nothing copies verbatim, but the shape - generic
   endpoint list plus sibling iteration, instead of a `_isMainDevice`/hardcoded-two-gangs split - is the right
   target for a `RelayMultiGangBase` later.
-- Availability on/off switch as a global app setting: **done**, not yet hardware-tested. `homey.settings` key
-  `availability_enabled` (`lib/constants.js`), read by `AvailabilityManagerBase._isGloballyEnabled()` and gating
-  the three paths that can mark a device unavailable - the watchdog timeout, `_onSendFailure`'s confirmation poll
-  (Passive), and `_reapplyUnavailable()` at install (so a stale offline reason from before an app restart isn't
-  reapplied while the switch is off). `_markAlive`/`_recordMessage` are never gated - activity tracking, Traffic
-  and Rejoins statistics, and restoring a device to available on real activity all keep working exactly as
-  before. `api.js`'s `getAvailabilitySetting`/`setAvailabilitySetting` (new `app.json` routes, added through
-  `.homeycompose/app.json` + `homey app build`) read/write the setting; turning it off also force-restores, in
-  the same call, every device that is currently unavailable (`manager.markAvailable()` per device, mirroring how
-  `resetMessageStats`/`resetRejoinStats` already iterate `homey.drivers.getDrivers()`). UI: a switch in the
-  settings page header (`settings/index.html`, above the Traffic/Rejoins tabs, since this applies to both) -
-  `locales/en.json` has the three new strings. Verified with a standalone simulation against the real
-  `AvailabilityManagerPassive` class (fake device/homey, watchdog tick driven manually): enabled-path behaviour
-  unchanged, disabled-path never marks unavailable/never polls, stale offline state not reapplied at install,
-  `markAvailable()` still restores while the switch is off. This app is meant to be the reference implementation
-  for the same switch in Moes/Tuya/NovaDigital - see `~/HomeyApp/ARQUITETURA_DISPONIBILIDADE_REJOIN.md`.
-  Confirmed on real hardware (`teste16.log`): toggling off/on while the app was running logged the change
-  correctly, no errors, no false unavailable marks.
-  A `/code-review max` pass (3 subagents, 15 findings, 10 CONFIRMED/5 PLAUSIBLE) then found the first version's
-  gating was per-call-site rather than at the one real chokepoint - a TOCTOU: the switch was checked once before
-  `_pollDevice()` (up to ~15s) but never rechecked before `_markAllUnavailable()` actually ran, so toggling off
-  mid-poll could still mark a device unavailable. Fixed by moving the authoritative check inside
-  `_markAllUnavailable()` itself (the call every path - watchdog, `_onSendFailure`, and the public
-  `markUnavailable()` - funnels through), keeping the early per-call-site checks only as a cheap "skip a
-  pointless poll" optimization. Also fixed in the same pass: `markUnavailable()` was entirely ungated (closed by
-  the same chokepoint fix); MINI-ZB2GS's secondary gang mirrors the main gang's unavailable state via a raw
-  `setUnavailable()` call that bypassed the switch (now also checks `main._availability._isGloballyEnabled()`);
-  `_reapplyUnavailable()` left a stale `availability_unavailable_reason` in the store when declining to reapply
-  it; `api.js`'s `Boolean(body?.enabled)` inverted intent for a JSON string `"false"` and silently disabled
-  tracking for a bodyless request (now `typeof body?.enabled !== 'boolean'` throws instead); `setAvailabilitySetting`
-  persisted the setting before a restore step that could throw, leaving the settings page unable to tell "nothing
-  changed" from "changed, but a restore partially failed" - now returns `{ enabled, restoreFailures }` and never
-  throws for a partial restore, and the client no longer reverts the toggle on that path; two concurrent toggle
-  calls could double-fire `onBecameAvailable()`/`onBecameUnavailable()` for one device (closed with a re-entrancy
-  guard on `_markAllAvailable`/`_markAllUnavailable`); the settings page had no request-ordering guard on the
-  availability GET/POST (added, matching `loadStats()`'s existing `latestRequest` pattern) and defaulted the
-  toggle to OFF on a malformed-but-successful API response (now requires `typeof result.enabled === 'boolean'`).
-  Also deduplicated `api.js`'s five near-identical `homey.drivers.getDrivers()` loops into one `allDevices()`
-  generator. Not fixed, left for later (lower severity / architectural): restore latency scales with how many
-  devices are down (`Promise.allSettled` already runs them concurrently, so this is a response-time nicety, not
-  a correctness gap); the force-restore loop scopes on `!device.getAvailable()` rather than on whether the
-  watchdog specifically caused it - latent today since nothing else in the app calls `setUnavailable()` for an
-  unrelated reason. All fixes re-verified with an extended standalone simulation plus a dedicated `api.js` test
-  (validation, restore-failure reporting, the `allDevices()` refactor) - both passing - before committing.
+- Availability, lean model (3 signals): **done, confirmed on real hardware** (`logs/test-disponilidade2.log`: 5 failed
+  sends 19 s apart -> "No response to commands", then the first frame after replugging -> Restoring, Available,
+  one rejoin flow; the sendFrame hook was seen working on 12 devices). See
+  `~/HomeyApp/MODELO_DISPONIBILIDADE_LEVE.md`. `lib/AvailabilityManager.js` went from ~760 to ~420 lines:
+  any frame marks the device available (and resets the failure count); silence past the family timeout marks
+  it unavailable; 5 failed sends in a row with no frame in between (Passive only, no minimum gap) mark it
+  unavailable with "No response to commands". Removed: the confirmation poll before offline, the send-failure
+  gap/cooldown/"Homey radio down" guard, `last_seen_ts`, the persisted unavailable reason and
+  `_reapplyUnavailable`, the Store-persisted Traffic statistics (now in memory, footnote updated), the global
+  `setTimeout`/`clearTimeout` (the poll that used them is gone), `setLastSeenAt`. The MINI-ZB2GS secondary gang
+  no longer mirrors the main gang's stored reason at boot; the sibling cascade covers live transitions.
+  The global on/off switch stays (`availability_enabled`, gate inside `_markAllUnavailable`, which is the only
+  way to go unavailable; confirmed on hardware earlier), with the reentrancy guards on both `_markAll*`.
+  Evidence behind the choices (ZBMINIR2 paired as "TEMP", availability forced off, logs in
+  `logs/test-disponilidade.log`): Homey does not turn an unavailable device available again when it talks
+  (Basic, onOff and 0xFC11 frames, even after a power cut and rejoin, left `getAvailable()` false), so the
+  restore on frame is required; the node Last Seen in Developer Tools follows the frames by itself (2 min ->
+  17 s after a button press), so `setLastSeenAt` was dropped. A Zemismart plug unplugged for 5 minutes only
+  gave `timeout after 10000ms` on every click, so Homey does not mark unavailable on silence either.
+  Test: `~/HomeyApp/_testes/disponibilidade-leve/` (26 cases against the real classes).
+  The older shared suite `_testes/disponibilidade` (01 to 04) targets the previous baseline (confirmation poll,
+  1-minute `setLastSeenAt`) and fails on those by design.
+  Earlier history of this switch: a `/code-review max` pass found the per-call-site gating had a TOCTOU race
+  (switch turned off while a confirmation poll was in flight); the single gate in `_markAllUnavailable` closed it.
 - SNZB-02LD/WD reporting too often (Traffic tab: two SNZB-02LD units at ~280-293 msg/24h, more than a
   SNZB-02WD at 136/24h despite reporting one attribute instead of two): **done**. Root cause confirmed by
   sniffer, not environment/placement - `drivers/temphumiditysensor.js`'s `_configureReporting()` tied `minChange`

@@ -159,7 +159,7 @@ class RelaySwitchBase extends SonoffBase {
         this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_MEDIUM_MS });
         await this._availability.install();
         // No frequent traffic of its own beyond onOff reports - an active poll
-        // every 20 min (see SonoffBase) keeps last_seen_ts fresh independent
+        // every 20 min (see SonoffBase) keeps the last-seen time fresh independent
         // of whether the device happens to report anything.
         this._startActivePoll();
 
