@@ -176,9 +176,11 @@ one duplicate handler per gang - confirmed by simulation, not just a hypothetica
   different protocol (Tuya, not Sonoff's manufacturer cluster) so nothing copies verbatim, but the shape - generic
   endpoint list plus sibling iteration, instead of a `_isMainDevice`/hardcoded-two-gangs split - is the right
   target for a `RelayMultiGangBase` later.
-- Availability, lean model (3 signals): **done, confirmed on real hardware** (`logs/test-disponilidade2.log`: 5 failed
-  sends 19 s apart -> "No response to commands", then the first frame after replugging -> Restoring, Available,
-  one rejoin flow; the sendFrame hook was seen working on 12 devices). See
+- Availability, lean model (3 signals): **done, confirmed on real hardware** (`logs/test-disponilidade2.log` and `4.log`: 5 failed
+  sends 19-29 s apart -> "No response to commands", then the first frame after replugging -> Restoring, Available,
+  one rejoin flow; the sendFrame hook was seen working on 12 devices. `5.log`, silence path with a temporary
+  5 min timeout on one relay: last frame 01:23:47, "Unavailable: No activity for 6min" at 01:30:35, replugged ->
+  Restoring, Available, Device rejoined, one flow at 01:31:17). See
   `~/HomeyApp/MODELO_DISPONIBILIDADE_LEVE.md`. `lib/AvailabilityManager.js` went from ~760 to ~420 lines:
   any frame marks the device available (and resets the failure count); silence past the family timeout marks
   it unavailable; 5 failed sends in a row with no frame in between (Passive only, no minimum gap) mark it
