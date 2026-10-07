@@ -37,6 +37,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
       this._onOnOff ??= value => {
         this.log(`handle report (cluster: onOff, capability: onoff), parsed payload: ${value}`);
         this.setCapabilityValue('onoff', value).catch(this.error);
+        if (!value) this._setCurrent(0);
       };
       _onOffCluster.removeListener('attr.onOff', this._onOnOff);
       _onOffCluster.on('attr.onOff', this._onOnOff);
@@ -68,7 +69,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
         this.setCapabilityValue('measure_power', this._toSignedInt32(value) / 1000).catch(this.error);
       });
       sonoffCluster.on('attr.acCurrentCurrentValue', (value) => {
-        if (this._isValidReading(value)) this.setCapabilityValue('measure_current', value / 1000).catch(this.error);
+        if (this._isValidReading(value)) this._setCurrent(value / 1000);
       });
 
       // Cumulative counters - real running totals reported by the device, no
@@ -104,6 +105,12 @@ class SonoffBasicZB1GSP extends SonoffBase {
     this.log('BASIC-ZB1GSP initialized');
   }
 
+  // The device keeps reporting a leftover current after the relay opens
+  // (zigbee-herdsman-converters shows 0 A while off), so report 0 then.
+  _setCurrent(amps) {
+    return this.setCapabilityValue('measure_current', this.getCapabilityValue('onoff') === false ? 0 : amps).catch(this.error);
+  }
+
   _isValidReading(value) {
     return Number.isFinite(value) && value !== 0xFFFFFFFF;
   }
@@ -125,7 +132,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
         await this.setCapabilityValue('measure_power', this._toSignedInt32(data.acCurrentPowerValue) / 1000);
       }
       if (data.acCurrentCurrentValue !== undefined && this._isValidReading(data.acCurrentCurrentValue)) {
-        await this.setCapabilityValue('measure_current', data.acCurrentCurrentValue / 1000);
+        await this._setCurrent(data.acCurrentCurrentValue / 1000);
       }
       if (data.totalEnergyConsumption !== undefined && this._isValidReading(data.totalEnergyConsumption)) {
         await this.setCapabilityValue('meter_power', data.totalEnergyConsumption / 1000);
