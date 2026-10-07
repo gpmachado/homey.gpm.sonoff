@@ -125,72 +125,6 @@
     ],
     "triggers": [
       {
-        "id": "BASIC-ZB1GSP:single_click",
-        "title": {
-          "en": "Single click",
-          "es": "Clic simple",
-          "it": "Clic singolo",
-          "de": "Einfacher Klick"
-        },
-        "titleFormatted": {
-          "en": "Single click",
-          "es": "Clic simple",
-          "it": "Clic singolo",
-          "de": "Einfacher Klick"
-        },
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=BASIC-ZB1GSP"
-          }
-        ]
-      },
-      {
-        "id": "BASIC-ZB1GSP:double_click",
-        "title": {
-          "en": "Double click",
-          "es": "Doble clic",
-          "it": "Doppio clic",
-          "de": "Doppelklick"
-        },
-        "titleFormatted": {
-          "en": "Double click",
-          "es": "Doble clic",
-          "it": "Doppio clic",
-          "de": "Doppelklick"
-        },
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=BASIC-ZB1GSP"
-          }
-        ]
-      },
-      {
-        "id": "BASIC-ZB1GSP:long_press",
-        "title": {
-          "en": "Long press",
-          "es": "Pulsación larga",
-          "it": "Pressione lunga",
-          "de": "Langer Druck"
-        },
-        "titleFormatted": {
-          "en": "Long press",
-          "es": "Pulsación larga",
-          "it": "Pressione lunga",
-          "de": "Langer Druck"
-        },
-        "args": [
-          {
-            "type": "device",
-            "name": "device",
-            "filter": "driver_id=BASIC-ZB1GSP"
-          }
-        ]
-      },
-      {
         "id": "MINI-ZB1GP_device_rejoined",
         "title": {
           "en": "Reconnected after power cut",
@@ -375,9 +309,6 @@
         "meter_power",
         "meter_power.today",
         "meter_power.month",
-        "meter_power.exported",
-        "output_energy_today",
-        "output_energy_month",
         "alarm_generic",
         "alarm_generic.metering_error",
         "alarm_generic.overload_protection"
@@ -391,11 +322,6 @@
         "meter_power.month": {
           "title": {
             "en": "Energy this month"
-          }
-        },
-        "meter_power.exported": {
-          "title": {
-            "en": "Exported"
           }
         },
         "alarm_generic": {
@@ -415,8 +341,7 @@
         }
       },
       "energy": {
-        "meterPowerImportedCapability": "meter_power",
-        "meterPowerExportedCapability": "meter_power.exported"
+        "meterPowerImportedCapability": "meter_power"
       },
       "icon": "/drivers/BASIC-ZB1GSP/assets/icon.svg",
       "zigbee": {
@@ -461,54 +386,6 @@
           }
         },
         {
-          "id": "turbo_mode",
-          "type": "checkbox",
-          "label": {
-            "en": "Turbo mode"
-          },
-          "value": false,
-          "hint": {
-            "en": "Boosts Zigbee radio transmit power to improve range."
-          }
-        },
-        {
-          "id": "switch_mode",
-          "type": "dropdown",
-          "label": {
-            "en": "Switch mode"
-          },
-          "value": "0",
-          "hint": {
-            "en": "Type of external switch wired to the device. Use 'Pulse' for self-resetting (momentary) buttons. 'Edge' is the default for a normal rocker."
-          },
-          "values": [
-            {
-              "id": "0",
-              "label": {
-                "en": "Edge (rocker)"
-              }
-            },
-            {
-              "id": "1",
-              "label": {
-                "en": "Pulse (momentary)"
-              }
-            },
-            {
-              "id": "2",
-              "label": {
-                "en": "Follow switch"
-              }
-            },
-            {
-              "id": "130",
-              "label": {
-                "en": "Follow switch (inverted)"
-              }
-            }
-          ]
-        },
-        {
           "id": "power_on_behavior",
           "type": "dropdown",
           "label": {
@@ -535,50 +412,6 @@
               }
             }
           ]
-        },
-        {
-          "type": "group",
-          "label": {
-            "en": "Delayed power-on"
-          },
-          "children": [
-            {
-              "id": "delayed_power_on_state",
-              "type": "checkbox",
-              "label": {
-                "en": "Enable"
-              },
-              "hint": {
-                "en": "Turn the device on automatically after the delay below, once powered."
-              },
-              "value": false
-            },
-            {
-              "id": "delayed_power_on_time",
-              "type": "number",
-              "label": {
-                "en": "Delay (seconds)"
-              },
-              "hint": {
-                "en": "Time to wait before the delayed power-on action (0.5 - 3599.5 seconds)."
-              },
-              "value": 1,
-              "min": 0.5,
-              "max": 3599.5,
-              "step": 0.5
-            }
-          ]
-        },
-        {
-          "id": "detach_relay",
-          "type": "checkbox",
-          "label": {
-            "en": "Detach relay (experimental)"
-          },
-          "value": false,
-          "hint": {
-            "en": "Experimental: the device may reject this write with MALFORMED_COMMAND. Kept as a setting so it lights up automatically once supported. When working: the physical rocker stops switching the relay - useful for controlling a smart bulb via scene instead."
-          }
         },
         {
           "type": "group",
@@ -641,33 +474,33 @@
         {
           "type": "group",
           "label": {
-            "en": "Power protector"
+            "en": "Overload protection"
           },
           "children": [
+            {
+              "id": "current_protect_enabled",
+              "type": "checkbox",
+              "label": {
+                "en": "Enable overcurrent protection"
+              },
+              "value": false
+            },
             {
               "id": "max_current_protect",
               "type": "number",
               "label": {
                 "en": "Max current (A)"
               },
-              "value": 16,
+              "value": 32,
               "min": 0.1,
-              "max": 16,
-              "step": 0.1
+              "max": 32,
+              "step": 0.1,
+              "hint": {
+                "en": "The device cuts the output when a limit is exceeded."
+              }
             },
             {
-              "id": "max_power_protect",
-              "type": "number",
-              "label": {
-                "en": "Max power (W)"
-              },
-              "value": 3840,
-              "min": 2,
-              "max": 3840,
-              "step": 0.1
-            },
-            {
-              "id": "max_voltage_protect_enabled",
+              "id": "voltage_protect_enabled",
               "type": "checkbox",
               "label": {
                 "en": "Enable overvoltage protection"
@@ -686,39 +519,23 @@
               "step": 1
             },
             {
-              "id": "min_voltage_protect_enabled",
+              "id": "power_protect_enabled",
               "type": "checkbox",
               "label": {
-                "en": "Enable undervoltage protection"
+                "en": "Enable overpower protection"
               },
               "value": false
             },
             {
-              "id": "min_voltage_protect",
+              "id": "max_power_protect",
               "type": "number",
               "label": {
-                "en": "Min voltage (V)"
+                "en": "Max power (W)"
               },
-              "value": 85,
-              "min": 85,
-              "max": 277,
+              "value": 7680,
+              "min": 10,
+              "max": 7680,
               "step": 1
-            },
-            {
-              "id": "external_switch_only_recovery",
-              "type": "checkbox",
-              "label": {
-                "en": "Recover only via external switch"
-              },
-              "value": false
-            },
-            {
-              "id": "auto_recovery",
-              "type": "checkbox",
-              "label": {
-                "en": "Auto-recover when back in range"
-              },
-              "value": false
             }
           ]
         }

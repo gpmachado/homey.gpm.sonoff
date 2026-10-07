@@ -6,15 +6,6 @@ const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
 const { HEARTBEAT_FAST_MS } = require('../../lib/constants');
 const { writeAttributesVerbose } = require('../../lib/zclDebug');
 
-// zigbee-herdsman-converters: detachRelayActionEvent lookup
-const ACTION_LOOKUP = {
-  1: 'single_click',
-  2: 'double_click',
-  3: 'long_press',
-  4: 'switch_on',
-  5: 'switch_off',
-};
-
 // zigbee-herdsman-converters: faultCodeMiniZb1gsp({hasSwitch:true}) bit map
 const FAULT_BITS = {
   alarm_generic: 0b001,
@@ -59,43 +50,12 @@ class SonoffBasicZB1GSP extends SonoffBase {
 
     const sonoffCluster = zclNode.endpoints[1].clusters[SonoffCluster.NAME];
     if (sonoffCluster) {
-      sonoffCluster.on('attr.detach_relay_action_event', (value) => this.handleActionEvent(value));
       sonoffCluster.on('attr.fault_code', (value) => this.handleFaultCode(value));
       sonoffCluster.on('attr.network_led', (value) => {
         if (this.getSetting('network_indicator') !== !!value) {
           this.setSettings({ network_indicator: !!value }).catch(this.error);
         }
       });
-      sonoffCluster.on('attr.TurboMode', (value) => {
-        const valBool = Number(value) === 20;
-        if (this.getSetting('turbo_mode') !== valBool) {
-          this.setSettings({ turbo_mode: valBool }).catch(this.error);
-        }
-      });
-      sonoffCluster.on('attr.switch_mode', (value) => {
-        const valStr = String(value);
-        if (this.getSetting('switch_mode') !== valStr) {
-          this.setSettings({ switch_mode: valStr }).catch(this.error);
-        }
-      });
-      sonoffCluster.on('attr.power_on_delay_state', (value) => {
-        if (this.getSetting('delayed_power_on_state') !== !!value) {
-          this.setSettings({ delayed_power_on_state: !!value }).catch(this.error);
-        }
-      });
-      sonoffCluster.on('attr.power_on_delay_time', (value) => {
-        const valSec = value / 2;
-        if (this.getSetting('delayed_power_on_time') !== valSec) {
-          this.setSettings({ delayed_power_on_time: valSec }).catch(this.error);
-        }
-      });
-      sonoffCluster.on('attr.detach_relay_mode2', (value) => {
-        const enabled = !!(value && value.l1);
-        if (this.getSetting('detach_relay') !== enabled) {
-          this.setSettings({ detach_relay: enabled }).catch(this.error);
-        }
-      });
-
       // Live power measurements - manufacturer-specific cluster, NOT the
       // standard Electrical Measurement cluster (confirmed against
       // zigbee-herdsman-converters). Power can be negative here (export
@@ -111,39 +71,16 @@ class SonoffBasicZB1GSP extends SonoffBase {
         if (this._isValidReading(value)) this.setCapabilityValue('measure_current', value / 1000).catch(this.error);
       });
 
-      // Cumulative import/export counters - real running totals reported by
-      // the device, no client-side reconstruction needed.
+      // Cumulative counters - real running totals reported by the device, no
+      // client-side reconstruction needed. (Export counters exist only from firmware 1.3.0.)
       sonoffCluster.on('attr.totalEnergyConsumption', (value) => {
         if (this._isValidReading(value)) this.setCapabilityValue('meter_power', value / 1000).catch(this.error);
-      });
-      sonoffCluster.on('attr.totalOutputEnergyConsumption', (value) => {
-        if (this._isValidReading(value)) this.setCapabilityValue('meter_power.exported', value / 1000).catch(this.error);
       });
       sonoffCluster.on('attr.energyToday', (value) => {
         if (this._isValidReading(value)) this.setCapabilityValue('meter_power.today', value / 1000).catch(this.error);
       });
       sonoffCluster.on('attr.energyMonth', (value) => {
         if (this._isValidReading(value)) this.setCapabilityValue('meter_power.month', value / 1000).catch(this.error);
-      });
-      sonoffCluster.on('attr.outputEnergyToday', (value) => {
-        if (this._isValidReading(value)) this.setCapabilityValue('output_energy_today', value / 1000).catch(this.error);
-      });
-      sonoffCluster.on('attr.outputEnergyMonth', (value) => {
-        if (this._isValidReading(value)) this.setCapabilityValue('output_energy_month', value / 1000).catch(this.error);
-      });
-      sonoffCluster.on('attr.local_fast_scene_configuration', (value) => {
-        const scene = SonoffCluster.parsePowerProtectorPayload(value);
-        if (!scene) return;
-        this.setSettings({
-          max_current_protect: scene.maxCurrentProtect,
-          max_power_protect: scene.maxPowerProtect,
-          max_voltage_protect_enabled: scene.maxVoltageProtectEnabled,
-          max_voltage_protect: scene.maxVoltageProtect,
-          min_voltage_protect_enabled: scene.minVoltageProtectEnabled,
-          min_voltage_protect: scene.minVoltageProtect,
-          external_switch_only_recovery: scene.externalSwitchOnlyRecovery,
-          auto_recovery: scene.autoRecovery,
-        }).catch(this.error);
       });
     }
 
@@ -178,8 +115,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
     try {
       const data = await cluster.readAttributes([
         'acCurrentVoltageValue', 'acCurrentPowerValue', 'acCurrentCurrentValue',
-        'totalEnergyConsumption', 'totalOutputEnergyConsumption',
-        'energyToday', 'energyMonth', 'outputEnergyToday', 'outputEnergyMonth',
+        'totalEnergyConsumption', 'energyToday', 'energyMonth',
       ], { manufacturerCode: 0x1286 });
 
       if (data.acCurrentVoltageValue !== undefined && this._isValidReading(data.acCurrentVoltageValue)) {
@@ -194,38 +130,15 @@ class SonoffBasicZB1GSP extends SonoffBase {
       if (data.totalEnergyConsumption !== undefined && this._isValidReading(data.totalEnergyConsumption)) {
         await this.setCapabilityValue('meter_power', data.totalEnergyConsumption / 1000);
       }
-      if (data.totalOutputEnergyConsumption !== undefined && this._isValidReading(data.totalOutputEnergyConsumption)) {
-        await this.setCapabilityValue('meter_power.exported', data.totalOutputEnergyConsumption / 1000);
-      }
       if (data.energyToday !== undefined && this._isValidReading(data.energyToday)) {
         await this.setCapabilityValue('meter_power.today', data.energyToday / 1000);
       }
       if (data.energyMonth !== undefined && this._isValidReading(data.energyMonth)) {
         await this.setCapabilityValue('meter_power.month', data.energyMonth / 1000);
       }
-      if (data.outputEnergyToday !== undefined && this._isValidReading(data.outputEnergyToday)) {
-        await this.setCapabilityValue('output_energy_today', data.outputEnergyToday / 1000);
-      }
-      if (data.outputEnergyMonth !== undefined && this._isValidReading(data.outputEnergyMonth)) {
-        await this.setCapabilityValue('output_energy_month', data.outputEnergyMonth / 1000);
-      }
     } catch (e) {
       this.log('Could not read power/energy measurements:', e.message);
     }
-  }
-
-  handleActionEvent(value) {
-    const action = ACTION_LOOKUP[value];
-    if (!action) return;
-    this.log('Action event:', action);
-
-    if (action === 'switch_on' || action === 'switch_off') {
-      this.setCapabilityValue('onoff', action === 'switch_on').catch(this.error);
-      return;
-    }
-
-    const triggerCard = this.homey.flow.getDeviceTriggerCard(`${this.driver.id}:${action}`);
-    triggerCard.trigger(this).catch(this.error);
   }
 
   handleFaultCode(value) {
@@ -259,22 +172,6 @@ class SonoffBasicZB1GSP extends SonoffBase {
     if (changedKeys.includes('network_indicator')) {
       sonoffSettings.network_led = !!newSettings.network_indicator;
     }
-    if (changedKeys.includes('turbo_mode')) {
-      sonoffSettings.TurboMode = newSettings.turbo_mode ? 20 : 9;
-    }
-    if (changedKeys.includes('switch_mode')) {
-      sonoffSettings.switch_mode = Number(newSettings.switch_mode);
-    }
-    if (changedKeys.includes('delayed_power_on_state')) {
-      sonoffSettings.power_on_delay_state = !!newSettings.delayed_power_on_state;
-    }
-    if (changedKeys.includes('delayed_power_on_time')) {
-      sonoffSettings.power_on_delay_time = Math.round(newSettings.delayed_power_on_time * 2);
-    }
-    if (changedKeys.includes('detach_relay')) {
-      sonoffSettings.detach_relay_mode2 = newSettings.detach_relay ? 0x01 : 0x00;
-    }
-
     if (Object.keys(sonoffSettings).length > 0) {
       try {
         await writeAttributesVerbose(this, this.zclNode.endpoints[1].clusters[SonoffCluster.NAME], sonoffSettings);
@@ -292,35 +189,25 @@ class SonoffBasicZB1GSP extends SonoffBase {
       ).catch(err => this.error('Error updating inching settings:', err));
     }
 
-    const POWER_PROTECTOR_KEYS = [
-      'max_current_protect', 'max_power_protect',
-      'max_voltage_protect_enabled', 'max_voltage_protect',
-      'min_voltage_protect_enabled', 'min_voltage_protect',
-      'external_switch_only_recovery', 'auto_recovery',
-    ];
-    if (changedKeys.some((k) => POWER_PROTECTOR_KEYS.includes(k))) {
-      await this.setPowerProtector(newSettings);
+    const PROTECTION = {
+      current_protect_enabled: ['acCurrentMaxOverloadEnable', v => (v ? 1 : 0)],
+      max_current_protect: ['acCurrentMaxOverload', v => Math.round(v * 1000)],
+      voltage_protect_enabled: ['acVoltageMaxOverloadEnable', v => (v ? 1 : 0)],
+      max_voltage_protect: ['acVoltageMaxOverload', v => Math.round(v * 1000)],
+      power_protect_enabled: ['acPowerMaxOverloadEnable', v => (v ? 1 : 0)],
+      max_power_protect: ['acPowerMaxOverload', v => Math.round(v * 1000)],
+    };
+    const protection = {};
+    for (const key of changedKeys) {
+      if (PROTECTION[key]) protection[PROTECTION[key][0]] = PROTECTION[key][1](newSettings[key]);
     }
-  }
-
-  async setPowerProtector(settings) {
-    try {
-      const payload = SonoffCluster.createPowerProtectorPayload({
-        maxCurrentProtect: settings.max_current_protect,
-        maxPowerProtect: settings.max_power_protect,
-        maxVoltageProtectEnabled: settings.max_voltage_protect_enabled,
-        maxVoltageProtect: settings.max_voltage_protect,
-        minVoltageProtectEnabled: settings.min_voltage_protect_enabled,
-        minVoltageProtect: settings.min_voltage_protect,
-        externalSwitchOnlyRecovery: settings.external_switch_only_recovery,
-        autoRecovery: settings.auto_recovery,
-      });
-      await writeAttributesVerbose(this, this.zclNode.endpoints[1].clusters[SonoffCluster.NAME], {
-        local_fast_scene_configuration: payload,
-      });
-      this.log('Power protector written:', payload.toString('hex'));
-    } catch (error) {
-      this.error('Error writing power protector:', error.message || error);
+    if (Object.keys(protection).length > 0) {
+      try {
+        await writeAttributesVerbose(this, this.zclNode.endpoints[1].clusters[SonoffCluster.NAME], protection);
+        this.log('Overload protection written:', protection);
+      } catch (error) {
+        this.error('Error writing overload protection:', error.message || error);
+      }
     }
   }
 
@@ -376,36 +263,26 @@ class SonoffBasicZB1GSP extends SonoffBase {
       const cluster = this.zclNode.endpoints[1].clusters[SonoffCluster.NAME];
       const data = await cluster.readAttributes([
         'network_led',
-        'TurboMode',
-        'switch_mode',
-        'power_on_delay_state',
-        'power_on_delay_time',
-        'detach_relay_mode2',
         'fault_code',
-        'local_fast_scene_configuration',
+        'acCurrentMaxOverloadEnable', 'acCurrentMaxOverload',
+        'acVoltageMaxOverloadEnable', 'acVoltageMaxOverload',
+        'acPowerMaxOverloadEnable', 'acPowerMaxOverload',
       ], { manufacturerCode: 0x1286 });
       if (!data) return;
 
       const settingsData = {};
       if (data.network_led !== undefined) settingsData.network_indicator = !!data.network_led;
-      if (data.TurboMode !== undefined) settingsData.turbo_mode = Number(data.TurboMode) === 20;
-      if (data.switch_mode !== undefined) settingsData.switch_mode = String(data.switch_mode);
-      if (data.power_on_delay_state !== undefined) settingsData.delayed_power_on_state = !!data.power_on_delay_state;
-      if (data.power_on_delay_time !== undefined) settingsData.delayed_power_on_time = data.power_on_delay_time / 2;
-      if (data.detach_relay_mode2 !== undefined) settingsData.detach_relay = !!(data.detach_relay_mode2 && data.detach_relay_mode2.l1);
-
-      if (data.local_fast_scene_configuration !== undefined) {
-        const scene = SonoffCluster.parsePowerProtectorPayload(data.local_fast_scene_configuration);
-        if (scene) {
-          settingsData.max_current_protect = scene.maxCurrentProtect;
-          settingsData.max_power_protect = scene.maxPowerProtect;
-          settingsData.max_voltage_protect_enabled = scene.maxVoltageProtectEnabled;
-          settingsData.max_voltage_protect = scene.maxVoltageProtect;
-          settingsData.min_voltage_protect_enabled = scene.minVoltageProtectEnabled;
-          settingsData.min_voltage_protect = scene.minVoltageProtect;
-          settingsData.external_switch_only_recovery = scene.externalSwitchOnlyRecovery;
-          settingsData.auto_recovery = scene.autoRecovery;
-        }
+      const limit = v => (this._isValidReading(v) ? v / 1000 : undefined);
+      const protection = {
+        current_protect_enabled: data.acCurrentMaxOverloadEnable === undefined ? undefined : !!data.acCurrentMaxOverloadEnable,
+        max_current_protect: limit(data.acCurrentMaxOverload),
+        voltage_protect_enabled: data.acVoltageMaxOverloadEnable === undefined ? undefined : !!data.acVoltageMaxOverloadEnable,
+        max_voltage_protect: limit(data.acVoltageMaxOverload),
+        power_protect_enabled: data.acPowerMaxOverloadEnable === undefined ? undefined : !!data.acPowerMaxOverloadEnable,
+        max_power_protect: limit(data.acPowerMaxOverload),
+      };
+      for (const [key, value] of Object.entries(protection)) {
+        if (value !== undefined) settingsData[key] = value;
       }
 
       if (Object.keys(settingsData).length > 0) {
