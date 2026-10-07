@@ -15,6 +15,7 @@ This section is generated from the Homey manifest. It is the easiest place to ch
 | MINI-ZBD Dry Contact (`MINI-ZBD`) | `MINI-ZBD` | `SONOFF` |
 | Motion Sensor SNZB-03 (`SNZB-03`) | `MS01` | `eWeLink` |
 | Presence Sensor SNZB-06P (`SNZB-06P`) | `SNZB-06P` | `SONOFF` |
+| Sonoff Basic DIN Rail Switch ZB1GSP (with power monitoring) (`BASIC-ZB1GSP`) | `BASIC-ZB1GSP` | `SONOFF` |
 | Sonoff Energy Meter ZB1GP (`MINI-ZB1GP`) | `MINI-ZB1GP` | `SONOFF` |
 | Sonoff Zigbee Dongle E (`DONGLE-E_R`) | `DONGLE-E_R` | `SONOFF` |
 | Sonoff Zigbee Dongle P (`DONGLE-P`) | `ti.router` | `TexasInstruments` |
