@@ -38,12 +38,14 @@ class SonoffBasicZB1GSP extends SonoffBase {
         this.log(`handle report (cluster: onOff, capability: onoff), parsed payload: ${value}`);
         this.setCapabilityValue('onoff', value).catch(this.error);
         if (!value) this._setCurrent(0);
+        this._pollSoon();
       };
       _onOffCluster.removeListener('attr.onOff', this._onOnOff);
       _onOffCluster.on('attr.onOff', this._onOnOff);
 
       this.registerCapabilityListener('onoff', async value => {
         this.log(`set onoff -> ${value} (cluster: onOff, endpoint: 1)`);
+        this._pollSoon();
         if (value) return _onOffCluster.setOn({}, { waitForResponse: false });
         return _onOffCluster.setOff({}, { waitForResponse: false });
       });
@@ -95,6 +97,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
       this.pollPowerMeasurements();
     }, 120_000);
 
+    this._configureReporting();
     await this.checkAttributes();
 
     // Power/energy poll runs every 120s (see above), so activity is frequent;
@@ -105,10 +108,37 @@ class SonoffBasicZB1GSP extends SonoffBase {
     this.log('BASIC-ZB1GSP initialized');
   }
 
+  // Power and current only arrive with the 120 s poll, so read them again right after a
+  // relay change (the load takes a moment to settle: 2 s and 8 s later).
+  _pollSoon() {
+    for (const timer of this._pollSoonTimers || []) this.homey.clearTimeout(timer);
+    this._pollSoonTimers = [2000, 8000].map(ms => this.homey.setTimeout(() => this.pollPowerMeasurements(), ms));
+  }
+
   // The device keeps reporting a leftover current after the relay opens
   // (zigbee-herdsman-converters shows 0 A while off), so report 0 then.
   _setCurrent(amps) {
     return this.setCapabilityValue('measure_current', this.getCapabilityValue('onoff') === false ? 0 : amps).catch(this.error);
+  }
+
+  // Same reports zigbee-herdsman-converters asks of this model (BASIC-ZB1GSP). Reports need the
+  // 0xFC11 binding from the manifest, which a device paired before this was added does not have;
+  // the poll keeps working either way.
+  async _configureReporting() {
+    const report = (attributeName, minInterval, maxInterval, minChange) => ({
+      endpointId: 1, cluster: SonoffCluster, attributeName, minInterval, maxInterval, minChange,
+    });
+    try {
+      await this.configureAttributeReporting([
+        report('acCurrentPowerValue', 10, 300, 5000), // 5 W
+        report('acCurrentCurrentValue', 10, 300, 100), // 0.1 A
+        report('energyToday', 60, 3600, 50),
+        report('energyMonth', 60, 3600, 50),
+        report('totalEnergyConsumption', 60, 3600, 50),
+      ]);
+    } catch (err) {
+      this.log('Could not configure attribute reporting:', err.message);
+    }
   }
 
   _isValidReading(value) {
@@ -255,14 +285,15 @@ class SonoffBasicZB1GSP extends SonoffBase {
     return checksum;
   }
 
-  async checkAttributes() {
+  async checkAttributes(attempt = 1) {
     try {
       const data = await this.zclNode.endpoints[1].clusters.onOff.readAttributes(['powerOnBehavior']);
       if (data && data.powerOnBehavior !== undefined) {
         await this.setSettings({ power_on_behavior: data.powerOnBehavior });
       }
     } catch (e) {
-      this.log('Device offline at startup, skipping attribute sync:', e.message);
+      this.log(`Device offline at startup, attribute sync failed (attempt ${attempt}/3):`, e.message);
+      this._retryCheckAttributes(attempt);
       return;
     }
 
@@ -300,8 +331,19 @@ class SonoffBasicZB1GSP extends SonoffBase {
         this.handleFaultCode(data.fault_code);
       }
     } catch (e) {
-      this.log('Could not read SonoffCluster attributes:', e.message);
+      this.log(`Could not read SonoffCluster attributes (attempt ${attempt}/3):`, e.message);
+      this._retryCheckAttributes(attempt);
     }
+  }
+
+  // The first read at start often fails while the app is sending a lot in parallel (seen on a
+  // Homey with many devices); try again 60 s and 120 s later.
+  _retryCheckAttributes(attempt) {
+    if (attempt >= 3) return;
+    this._syncTimer = this.homey.setTimeout(() => {
+      this._syncTimer = null;
+      this.checkAttributes(attempt + 1);
+    }, attempt * 60 * 1000);
   }
 
   async _teardown() {
@@ -309,6 +351,8 @@ class SonoffBasicZB1GSP extends SonoffBase {
       this.homey.clearInterval(this._powerPollInterval);
       this._powerPollInterval = null;
     }
+    if (this._syncTimer) this.homey.clearTimeout(this._syncTimer);
+    for (const timer of this._pollSoonTimers || []) this.homey.clearTimeout(timer);
     await this._availability?.uninstall().catch(() => {});
     await super._teardown();
   }
