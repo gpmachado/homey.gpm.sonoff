@@ -66,7 +66,7 @@ class SonoffMINIZB1GP extends SonoffBase {
     installRejoinDetection(this, { sonoffClusterId: SonoffCluster.ID, cooldownMs: 5000 });
 
     // Suppress Time cluster (0x000A) binding_unavailable errors
-    this.zclNode.endpoints[1].bind(CLUSTER.TIME.NAME, new SonoffTimeServerBoundCluster());
+    this.zclNode.endpoints[1].bind(CLUSTER.TIME.NAME, new SonoffTimeServerBoundCluster({ getTimeZone: () => this.homey.clock.getTimezone() }));
 
     // Read initial data
     await this.checkAttributes();
