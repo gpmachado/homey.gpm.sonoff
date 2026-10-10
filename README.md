@@ -51,7 +51,7 @@ Based on [Homey.Sonoff.Zigbee](https://github.com/StyraHem/Homey.Sonoff.Zigbee) 
 | v1.0.5 | MINI-ZB2GS (2-gang switch), SNZB-05P (Water leak sensor) |
 | Removed in v1.0.7 | MINI-ZB1GSP (added v1.0.4), S60ZBTPF (added v1.0.4), SNZB-09P (added v1.0.5) |
 
-Tested on physical units paired with Homey, with logs kept for hours: BASICZBR3, MINI-ZB1GP, MINI-ZBD, MINI-ZB2GS, SNZB-02LD, SNZB-02WD, SNZB-03, SNZB-04P, SNZB-04PR2, SNZB-06P, ZBMINI and ZBMINIR2. The dongles are owned and run as routers with the router firmware from Sonoff's site. The removed drivers were not tested.
+Tested on physical units paired with Homey, with logs kept for hours: BASICZBR3, MINI-ZB1GP, MINI-ZBD, MINI-ZB2GS, SNZB-02LD, SNZB-02WD, SNZB-03, SNZB-04P, SNZB-04PR2, SNZB-06P, ZBMINI and ZBMINIR2. BASIC-ZB1GSP was tested by a friend with a 245 W load: relay, power and current readings, and the overload protection (current and voltage limits opened the relay as set); the energy counters were not exercised yet. The dongles are owned and run as routers with the router firmware from Sonoff's site. The removed drivers were not tested.
 
 Notes per device:
 - **ZBMINIR2**: TurboMode setting; power-cut trigger.
