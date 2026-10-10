@@ -80,11 +80,34 @@ class SonoffMINIZB1GP extends SonoffBase {
       this._readEnergy().catch(err => this.error('[MINI-ZB1GP] periodic poll failed:', err.message));
     }, ENERGY_POLL_MS);
 
+    // Ask the device to report voltage and current over 0xFC11 as well (it already reports power
+    // and energy on its own). Delayed so it does not compete with the app's start-up traffic.
+    this._reportingTimer = this.homey.setTimeout(() => this._configureReporting(), 25 * 1000);
+
     // Reports (every 300 s at the latest) and the 10 min poll keep a wide margin under 25 min.
     this._availability = new AvailabilityManagerPassive(this, { timeout: HEARTBEAT_FAST_MS });
     await this._availability.install();
 
     this.log('[MINI-ZB1GP] energy meter driver ready');
+  }
+
+  // The device accepts configureReporting on the manufacturer cluster for voltage (0x7005) and
+  // current (0x7004) (checked on two units, read back with SUCCESS). Voltage then arrives every
+  // 300 s or on a 2 V change, current on a 0.1 A change; the 10 min poll stays as a safety net.
+  async _configureReporting() {
+    const cluster = this.zclNode?.endpoints?.[1]?.clusters?.[SonoffCluster.NAME];
+    if (!cluster) return;
+    const reports = {
+      acCurrentVoltageValue: { minInterval: 60, maxInterval: 300, minChange: 2000 }, // 2 V
+      acCurrentCurrentValue: { minInterval: 10, maxInterval: 300, minChange: 100 }, // 0.1 A
+    };
+    for (const [name, config] of Object.entries(reports)) {
+      try {
+        await cluster.configureReporting({ [name]: config });
+      } catch (err) {
+        this.log(`[MINI-ZB1GP] configureReporting ${name} failed:`, err.message);
+      }
+    }
   }
 
   // Fault code (0x0010): the metering-communication-error and overload-protection bits
@@ -505,6 +528,7 @@ class SonoffMINIZB1GP extends SonoffBase {
   }
 
   async _teardown() {
+    if (this._reportingTimer) this.homey.clearTimeout(this._reportingTimer);
     if (this._electricalTimer) {
       this.homey.clearTimeout(this._electricalTimer);
       this._electricalTimer = null;
