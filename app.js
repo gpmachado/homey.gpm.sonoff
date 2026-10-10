@@ -16,6 +16,9 @@ module.exports = class MyApp extends Homey.App {
     // zigbee-clusters frame dumps follow the single ZCL_DEBUG switch in lib/constants.js.
     debug(ZCL_DEBUG);
 
+    // First line of every log: which build is running (and whether frame dumps are on).
+    this.log(`My Sonoff Devices v${this.homey.manifest?.version ?? "?"} started (ZCL_DEBUG ${ZCL_DEBUG ? 'on' : 'off'})`);
+
     // Must run before any device's onNodeInit - registers SonoffCluster
     // (0xFC11) globally so zclNode.endpoints[1].clusters['SonoffCluster']
     // resolves for every driver that uses it.
