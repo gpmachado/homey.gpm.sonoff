@@ -2,6 +2,8 @@
 
 const SonoffBase = require('../sonoffbase');
 const SonoffCluster = require('../../lib/SonoffCluster');
+const { CLUSTER } = require('zigbee-clusters');
+const { SonoffTimeServerBoundCluster } = require('../../lib/TimeCluster');
 const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
 const { HEARTBEAT_FAST_MS } = require('../../lib/constants');
 const { writeAttributesVerbose } = require('../../lib/zclDebug');
@@ -26,6 +28,10 @@ class SonoffBasicZB1GSP extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
     super.onNodeInit({ zclNode });
+
+    // The device asks the coordinator for the time (Time is one of its output clusters) and
+    // rolls its day counters over on it: answer with the Homey's own time zone.
+    zclNode.endpoints[1].bind(CLUSTER.TIME.NAME, new SonoffTimeServerBoundCluster({ getTimeZone: () => this.homey.clock.getTimezone() }));
 
     if (this.hasCapability('onoff')) {
       // Same fix as BASICZBR3/ZBMINIR2: this firmware doesn't reliably send
