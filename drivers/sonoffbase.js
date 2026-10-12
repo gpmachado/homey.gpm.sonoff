@@ -29,6 +29,9 @@ class SonoffBase extends ZigBeeDevice {
       this.enableDebug();
     }
     this.printNode();
+    // The node's address next to the device id of every log line: ties a Zigbee frame, a
+    // sniffer capture or a "binding_unavailable" to the device it came from.
+    this.log(`[Node] ieee=${this.getData()?.ieeeAddress ?? '-'} nwk=${this.node?.networkAddress ?? '-'}`);
 
     if (options.noAttribCheck !== true) {
       if ('powerConfiguration' in zclNode.endpoints[1].clusters) {

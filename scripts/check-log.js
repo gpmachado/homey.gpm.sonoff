@@ -51,6 +51,20 @@ const frameRe = /(\S+Z) zigbee-clusters:cluster ep: \d, cl: SonoffCluster \(6452
 const frames = [...text.matchAll(frameRe)].map(m => ({
   t: ms(m[1]), report: m[2] === 'reportAttributes', attrs: decode(m[3], m[2] !== 'reportAttributes'),
 }));
+// With ZCL_DEBUG the app logs one "[Availability] frame ..." line per inbound frame of a mains device,
+// prefixed with its device id: unlike the zigbee-clusters dump above, these belong to one device.
+function deviceFrames(lines) {
+  const out = [];
+  for (const l of lines) {
+    const m = l.msg.match(/^\[Availability\] frame ep\d+ cl:0x([0-9a-f]+) ([0-9a-f]+)$/);
+    if (!m || m[1] !== 'fc11') continue;
+    const b = Buffer.from(m[2], 'hex');
+    const head = b[0] & 0x04 ? 5 : 3; // manufacturer-specific frames carry a 2-byte code
+    const cmd = b[head - 1];
+    if (cmd === 0x0a || cmd === 0x01) out.push({ t: l.t, report: cmd === 0x0a, attrs: decode(b.subarray(head).toString('hex'), cmd === 0x01) });
+  }
+  return out;
+}
 const POWER = 0x7006; const CURRENT = 0x7004; const VOLTAGE = 0x7005; const FAULT = 0x0010; const TOTAL = 0x701e;
 
 // -- version ---------------------------------------------------------------------------------------
@@ -65,6 +79,9 @@ if (!basic.length) {
   add('INFO', 'BASIC-ZB1GSP', 'not in this log');
 } else {
   const has = re => basic.filter(l => re.test(l.msg));
+  const own = deviceFrames(basic);
+  const bframes = own.length ? own : frames;
+  add('INFO', 'BASIC frames', own.length ? `${own.length} 0xFC11 frames tied to this device` : 'zigbee-clusters dump only (not tied to a device): other meters in the Homey could be counted');
   has(/BASIC-ZB1GSP initialized/).length ? add('PASS', 'BASIC starts') : add('FAIL', 'BASIC starts', 'no "initialized" line');
 
   has(/Could not configure attribute reporting/).length
@@ -84,7 +101,7 @@ if (!basic.length) {
   add(cmds.length && sawOn && sawOff ? 'PASS' : 'FAIL', 'BASIC relay on and off', `${cmds.length} commands, ${reports.length} onOff reports`);
 
   // power and current read soon after a relay change
-  const reads = frames.filter(f => !f.report && f.attrs[POWER] !== undefined);
+  const reads = bframes.filter(f => !f.report && f.attrs[POWER] !== undefined);
   const ons = cmds.filter(c => c.on);
   if (ons.length) {
     const ok = ons.filter(c => reads.some(f => f.t > c.t && f.t <= c.t + 15000 && f.attrs[POWER] >= 500)).length;
@@ -92,7 +109,7 @@ if (!basic.length) {
   }
 
   // spontaneous reports
-  const spont = frames.filter(f => f.report && (f.attrs[POWER] !== undefined || f.attrs[CURRENT] !== undefined || f.attrs[VOLTAGE] !== undefined));
+  const spont = bframes.filter(f => f.report && (f.attrs[POWER] !== undefined || f.attrs[CURRENT] !== undefined || f.attrs[VOLTAGE] !== undefined));
   add(spont.length ? 'PASS' : 'WARN', 'BASIC reports on its own', spont.length
     ? `${spont.length} power/current/voltage reports`
     : 'none: remove the BASIC from Homey and pair it again with this version (the 0xFC11 binding is made at pairing)');
@@ -127,9 +144,9 @@ if (!basic.length) {
   }
   add('INFO', 'BASIC relay opened by itself', trips.length ? `${trips.length}x at ${trips.join(' ')}` : 'never (a limit has to be crossed to see it)');
 
-  const faults = [...new Set(frames.filter(f => f.attrs[FAULT] !== undefined).map(f => '0x' + f.attrs[FAULT].toString(16).padStart(8, '0')))];
+  const faults = [...new Set(bframes.filter(f => f.attrs[FAULT] !== undefined).map(f => '0x' + f.attrs[FAULT].toString(16).padStart(8, '0')))];
   add('INFO', 'BASIC fault_code values', faults.join(' ') || 'none seen');
-  const total = Math.max(0, ...frames.map(f => f.attrs[TOTAL] ?? 0));
+  const total = Math.max(0, ...bframes.map(f => f.attrs[TOTAL] ?? 0));
   add('INFO', 'BASIC energy total', `${total / 1000} kWh (stays 0 until a load runs a few minutes)`);
 }
 
