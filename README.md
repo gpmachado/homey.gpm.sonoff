@@ -4,7 +4,7 @@ Homey app adding support for SONOFF Zigbee devices, with availability tracking, 
 
 Based on [Homey.Sonoff.Zigbee](https://github.com/StyraHem/Homey.Sonoff.Zigbee) by StyraHem (Tarra AB), through the community fork [macmonty/Homey.Sonoff.Zigbee](https://github.com/macmonty/Homey.Sonoff.Zigbee), which includes the ZBMINIR2 and MINI-ZB2GS work by Simone Di Maio.
 
-**Published** on the Homey App Store as *My Sonoff Devices* (store version: **v1.0.8**); it can also be installed from source (see [Install](#install)). Requires Homey firmware `>=12.4.0`.
+**Not public, not certified.** *My Sonoff Devices* is not in the public Homey App Store listing (the store already has a Sonoff app). It is sent to the store as a non-public build for testing (current build: **v1.0.8**) and can also be installed from source (see [Install](#install)). Requires Homey firmware `>=12.4.0`.
 
 ## Changelog
 

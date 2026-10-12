@@ -134,7 +134,7 @@ Nice to have:
   with `ZCL_DEBUG`, one line per inbound frame with its device id.
 - Post the notes for the upstream fork owner (macmonty): issues are disabled there, so use the e-mail. Put the
   notes in a gist or `docs/` and link them.
-- Before publishing: the store is at 1.0.8; the next release is 1.0.10 (1.0.9 was never published, its text is
+- Before the next build goes to the store (non-public, not certified): it is at 1.0.8; the next one is 1.0.10 (1.0.9 was never published, its text is
   merged into the 1.0.10 entry of `.homeychangelog.json`, which is also the text the store will show: check it).
   `ZCL_DEBUG` back to `false` in `lib/constants.js` (it is `true` on `main` on purpose while the remote tests run).
   Decide whether the BASIC-ZB1GSP goes in this release: it is still under analysis.
