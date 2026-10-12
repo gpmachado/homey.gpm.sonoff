@@ -24,6 +24,12 @@ const INCHING_PROTOCOL = {
   FLAG_MODE_ON: 0x01,
 };
 
+const PROTECTION_ATTRIBUTES = [
+  'acCurrentMaxOverloadEnable', 'acCurrentMaxOverload',
+  'acVoltageMaxOverloadEnable', 'acVoltageMaxOverload',
+  'acPowerMaxOverloadEnable', 'acPowerMaxOverload',
+];
+
 class SonoffBasicZB1GSP extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
@@ -248,6 +254,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
       try {
         await writeAttributesVerbose(this, this.zclNode.endpoints[1].clusters[SonoffCluster.NAME], protection);
         this.log('Overload protection written:', protection);
+        this._logProtection('after write');
       } catch (error) {
         this.error('Error writing overload protection:', error.message || error);
       }
@@ -336,6 +343,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
       if (data.fault_code !== undefined) {
         this.handleFaultCode(data.fault_code);
       }
+      this._logProtection('at start');
     } catch (e) {
       this.log(`Could not read SonoffCluster attributes (attempt ${attempt}/3):`, e.message);
       this._retryCheckAttributes(attempt);
@@ -350,6 +358,26 @@ class SonoffBasicZB1GSP extends SonoffBase {
       this._syncTimer = null;
       this.checkAttributes(attempt + 1);
     }, attempt * 60 * 1000);
+  }
+
+  // Reads the protection attributes back and logs them as the device holds them, once at start and
+  // after every limits write: the log shows what was written next to what was stored, and the
+  // attributes this driver does not use yet (the 0x7003 limits block, 0x7007, the fault code).
+  // The Sonoff hub offers minimum limits and "Remote Unlock" that are not mapped here; their
+  // values show up in these lines. Two small reads, so no response is split in fragments.
+  async _logProtection(reason) {
+    const cluster = this.zclNode?.endpoints?.[1]?.clusters?.[SonoffCluster.NAME];
+    if (!cluster) return;
+    const opts = { manufacturerCode: 0x1286 };
+    try {
+      const limits = await cluster.readAttributes(PROTECTION_ATTRIBUTES, opts);
+      this.log(`[Protection] ${reason}:`, JSON.stringify(limits));
+      const extra = await cluster.readAttributes(['limits_of_threshold_value', 'outlet_control_protect', 'fault_code'], opts);
+      const block = extra.limits_of_threshold_value;
+      this.log(`[Protection] ${reason}: limits block 0x${block ? block.toString('hex') : '-'}, outlet_control_protect=${extra.outlet_control_protect}, fault_code=0x${(extra.fault_code >>> 0).toString(16)}`);
+    } catch (err) {
+      this.log(`[Protection] ${reason} read failed:`, err.message);
+    }
   }
 
   async _teardown() {

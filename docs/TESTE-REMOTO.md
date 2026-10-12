@@ -37,6 +37,12 @@ potência e corrente.
    (abaixo da carga). Volte os dois ao normal.
 5. Mude o "Power-on behavior" uma vez.
 
+Cada vez que você salvar um limite, o app lê de volta o que o aparelho guardou e o script compara com
+o que foi gravado. *(linhas "written vs stored" e "extra attributes")* A linha "extra attributes"
+mostra três coisas que o app ainda não usa: o bloco de limites (`0x7003`), o `outlet_control_protect`
+(`0x7007`) e o `fault_code`. Elas ajudam a descobrir o que são os limites mínimos e o "Remote Unlock"
+do aplicativo da Sonoff.
+
 Anote: o relé desarmou nos 3 casos? Quanto tempo levou?
 
 ## 3. MINI-ZB2GS

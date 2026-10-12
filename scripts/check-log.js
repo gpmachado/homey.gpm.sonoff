@@ -102,6 +102,22 @@ if (!basic.length) {
   const bad = basic.filter(l => /Error writing overload protection|REJECTED/.test(l.msg));
   add(bad.length ? 'FAIL' : writes.length ? 'PASS' : 'WARN', 'BASIC protection limits written', bad.length ? bad[0].msg : `${writes.length} writes`);
 
+  // what was written next to what the device stored (the read-back right after each write)
+  const pairs = [];
+  basic.forEach((l, i) => {
+    const w = l.msg.match(/^Overload protection written: \{(.*)\}$/);
+    const back = w && basic.slice(i + 1).find(x => /^\[Protection\] after write: \{/.test(x.msg));
+    if (!back) return;
+    let stored = {};
+    try { stored = JSON.parse(back.msg.replace('[Protection] after write: ', '')); } catch { return; }
+    for (const [, k, v] of w[1].matchAll(/(\w+): (\d+)/g)) pairs.push({ k, written: Number(v), stored: stored[k] });
+  });
+  const diff = pairs.filter(p => p.written !== p.stored);
+  if (!pairs.length) add('WARN', 'BASIC written vs stored', 'no read-back seen: needs the version with the [Protection] log lines');
+  else add(diff.length ? 'FAIL' : 'PASS', 'BASIC written vs stored', diff.length ? diff.map(p => `${p.k} written ${p.written}, device has ${p.stored}`).join('; ') : `${pairs.length} values read back equal`);
+  const extras = has(/^\[Protection\] .*limits block/).map(l => l.msg.replace(/^\[Protection\] [^:]*: /, ''));
+  add('INFO', 'BASIC extra attributes', [...new Set(extras)].join(' | ') || 'not read yet');
+
   // the relay opened by itself soon after "on" = a protection trip
   const trips = [];
   for (const c of ons) {
