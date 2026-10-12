@@ -116,9 +116,6 @@ Should fix:
   in the two dongle drivers (the poll is 20 min).
 
 Lean (about -450 lines):
-- `lib/HourlyMessageStats.js`: the snapshot constructor, `serialize()`, `_normalizeBuckets`, the version,
-  `averagePerHour`, `hourly` and `bySource` are not used by anything (the page reads `currentHour`,
-  `previousHour`, `last24h`, `lastMessageAt`, `mode`). The same file in `com.gpm.tuya` and the Nova app.
 - `lib/IASZoneHelper.js`: the CIE address path (`configureCieAddress`, `writeCieAddress`,
   `_getCoordinatorIeee`, `cleanIeee`, `_isEnrolled`) has no caller that enables it.
 - `drivers/sonoffbase.js`: `initAttribute`, `writeAttribute`; `lib/zclDebug.js`: `installNamedLogging` and its
