@@ -7,3 +7,8 @@ analise/
 homey-app-debug*
 env.json
 docs/
+TODO.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SUPPORTED_DEVICES.md
+scripts/
