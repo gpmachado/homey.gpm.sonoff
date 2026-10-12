@@ -28,5 +28,8 @@
   },
   "1.0.9": {
     "en": "MINI-ZB1GP: voltage and current now reach the app on their own and the periodic reads are ten times less frequent (every 10 minutes instead of 2), and the energy counters now roll over at local midnight instead of 21:00 (UTC). BASIC-ZB1GSP (Sonoff Basic DIN Rail switch): power and current appear within seconds of a change, and the protection limits are read again if the first read fails at start."
+  },
+  "1.0.10": {
+    "en": "BASIC-ZB1GSP: the protection limits are read back after saving, so the log shows what the device stored. Remote tests: each device logs its node address and, with debug on, one line per frame."
   }
 }
