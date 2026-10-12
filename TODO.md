@@ -102,7 +102,7 @@ Should fix:
 - Tests in the repo: move `01-three-signals.test.js` and `run.js` from `~/HomeyApp/_testes/disponibilidade-leve`
   into `test/` and add an npm `test` script (its default path still names the old folder).
 - Docs and comments that describe removed code: `SUPPORTED_DEVICES.md` mentions an npm script that does not
-  exist; `README.md` says "Current version v1.0.7" and its changelog stops there; "poll-before-offline" in
+  exist; "poll-before-offline" in
   `lib/constants.js` and `drivers/ZBMINI/device.js`; "Store I/O" in `lib/availabilityHooks.js`; "every 5 min"
   in the two dongle drivers (the poll is 20 min).
 
@@ -134,5 +134,7 @@ Nice to have:
   with `ZCL_DEBUG`, one line per inbound frame with its device id.
 - Post the notes for the upstream fork owner (macmonty): issues are disabled there, so use the e-mail. Put the
   notes in a gist or `docs/` and link them.
-- Before publishing: `ZCL_DEBUG` back to `false` in `lib/constants.js` (it is `true` on `main` on purpose while
-  the remote tests run), and write the store text of the version being published.
+- Before publishing: the store is at 1.0.8; the next release is 1.0.10 (1.0.9 was never published, its text is
+  merged into the 1.0.10 entry of `.homeychangelog.json`, which is also the text the store will show: check it).
+  `ZCL_DEBUG` back to `false` in `lib/constants.js` (it is `true` on `main` on purpose while the remote tests run).
+  Decide whether the BASIC-ZB1GSP goes in this release: it is still under analysis.

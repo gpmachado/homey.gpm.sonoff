@@ -4,9 +4,14 @@ Homey app adding support for SONOFF Zigbee devices, with availability tracking, 
 
 Based on [Homey.Sonoff.Zigbee](https://github.com/StyraHem/Homey.Sonoff.Zigbee) by StyraHem (Tarra AB), through the community fork [macmonty/Homey.Sonoff.Zigbee](https://github.com/macmonty/Homey.Sonoff.Zigbee), which includes the ZBMINIR2 and MINI-ZB2GS work by Simone Di Maio.
 
-**Internal use.** The Homey App Store already has a Sonoff app, so this one is not published there and is installed from source (see [Install](#install)). Requires Homey firmware `>=12.4.0`. Current version: **v1.0.7**.
+**Published** on the Homey App Store as *My Sonoff Devices* (store version: **v1.0.8**); it can also be installed from source (see [Install](#install)). Requires Homey firmware `>=12.4.0`.
 
 ## Changelog
+
+**v1.0.8**
+- Availability is simpler and lighter: a device is marked unavailable after 5 commands in a row get no answer ("No response to commands") or after a long silence, and comes back as soon as it talks again. Nothing is stored any more, so after an app restart every device starts as seen now.
+- Battery sensors are no longer read while they sleep (Poll Control reads removed, one attempt for the battery and calibration reads at start), which means far fewer failed transmissions.
+- MINI-ZB1GP: the Electrical Monitoring limits (overcurrent, overpower, overvoltage, undervoltage) are shown as read-only settings.
 
 **v1.0.7**
 - SNZB-04P/04PR2 and SNZB-02LD/WD: if a sensor shows as unavailable while idle, remove and re-pair it. Sensors paired with an older version do not always send anything on their own (six SNZB-04P showed no traffic for 24 h on one network), while freshly paired ones announce every hour.
