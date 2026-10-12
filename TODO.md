@@ -36,15 +36,24 @@ with `node scripts/check-log.js <log>`.
 ## MINI-ZB1GP
 
 - **Electrical Monitoring (`0x7016`, the power protector).** Read and shown read-only in the settings,
-  confirmed on the unit. Editing is not implemented: decide it per setting, write with
-  `createPowerProtectorPayload()` from the values read back, read again to confirm; the write path was
-  never run on hardware. Decide what the app does with the "Electrical Status" alarm once limits can change.
+  confirmed on the unit. **No editing is planned:** the Sonoff hub offers no limit setting for this model (its
+  device screen has Turbo Mode, Billing Date, Network Indicator, Reset Consumption, Show Export Energy; firmware
+  1.2.7 on that unit), which fits a device with no relay: nothing trips. Open decision: keep the four read-only
+  labels (they show a configuration the hub never shows and that has no effect here; the read is 70 bytes and
+  failed at boot on the first run, hence its two retries) or remove them: about 50 lines in
+  `drivers/MINI-ZB1GP/device.js` plus the settings group. The parser and builder in `lib/SonoffCluster.js` stay
+  as protocol knowledge either way (the BASIC-ZB1GSP does not use `0x7016`).
   Protocol notes, kept because the logs are not in the repository: ARRAY of UINT8 (`0x48`), 3 bytes
   `01 01 01`, then TLV scenes; type `02` (20 bytes) is the protector. Read from the unit: overcurrent 16 A,
   overpower 3840 W, overvoltage on at 277 V, undervoltage on at 165 V, auto recovery off, recovery only by
   external switch off. First 50 bytes of the answer:
   `16 70 00 48 20 3f 00 | 01 01 01 | 01 05 01 00 00 03 28 | 02 14 01 80 3e 00 00 00 98 3a 00 00 08 3a 04 80 88 84 02 80 00 00 | 03 12 01 00 14 00 00 00 40 7e 05 ...`
   (z2m `localFastSceneConfiguration({hasSwitch: false})`; ZHA quirk PR zigpy/zha-device-handlers#5155.)
+- **Billing Date is not a device setting.** The hub has "Billing Date Settings" (day of the month) for this model,
+  but the three captures of changing it (`_reference/sniffers/energymeter/billing-*.pcapng`, 732 to 976 bytes)
+  hold only route requests and link status: nothing is sent to the device. The only writes in the longer
+  capture (`dia 5-10-1-15 billing - networkled.pcapng`) are the network LED (`0xFC11` attribute `0x0001`). The
+  device's own month counter rolls over on the 1st; a different billing day would be a software sum in the app.
 - **Standard-cluster capabilities.** Power, current and voltage are registered on the Electrical Measurement
   cluster, which this unit always answers with "no value" (`65535`, `-1`; two units, with a 1.5 kW load).
   The real values come on `0xFC11`, which the device reports on its own. Test one freshly paired unit with
