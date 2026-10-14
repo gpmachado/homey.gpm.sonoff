@@ -8,29 +8,26 @@ the SNZB-05P restore, the settings page split) is in the git history and in `doc
 
 Driver restored from the removed MINI-ZB1GSP and aligned with the zigbee-herdsman-converters definition
 of this model. Confirmed on his unit: relay, power and current reads, and the relay opening by itself
-when a configured current, voltage or power limit is crossed. Test steps: `docs/TESTE-REMOTO.md`, checked
-with `node scripts/check-log.js <log>`.
+when a configured current, voltage or power limit is crossed. After the re-pair (log 2026-10-13) it reports
+power/current/voltage on its own (42 reports in 12 min; poll lowered to 10 min) and every trip reports
+`fault_code` `0x06020004` (TLV type `0x06`, bit 2 = overload protection, the same for current, voltage and
+power), cleared to `0x06020000` by the next "on"; `handleFaultCode` now accepts type `0x06`. It also reads
+the Time cluster (`localTime`, `time`, `timeStatus`...), so the Time bind stays. Test steps:
+`docs/TESTE-REMOTO.md`, checked with `node scripts/check-log.js <log>`.
 
-1. **Re-pair and measure the reports.** His unit was paired before the `0xFC11` binding was added to the
-   manifest, so it sends no reports on its own (zero in a 6 min log with a load). After a re-pair with
-   1.0.10 or later: confirm the spontaneous power/current reports, then lower the 2 min poll of
-   `drivers/BASIC-ZB1GSP/device.js` to about 10 min, as done for the MINI-ZB1GP.
-2. **`fault_code` is not decoded.** The unit answers `0x06020000` (TLV type `0x06`, length 2, no bits) and
-   `handleFaultCode` only accepts type `0x07` (the MINI-ZB1GSP format), so the three alarms never update.
-   Read it after a protection trip to learn the bits, then decode it or drop the alarm capabilities.
-3. **Hub features not mapped:** minimum power, voltage and current limits, and "Remote Unlock". Candidates:
+1. **Fault bits 0 and 1 not seen.** Overheat (bit 0) and metering error (bit 1) follow the MINI-ZB1GSP map
+   without confirmation on this unit.
+2. **Hub features not mapped:** minimum power, voltage and current limits, and "Remote Unlock". Candidates:
    the `0x7003` limits block (z2m `buildOverloadProtectionPayload`: max current and max power always present,
    the rest optional behind flags) and `outlet_control_protect` (`0x7007`). Not guessed: the read-back log lines
    (`[Protection] ...`) give the bytes; confirm what changes with a capture (needs a unit paired to the hub
    with a sniffer) before writing anything.
-4. **Maximum current and power are always on in the hub** ("default protection is enabled", no switch; only
+3. **Maximum current and power are always on in the hub** ("default protection is enabled", no switch; only
    the voltage has one). Remove the two "Enable" checkboxes and write enable `1` with the value.
-5. **A failed write of a protection limit must show as an error.** `onSettings` catches and only logs; the
+4. **A failed write of a protection limit must show as an error.** `onSettings` catches and only logs; the
    page then says "saved" while the device keeps the old limit. Let the error go (the MINI-ZB1GP already does).
-6. **Time server:** the driver answers Time queries with the Homey time zone, a guess from the interview.
-   With the per-device frame lines (1.0.10) check that this unit asks for the time (cluster `0x000a`);
-   remove the bind if it never does. Energy counters still need a load running a few minutes.
-7. Not done on purpose: export energy and the consumption history (firmware 1.3.0 or later; this unit is
+5. **Energy counters** still need a load running a few minutes to confirm.
+6. Not done on purpose: export energy and the consumption history (firmware 1.3.0 or later; this unit is
    1.0.5), `energyYesterday` (no standard capability).
 
 ## MINI-ZB1GP

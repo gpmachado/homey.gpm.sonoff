@@ -8,7 +8,10 @@ const { AvailabilityManagerPassive } = require('../../lib/AvailabilityManager');
 const { HEARTBEAT_FAST_MS } = require('../../lib/constants');
 const { writeAttributesVerbose } = require('../../lib/zclDebug');
 
-// zigbee-herdsman-converters: faultCodeMiniZb1gsp({hasSwitch:true}) bit map
+// zigbee-herdsman-converters: faultCodeMiniZb1gsp({hasSwitch:true}) bit map.
+// The BASIC sends the same bits with TLV type 0x06 instead of 0x07: field log
+// 2026-10-13, current/voltage/power trips each reported 0x06020004 (bit 2, no
+// cause per limit), cleared to 0x06020000 by the next "on".
 const FAULT_BITS = {
   alarm_generic: 0b001,
   'alarm_generic.metering_error': 0b010,
@@ -75,15 +78,22 @@ class SonoffBasicZB1GSP extends SonoffBase {
       // standard Electrical Measurement cluster (confirmed against
       // zigbee-herdsman-converters). Power can be negative here (export
       // direction) - acCurrentPowerValue is signed on the wire.
+      // Last raw readings for the protection_tripped tokens: measure_current is
+      // forced to 0 once the relay opens, and the trip frame carries them anyway.
+      this._readings = {};
       sonoffCluster.on('attr.acCurrentVoltageValue', (value) => {
+        if (this._isValidReading(value)) this._readings.voltage = value / 1000;
         if (this._isValidReading(value)) this.setCapabilityValue('measure_voltage', value / 1000).catch(this.error);
       });
       sonoffCluster.on('attr.acCurrentPowerValue', (value) => {
         if (!this._isValidReading(value)) return;
+        this._readings.power = this._toSignedInt32(value) / 1000;
         this.setCapabilityValue('measure_power', this._toSignedInt32(value) / 1000).catch(this.error);
       });
       sonoffCluster.on('attr.acCurrentCurrentValue', (value) => {
-        if (this._isValidReading(value)) this._setCurrent(value / 1000);
+        if (!this._isValidReading(value)) return;
+        this._readings.current = value / 1000;
+        this._setCurrent(value / 1000);
       });
 
       // Cumulative counters - real running totals reported by the device, no
@@ -99,15 +109,14 @@ class SonoffBasicZB1GSP extends SonoffBase {
       });
     }
 
-    // Passive reports alone can lag behind a real change by hours (same
-    // issue as MINI-ZB1GP's daily/monthly counters). Poll actively every
-    // 120s instead - same base interval as the smartplug driver in
-    // nova.digital.homeyapp.
+    // Backup poll only: after a re-pair with the 0xFC11 binding the unit
+    // reports power/current/voltage on its own (field log 2026-10-13, 42
+    // reports in 12 min), so 10 min is enough - same as the MINI-ZB1GP.
     if (this._powerPollInterval) this.homey.clearInterval(this._powerPollInterval);
     this.pollPowerMeasurements();
     this._powerPollInterval = this.homey.setInterval(() => {
       this.pollPowerMeasurements();
-    }, 120_000);
+    }, 600_000);
 
     this._configureReporting();
     await this.checkAttributes();
@@ -195,9 +204,19 @@ class SonoffBasicZB1GSP extends SonoffBase {
     const tlv = value >>> 0;
     const type = (tlv >>> 24) & 0xff;
     const length = (tlv >>> 16) & 0xff;
-    if (type !== 0x07 || length !== 0x02) return;
+    if ((type !== 0x07 && type !== 0x06) || length !== 0x02) return;
 
     const faultValue = tlv & 0xffff;
+    const tripped = (faultValue & FAULT_BITS['alarm_generic.overload_protection']) !== 0;
+    if (tripped && this.getCapabilityValue('alarm_generic.overload_protection') !== true) {
+      // The trip frame lists fault_code before the readings: let them land first.
+      setImmediate(() => {
+        const { current = 0, voltage = 0, power = 0 } = this._readings ?? {};
+        this.log(`[Protection] tripped: ${current} A, ${voltage} V, ${power} W`);
+        this.homey.flow.getDeviceTriggerCard('BASIC-ZB1GSP:protection_tripped')
+          .trigger(this, { current, voltage, power }).catch(this.error);
+      });
+    }
     for (const [capabilityId, bit] of Object.entries(FAULT_BITS)) {
       if (this.hasCapability(capabilityId)) {
         this.setCapabilityValue(capabilityId, (faultValue & bit) !== 0).catch(this.error);

@@ -45,6 +45,31 @@ do aplicativo da Sonoff.
 
 Anote: o relé desarmou nos 3 casos? Quanto tempo levou?
 
+### 2b. BASIC-ZB1GSP: rodada complementar (alarme e flow de proteção)
+
+Para quem já fez a seção 2. **Não precisa parear de novo.** Use a mesma carga de 100 W ou mais.
+
+1. **Antes:** crie um flow com o gatilho **"Proteção desarmou"** do BASIC e a ação "Enviar notificação"
+   com o texto `Desarmou: [Corrente] A, [Tensão] V, [Potência] W` (os três tokens do gatilho).
+2. **Corrente:** limite de corrente abaixo da carga e ligue o relé. Quando desarmar, confira:
+   - chegou a notificação, com uma corrente **acima** do limite;
+   - no device, o alarme **"Overload protection"** ficou ativo.
+   Ligue o relé de novo **pelo Homey**: o alarme deve **apagar** (e desarmar de novo, se o limite
+   continuar baixo). Volte o limite para 32 A. *(linha "protection flow")*
+3. **Tensão:** o mesmo com o limite de tensão abaixo da tensão da tomada. A notificação deve mostrar
+   uma tensão **acima** do limite. Volte ao normal.
+4. **Potência:** o mesmo com o limite de potência abaixo da carga. Volte ao normal.
+5. **Energia:** deixe a carga ligada **15 minutos** sem mexer em nada. Anote no começo e no fim os
+   valores de "Energia", "Energia hoje" e "Energia do mês" no app. *(linha "energy total")*
+6. **Reports sozinhos:** durante esses 15 minutos, potência e corrente no app devem continuar mudando
+   quando a carga muda (desligue e religue a carga **pela tomada dela**, não pelo relé). O app agora só
+   consulta o aparelho a cada 10 minutos; o resto tem que vir do próprio aparelho. *(linha "reports on its own")*
+
+Anote: a notificação chegou nas 3 vezes? O alarme apagou ao religar? Quanto a energia subiu em 15 min?
+
+**Fora deste roteiro:** limites **mínimos** de corrente e tensão. O app ainda não tem essas opções;
+falta descobrir o formato com uma captura do hub da Sonoff.
+
 ## 3. MINI-ZB2GS
 
 1. **Canal 1:** ligue e desligue pelo Homey, 2 vezes. *(linha "gang 1 from Homey")*

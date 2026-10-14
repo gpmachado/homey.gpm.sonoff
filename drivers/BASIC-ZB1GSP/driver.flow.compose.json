@@ -1,0 +1,20 @@
+{
+  "triggers": [
+    {
+      "id": "BASIC-ZB1GSP:protection_tripped",
+      "title": {
+        "en": "Protection tripped",
+        "pt": "Proteção desarmou"
+      },
+      "hint": {
+        "en": "The relay opened because a current, voltage or power limit was crossed. The device does not say which one: compare the tokens with the limits in the settings.",
+        "pt": "O relé abriu porque um limite de corrente, tensão ou potência foi ultrapassado. O aparelho não informa qual: compare os tokens com os limites das configurações."
+      },
+      "tokens": [
+        { "name": "current", "type": "number", "title": { "en": "Current (A)", "pt": "Corrente (A)" }, "example": 16.2 },
+        { "name": "voltage", "type": "number", "title": { "en": "Voltage (V)", "pt": "Tensão (V)" }, "example": 231 },
+        { "name": "power", "type": "number", "title": { "en": "Power (W)", "pt": "Potência (W)" }, "example": 3800 }
+      ]
+    }
+  ]
+}

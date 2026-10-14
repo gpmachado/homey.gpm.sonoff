@@ -144,6 +144,12 @@ if (!basic.length) {
   }
   add('INFO', 'BASIC relay opened by itself', trips.length ? `${trips.length}x at ${trips.join(' ')}` : 'never (a limit has to be crossed to see it)');
 
+  // each trip must fire the "Protection tripped" flow card (log line from handleFaultCode)
+  const fired = basic.filter(l => l.msg.startsWith('[Protection] tripped:'));
+  if (!trips.length) add('WARN', 'BASIC protection flow', 'no trip in this log (cross a limit to test the flow card)');
+  else if (fired.length >= trips.length) add('PASS', 'BASIC protection flow', fired.map(l => `${hhmmss(l.t)} ${l.msg.slice(22)}`).join(' | '));
+  else add('FAIL', 'BASIC protection flow', `${trips.length} trips, ${fired.length} flow triggers (an app build without the "Protection tripped" card?)`);
+
   const faults = [...new Set(bframes.filter(f => f.attrs[FAULT] !== undefined).map(f => '0x' + f.attrs[FAULT].toString(16).padStart(8, '0')))];
   add('INFO', 'BASIC fault_code values', faults.join(' ') || 'none seen');
   const total = Math.max(0, ...bframes.map(f => f.attrs[TOTAL] ?? 0));
