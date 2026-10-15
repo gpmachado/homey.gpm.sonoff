@@ -152,8 +152,11 @@ if (!basic.length) {
 
   const faults = [...new Set(bframes.filter(f => f.attrs[FAULT] !== undefined).map(f => '0x' + f.attrs[FAULT].toString(16).padStart(8, '0')))];
   add('INFO', 'BASIC fault_code values', faults.join(' ') || 'none seen');
-  const total = Math.max(0, ...bframes.map(f => f.attrs[TOTAL] ?? 0));
-  add('INFO', 'BASIC energy total', `${total / 1000} kWh (stays 0 until a load runs a few minutes)`);
+  // total from the Metering cluster ([Energy] lines); 0x701E stays 0 on firmware 1.0.5
+  const totals = basic.filter(l => l.msg.startsWith('[Energy] total')).map(l => parseFloat(l.msg.slice(15)));
+  const legacy = Math.max(0, ...bframes.map(f => f.attrs[TOTAL] ?? 0)) / 1000;
+  if (!totals.length) add('WARN', 'BASIC energy total', `no metering read (old build or paired without cluster 1794); 0x701E max ${legacy} kWh`);
+  else add('INFO', 'BASIC energy total', `metering ${totals[0]} -> ${totals[totals.length - 1]} kWh (0x701E max ${legacy} kWh)`);
 }
 
 // -- MINI-ZB2GS -------------------------------------------------------------------------------------

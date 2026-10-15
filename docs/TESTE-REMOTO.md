@@ -47,12 +47,21 @@ Anote: o relé desarmou nos 3 casos? Quanto tempo levou?
 
 ### 2b. BASIC-ZB1GSP: rodada complementar (alarme e flow de proteção)
 
-Para quem já fez a seção 2. **Não precisa parear de novo.** Use a mesma carga de 100 W ou mais.
+Para quem já fez a seção 2. Use a mesma carga de 100 W ou mais.
 
+0. **Firmware e novo pareamento:** pareie o BASIC no **hub/app da Sonoff** e atualize o firmware por lá
+   (o seu está no **1.0.5**; existe o **1.3.3**). Anote a versão nova. Depois tire do app da Sonoff,
+   **pareie de novo no Homey** e refaça os flows (o device volta como novo). Com o app rodando, o
+   "Energy" (total) deve deixar de ficar em 0: ele agora vem do medidor padrão do aparelho. Anote o
+   valor dele e o de "Energy today". *(linha "energy total")*
+   Depois de parear no Homey, faça uma **nova interview** (developer tools do Homey → Zigbee → o BASIC →
+   Interview) e mande o texto: ela mostra a versão nova e se os clusters e atributos mudaram.
 1. **Antes:** crie **quatro** flows com o gatilho **"Proteção desarmou por ..."** do BASIC, um para cada
    opção (qualquer limite, corrente, tensão, potência), cada um com a ação "Enviar notificação" e um
    texto diferente, por exemplo `Corrente: [Corrente] A, [Tensão] V, [Potência] W`. Em cada desarme
    devem chegar **duas** notificações: a de "qualquer limite" e a do limite que você baixou.
+   Use notificação **normal** ou a Timeline, não "Critical Alert" (no Android ela pode não chegar). No
+   log, cada flow avaliado aparece como `[Protection] flow card limit=... -> run`.
 2. **Corrente:** limite de corrente abaixo da carga e ligue o relé. Quando desarmar, confira:
    - chegou a notificação, com uma corrente **acima** do limite;
    - no device, o alarme **"Overload protection"** ficou ativo, e nos cards "Quando" do BASIC

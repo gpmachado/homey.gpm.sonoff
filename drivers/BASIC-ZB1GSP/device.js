@@ -108,9 +108,8 @@ class SonoffBasicZB1GSP extends SonoffBase {
 
       // Cumulative counters - real running totals reported by the device, no
       // client-side reconstruction needed. (Export counters exist only from firmware 1.3.0.)
-      sonoffCluster.on('attr.totalEnergyConsumption', (value) => {
-        if (this._isValidReading(value)) this.setCapabilityValue('meter_power', value / 1000).catch(this.error);
-      });
+      // The total is NOT 0x701E (totalEnergyConsumption): firmware 1.0.5 leaves it at 0
+      // (field logs 2026-10-13/15, 56 reads). It comes from the standard Metering cluster below.
       sonoffCluster.on('attr.energyToday', (value) => {
         if (this._isValidReading(value)) this.setCapabilityValue('meter_power.today', value / 1000).catch(this.error);
       });
@@ -118,6 +117,10 @@ class SonoffBasicZB1GSP extends SonoffBase {
         if (this._isValidReading(value)) this.setCapabilityValue('meter_power.month', value / 1000).catch(this.error);
       });
     }
+
+    // Total energy: Metering 0x0702 currentSummationDelivered, Wh (interview: multiplier 1,
+    // divisor 1000), as zigbee2mqtt read it up to 2.13.0 (Koenkk/zigbee2mqtt#33044).
+    zclNode.endpoints[1].clusters.metering?.on('attr.currentSummationDelivered', (value) => this._setTotalEnergy(value));
 
     // Backup poll only: after a re-pair with the 0xFC11 binding the unit
     // reports power/current/voltage on its own (field log 2026-10-13, 42
@@ -165,7 +168,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
         report('acCurrentCurrentValue', 10, 300, 100), // 0.1 A
         report('energyToday', 60, 3600, 50),
         report('energyMonth', 60, 3600, 50),
-        report('totalEnergyConsumption', 60, 3600, 50),
+        { endpointId: 1, cluster: CLUSTER.METERING, attributeName: 'currentSummationDelivered', minInterval: 60, maxInterval: 3600, minChange: 10 }, // 10 Wh
       ]);
     } catch (err) {
       this.log('Could not configure attribute reporting:', err.message);
@@ -183,7 +186,7 @@ class SonoffBasicZB1GSP extends SonoffBase {
     try {
       const data = await cluster.readAttributes([
         'acCurrentVoltageValue', 'acCurrentPowerValue', 'acCurrentCurrentValue',
-        'totalEnergyConsumption', 'energyToday', 'energyMonth',
+        'energyToday', 'energyMonth',
       ], { manufacturerCode: 0x1286 });
 
       if (data.acCurrentVoltageValue !== undefined && this._isValidReading(data.acCurrentVoltageValue)) {
@@ -195,9 +198,6 @@ class SonoffBasicZB1GSP extends SonoffBase {
       if (data.acCurrentCurrentValue !== undefined && this._isValidReading(data.acCurrentCurrentValue)) {
         await this._setCurrent(data.acCurrentCurrentValue / 1000);
       }
-      if (data.totalEnergyConsumption !== undefined && this._isValidReading(data.totalEnergyConsumption)) {
-        await this.setCapabilityValue('meter_power', data.totalEnergyConsumption / 1000);
-      }
       if (data.energyToday !== undefined && this._isValidReading(data.energyToday)) {
         await this.setCapabilityValue('meter_power.today', data.energyToday / 1000);
       }
@@ -207,6 +207,18 @@ class SonoffBasicZB1GSP extends SonoffBase {
     } catch (e) {
       this.log('Could not read power/energy measurements:', e.message);
     }
+    try {
+      const { currentSummationDelivered } = await this.zclNode.endpoints[1].clusters.metering.readAttributes(['currentSummationDelivered']);
+      this._setTotalEnergy(currentSummationDelivered);
+    } catch (e) {
+      this.log('Could not read the metering total:', e.message);
+    }
+  }
+
+  _setTotalEnergy(wh) {
+    if (!Number.isFinite(wh)) return;
+    this.log(`[Energy] total ${wh / 1000} kWh (metering)`);
+    this.setCapabilityValue('meter_power', wh / 1000).catch(this.error);
   }
 
   handleFaultCode(value) {

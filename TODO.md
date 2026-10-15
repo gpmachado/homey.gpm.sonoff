@@ -26,7 +26,12 @@ the Time cluster (`localTime`, `time`, `timeStatus`...), so the Time bind stays.
    the voltage has one). Remove the two "Enable" checkboxes and write enable `1` with the value.
 4. **A failed write of a protection limit must show as an error.** `onSettings` catches and only logs; the
    page then says "saved" while the device keeps the old limit. Let the error go (the MINI-ZB1GP already does).
-5. **Energy counters** still need a load running a few minutes to confirm.
+5. **Total energy from Metering `0x0702`.** Firmware 1.0.5 leaves `0x701E` at 0 (56 reads); `meter_power` now
+   reads `currentSummationDelivered` (Wh, divisor 1000), as z2m did up to 2.13.0 (Koenkk/zigbee2mqtt#33044).
+   Confirm after the re-pair that adds cluster 1794, and whether firmware 1.3.3 (Koenkk OTA index, fileVersion
+   4867) fills `0x701E`. The friend updates through the Sonoff hub first; offering the OTA in Homey can wait.
+   Also pending: the "Protection tripped" flows did not run on 2026-10-15 although the card fired; a
+   runListener log line was added, and he used a Critical Alert on Android.
 6. Not done on purpose: export energy and the consumption history (firmware 1.3.0 or later; this unit is
    1.0.5), `energyYesterday` (no standard capability).
 
