@@ -131,8 +131,8 @@
           "pt": "Proteção desarmou"
         },
         "hint": {
-          "en": "The relay opened because a current, voltage or power limit was crossed. The device does not say which one: compare the tokens with the limits in the settings.",
-          "pt": "O relé abriu porque um limite de corrente, tensão ou potência foi ultrapassado. O aparelho não informa qual: compare os tokens com os limites das configurações."
+          "en": "The relay opened because a limit was crossed. The device does not say which one: the app compares the readings of the trip with the limits enabled in the settings.",
+          "pt": "O relé abriu porque um limite foi ultrapassado. O aparelho não diz qual: o app compara as leituras do desarme com os limites ativos nas configurações."
         },
         "tokens": [
           {
@@ -163,11 +163,49 @@
             "example": 3800
           }
         ],
+        "titleFormatted": {
+          "en": "Protection tripped by [[limit]]",
+          "pt": "Proteção desarmou por [[limit]]"
+        },
         "args": [
           {
             "type": "device",
             "name": "device",
             "filter": "driver_id=BASIC-ZB1GSP"
+          },
+          {
+            "name": "limit",
+            "type": "dropdown",
+            "values": [
+              {
+                "id": "any",
+                "title": {
+                  "en": "any limit",
+                  "pt": "qualquer limite"
+                }
+              },
+              {
+                "id": "current",
+                "title": {
+                  "en": "current",
+                  "pt": "corrente"
+                }
+              },
+              {
+                "id": "voltage",
+                "title": {
+                  "en": "voltage",
+                  "pt": "tensão"
+                }
+              },
+              {
+                "id": "power",
+                "title": {
+                  "en": "power",
+                  "pt": "potência"
+                }
+              }
+            ]
           }
         ]
       },
@@ -357,8 +395,8 @@
         "meter_power.today",
         "meter_power.month",
         "alarm_generic",
-        "alarm_generic.metering_error",
-        "alarm_generic.overload_protection"
+        "alarm_heat",
+        "alarm_problem"
       ],
       "capabilitiesOptions": {
         "meter_power.today": {
@@ -373,17 +411,12 @@
         },
         "alarm_generic": {
           "title": {
-            "en": "Overheated"
+            "en": "Overload protection"
           }
         },
-        "alarm_generic.metering_error": {
+        "alarm_problem": {
           "title": {
             "en": "Metering error"
-          }
-        },
-        "alarm_generic.overload_protection": {
-          "title": {
-            "en": "Overload protection"
           }
         }
       },

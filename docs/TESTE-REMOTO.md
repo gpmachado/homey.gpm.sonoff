@@ -49,11 +49,14 @@ Anote: o relé desarmou nos 3 casos? Quanto tempo levou?
 
 Para quem já fez a seção 2. **Não precisa parear de novo.** Use a mesma carga de 100 W ou mais.
 
-1. **Antes:** crie um flow com o gatilho **"Proteção desarmou"** do BASIC e a ação "Enviar notificação"
-   com o texto `Desarmou: [Corrente] A, [Tensão] V, [Potência] W` (os três tokens do gatilho).
+1. **Antes:** crie **quatro** flows com o gatilho **"Proteção desarmou por ..."** do BASIC, um para cada
+   opção (qualquer limite, corrente, tensão, potência), cada um com a ação "Enviar notificação" e um
+   texto diferente, por exemplo `Corrente: [Corrente] A, [Tensão] V, [Potência] W`. Em cada desarme
+   devem chegar **duas** notificações: a de "qualquer limite" e a do limite que você baixou.
 2. **Corrente:** limite de corrente abaixo da carga e ligue o relé. Quando desarmar, confira:
    - chegou a notificação, com uma corrente **acima** do limite;
-   - no device, o alarme **"Overload protection"** ficou ativo.
+   - no device, o alarme **"Overload protection"** ficou ativo, e nos cards "Quando" do BASIC
+     aparecem três alarmes **diferentes** (genérico, calor, problema), não mais três "Generic alarm".
    Ligue o relé de novo **pelo Homey**: o alarme deve **apagar** (e desarmar de novo, se o limite
    continuar baixo). Volte o limite para 32 A. *(linha "protection flow")*
 3. **Tensão:** o mesmo com o limite de tensão abaixo da tensão da tomada. A notificação deve mostrar

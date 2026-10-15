@@ -7,13 +7,77 @@
         "pt": "Proteção desarmou"
       },
       "hint": {
-        "en": "The relay opened because a current, voltage or power limit was crossed. The device does not say which one: compare the tokens with the limits in the settings.",
-        "pt": "O relé abriu porque um limite de corrente, tensão ou potência foi ultrapassado. O aparelho não informa qual: compare os tokens com os limites das configurações."
+        "en": "The relay opened because a limit was crossed. The device does not say which one: the app compares the readings of the trip with the limits enabled in the settings.",
+        "pt": "O relé abriu porque um limite foi ultrapassado. O aparelho não diz qual: o app compara as leituras do desarme com os limites ativos nas configurações."
       },
       "tokens": [
-        { "name": "current", "type": "number", "title": { "en": "Current (A)", "pt": "Corrente (A)" }, "example": 16.2 },
-        { "name": "voltage", "type": "number", "title": { "en": "Voltage (V)", "pt": "Tensão (V)" }, "example": 231 },
-        { "name": "power", "type": "number", "title": { "en": "Power (W)", "pt": "Potência (W)" }, "example": 3800 }
+        {
+          "name": "current",
+          "type": "number",
+          "title": {
+            "en": "Current (A)",
+            "pt": "Corrente (A)"
+          },
+          "example": 16.2
+        },
+        {
+          "name": "voltage",
+          "type": "number",
+          "title": {
+            "en": "Voltage (V)",
+            "pt": "Tensão (V)"
+          },
+          "example": 231
+        },
+        {
+          "name": "power",
+          "type": "number",
+          "title": {
+            "en": "Power (W)",
+            "pt": "Potência (W)"
+          },
+          "example": 3800
+        }
+      ],
+      "titleFormatted": {
+        "en": "Protection tripped by [[limit]]",
+        "pt": "Proteção desarmou por [[limit]]"
+      },
+      "args": [
+        {
+          "name": "limit",
+          "type": "dropdown",
+          "values": [
+            {
+              "id": "any",
+              "title": {
+                "en": "any limit",
+                "pt": "qualquer limite"
+              }
+            },
+            {
+              "id": "current",
+              "title": {
+                "en": "current",
+                "pt": "corrente"
+              }
+            },
+            {
+              "id": "voltage",
+              "title": {
+                "en": "voltage",
+                "pt": "tensão"
+              }
+            },
+            {
+              "id": "power",
+              "title": {
+                "en": "power",
+                "pt": "potência"
+              }
+            }
+          ]
+        }
       ]
     }
   ]

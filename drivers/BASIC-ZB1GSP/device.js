@@ -12,10 +12,12 @@ const { writeAttributesVerbose } = require('../../lib/zclDebug');
 // The BASIC sends the same bits with TLV type 0x06 instead of 0x07: field log
 // 2026-10-13, current/voltage/power trips each reported 0x06020004 (bit 2, no
 // cause per limit), cleared to 0x06020000 by the next "on".
+// Three distinct standard capabilities: three alarm_generic sub-capabilities all got
+// the same auto Flow card title ("Generic alarm turned on"), field report 2026-10-15.
 const FAULT_BITS = {
-  alarm_generic: 0b001,
-  'alarm_generic.metering_error': 0b010,
-  'alarm_generic.overload_protection': 0b100,
+  alarm_heat: 0b001,
+  alarm_problem: 0b010, // metering error
+  alarm_generic: 0b100, // overload protection
 };
 
 const INCHING_PROTOCOL = {
@@ -37,6 +39,14 @@ class SonoffBasicZB1GSP extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
     super.onNodeInit({ zclNode });
+
+    // Devices paired before 2026-10-15 carry the old alarm_generic sub-capabilities.
+    for (const id of ['alarm_generic.metering_error', 'alarm_generic.overload_protection']) {
+      if (this.hasCapability(id)) await this.removeCapability(id);
+    }
+    for (const id of ['alarm_heat', 'alarm_problem']) {
+      if (!this.hasCapability(id)) await this.addCapability(id);
+    }
 
     // The device asks the coordinator for the time (Time is one of its output clusters) and
     // rolls its day counters over on it: answer with the Homey's own time zone.
@@ -207,14 +217,21 @@ class SonoffBasicZB1GSP extends SonoffBase {
     if ((type !== 0x07 && type !== 0x06) || length !== 0x02) return;
 
     const faultValue = tlv & 0xffff;
-    const tripped = (faultValue & FAULT_BITS['alarm_generic.overload_protection']) !== 0;
-    if (tripped && this.getCapabilityValue('alarm_generic.overload_protection') !== true) {
+    const tripped = (faultValue & FAULT_BITS.alarm_generic) !== 0;
+    if (tripped && this.getCapabilityValue('alarm_generic') !== true) {
       // The trip frame lists fault_code before the readings: let them land first.
       setImmediate(() => {
         const { current = 0, voltage = 0, power = 0 } = this._readings ?? {};
-        this.log(`[Protection] tripped: ${current} A, ${voltage} V, ${power} W`);
+        // The fault code is the same for every limit: infer the cause from the enabled ones.
+        const s = this.getSettings();
+        const causes = [
+          s.current_protect_enabled && current > s.max_current_protect && 'current',
+          s.voltage_protect_enabled && voltage > s.max_voltage_protect && 'voltage',
+          s.power_protect_enabled && power > s.max_power_protect && 'power',
+        ].filter(Boolean);
+        this.log(`[Protection] tripped: ${current} A, ${voltage} V, ${power} W (${causes.join(', ') || 'cause unknown'})`);
         this.homey.flow.getDeviceTriggerCard('BASIC-ZB1GSP:protection_tripped')
-          .trigger(this, { current, voltage, power }).catch(this.error);
+          .trigger(this, { current, voltage, power }, { causes }).catch(this.error);
       });
     }
     for (const [capabilityId, bit] of Object.entries(FAULT_BITS)) {
