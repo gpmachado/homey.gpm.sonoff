@@ -2,8 +2,7 @@
   "updates": [
     {
       "changelog": {
-        "en": "OEM firmware from Sonoff/eWeLink, mirrored via Koenkk's zigbee-OTA index.",
-        "pt": "Firmware original da Sonoff/eWeLink, espelhado via índice zigbee-OTA do Koenkk."
+        "en": "OEM firmware from Sonoff/eWeLink, mirrored via Koenkk's zigbee-OTA index."
       },
       "device": {
         "manufacturerName": "SONOFF",
