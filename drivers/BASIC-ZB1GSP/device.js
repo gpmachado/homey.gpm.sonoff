@@ -12,11 +12,11 @@ const { writeAttributesVerbose } = require('../../lib/zclDebug');
 // The BASIC sends the same bits with TLV type 0x06 instead of 0x07: field log
 // 2026-10-13, current/voltage/power trips each reported 0x06020004 (bit 2, no
 // cause per limit), cleared to 0x06020000 by the next "on".
-// Three distinct standard capabilities: three alarm_generic sub-capabilities all got
-// the same auto Flow card title ("Generic alarm turned on"), field report 2026-10-15.
+// One alarm only: three alarm_generic sub-capabilities all got the same auto Flow card
+// title ("Generic alarm turned on"), field report 2026-10-15.
+// Bits 0 (overheat, 0b001) and 1 (metering error, 0b010) are not mapped: the Sonoff app
+// shows neither alarm for this model and they were never seen (2026-10-16).
 const FAULT_BITS = {
-  alarm_heat: 0b001,
-  alarm_problem: 0b010, // metering error
   alarm_generic: 0b100, // overload protection
 };
 
@@ -41,11 +41,8 @@ class SonoffBasicZB1GSP extends SonoffBase {
     super.onNodeInit({ zclNode });
 
     // Devices paired before 2026-10-15 carry the old alarm_generic sub-capabilities.
-    for (const id of ['alarm_generic.metering_error', 'alarm_generic.overload_protection']) {
+    for (const id of ['alarm_generic.metering_error', 'alarm_generic.overload_protection', 'alarm_heat', 'alarm_problem']) {
       if (this.hasCapability(id)) await this.removeCapability(id);
-    }
-    for (const id of ['alarm_heat', 'alarm_problem']) {
-      if (!this.hasCapability(id)) await this.addCapability(id);
     }
 
     // The device asks the coordinator for the time (Time is one of its output clusters) and

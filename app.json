@@ -139,8 +139,8 @@
             "name": "current",
             "type": "number",
             "title": {
-              "en": "Current (A)",
-              "pt": "Corrente (A)"
+              "en": "Trip current (A)",
+              "pt": "Corrente no desarme (A)"
             },
             "example": 16.2
           },
@@ -148,8 +148,8 @@
             "name": "voltage",
             "type": "number",
             "title": {
-              "en": "Voltage (V)",
-              "pt": "Tensão (V)"
+              "en": "Trip voltage (V)",
+              "pt": "Tensão no desarme (V)"
             },
             "example": 231
           },
@@ -157,8 +157,8 @@
             "name": "power",
             "type": "number",
             "title": {
-              "en": "Power (W)",
-              "pt": "Potência (W)"
+              "en": "Trip power (W)",
+              "pt": "Potência no desarme (W)"
             },
             "example": 3800
           }
@@ -394,9 +394,7 @@
         "meter_power",
         "meter_power.today",
         "meter_power.month",
-        "alarm_generic",
-        "alarm_heat",
-        "alarm_problem"
+        "alarm_generic"
       ],
       "capabilitiesOptions": {
         "meter_power.today": {
@@ -412,11 +410,6 @@
         "alarm_generic": {
           "title": {
             "en": "Overload protection"
-          }
-        },
-        "alarm_problem": {
-          "title": {
-            "en": "Metering error"
           }
         }
       },

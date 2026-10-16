@@ -15,9 +15,7 @@
     "meter_power",
     "meter_power.today",
     "meter_power.month",
-    "alarm_generic",
-    "alarm_heat",
-    "alarm_problem"
+    "alarm_generic"
   ],
   "capabilitiesOptions": {
     "meter_power.today": {
@@ -33,11 +31,6 @@
     "alarm_generic": {
       "title": {
         "en": "Overload protection"
-      }
-    },
-    "alarm_problem": {
-      "title": {
-        "en": "Metering error"
       }
     }
   },

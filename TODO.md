@@ -15,8 +15,9 @@ power), cleared to `0x06020000` by the next "on"; `handleFaultCode` now accepts 
 the Time cluster (`localTime`, `time`, `timeStatus`...), so the Time bind stays. Test steps:
 `docs/TESTE-REMOTO.md`, checked with `node scripts/check-log.js <log>`.
 
-1. **Fault bits 0 and 1 not seen.** Overheat (bit 0) and metering error (bit 1) follow the MINI-ZB1GSP map
-   without confirmation on this unit.
+1. **Fault bits 0 and 1 dropped.** Overheat (bit 0) and metering error (bit 1) of the MINI-ZB1GSP map were
+   never seen and the Sonoff app shows neither alarm for this model (2026-10-16): only overload protection
+   (`alarm_generic`) is kept. Map them again if a log ever shows them.
 2. **Hub features not mapped:** minimum power, voltage and current limits, and "Remote Unlock". Candidates:
    the `0x7003` limits block (z2m `buildOverloadProtectionPayload`: max current and max power always present,
    the rest optional behind flags) and `outlet_control_protect` (`0x7007`). Not guessed: the read-back log lines

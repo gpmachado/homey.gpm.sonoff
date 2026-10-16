@@ -65,7 +65,7 @@ Para quem já fez a seção 2. Use a mesma carga de 100 W ou mais.
 2. **Corrente:** limite de corrente abaixo da carga e ligue o relé. Quando desarmar, confira:
    - chegou a notificação, com uma corrente **acima** do limite;
    - no device, o alarme **"Overload protection"** ficou ativo, e nos cards "Quando" do BASIC
-     aparecem três alarmes **diferentes** (genérico, calor, problema), não mais três "Generic alarm".
+     aparece **um** alarme só ("Generic alarm"), não mais três.
    Ligue o relé de novo **pelo Homey**: o alarme deve **apagar** (e desarmar de novo, se o limite
    continuar baixo). Volte o limite para 32 A. *(linha "protection flow")*
 3. **Tensão:** o mesmo com o limite de tensão abaixo da tensão da tomada. A notificação deve mostrar
