@@ -82,6 +82,22 @@ Anote: a notificação chegou nas 3 vezes? O alarme apagou ao religar? Quanto a 
 **Fora deste roteiro:** limites **mínimos** de corrente e tensão. O app ainda não tem essas opções;
 falta descobrir o formato com uma captura do hub da Sonoff.
 
+### 2c. BASIC-ZB1GSP: limites mínimos (versão de teste)
+
+Mesma carga de antes (uns 1,3 A e 210 V). Não precisa parear de novo. Nas configurações do BASIC, grupo
+"Overload protection", há quatro campos novos: "Enable minimum current", "Min current (A)",
+"Enable minimum voltage" e "Min voltage (V)".
+
+1. **Corrente mínima:** ative e ponha **2 A** (acima da corrente da carga). Salve e ligue o relé. Anote se
+   desarmou e em quanto tempo, e se chegou a notificação de "qualquer limite".
+2. Desative a corrente mínima, salve e confirme que o relé volta a ficar ligado.
+3. **Tensão mínima:** ative e ponha **220 V** (acima da tensão da tomada). Salve, ligue e anote o mesmo.
+4. Desative a tensão mínima e salve.
+
+Cada vez que salvar, o log mostra o bloco de limites lido de volta (linha "extra attributes"). Se aparecer
+`Error writing the minimum limits` ou `REJECTED`, o aparelho recusou: mande o log. Se nada desarmar, anote
+também: é a resposta que procuramos.
+
 ## 3. MINI-ZB2GS
 
 1. **Canal 1:** ligue e desligue pelo Homey, 2 vezes. *(linha "gang 1 from Homey")*

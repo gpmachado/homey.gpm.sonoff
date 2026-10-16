@@ -35,6 +35,31 @@ const PROTECTION_ATTRIBUTES = [
   'acPowerMaxOverloadEnable', 'acPowerMaxOverload',
 ];
 
+/**
+ * The hub's limits block (0xFC11 / 0x7003), z2m buildOverloadProtectionPayload without its leading
+ * length byte (ZCLRawString adds it). The unit read back 04 0b | 01 00 01 | 32000 mA | 7680000 mW,
+ * the hub defaults, so the layout matches. Flags per quantity: 1 = max, 2 = min. Values uint32 LE
+ * in mA/mV/mW, in the order max current, min current, max voltage, min voltage, max power.
+ * shortcut: max current and max power stay at the hub defaults (32 A / 7680 W), the driver's own
+ * maxima live in 0x700C-0x7011; revisit once a capture shows how the hub writes this block.
+ */
+function buildLimitsBlock(s) {
+  const values = [32000];
+  let currentFlag = 1;
+  let voltageFlag = 0;
+  if (s.min_current_enabled) { currentFlag |= 2; values.push(Math.round(s.min_current_protect * 1000)); }
+  if (s.min_voltage_enabled) { voltageFlag |= 2; values.push(Math.round(s.min_voltage_protect * 1000)); }
+  values.push(7680000);
+  const block = Buffer.alloc(5 + values.length * 4);
+  block.writeUInt8(0x04, 0);
+  block.writeUInt8(block.length - 2, 1);
+  block.writeUInt8(currentFlag, 2);
+  block.writeUInt8(voltageFlag, 3);
+  block.writeUInt8(1, 4);
+  values.forEach((v, i) => block.writeUInt32LE(v, 5 + i * 4));
+  return block;
+}
+
 class SonoffBasicZB1GSP extends SonoffBase {
 
   async onNodeInit({ zclNode }) {
@@ -283,6 +308,17 @@ class SonoffBasicZB1GSP extends SonoffBase {
       ).catch(err => this.error('Error updating inching settings:', err));
     }
 
+    if (['min_current_enabled', 'min_current_protect', 'min_voltage_enabled', 'min_voltage_protect'].some(k => changedKeys.includes(k))) {
+      try {
+        await writeAttributesVerbose(this, this.zclNode.endpoints[1].clusters[SonoffCluster.NAME], {
+          limits_of_threshold_value: buildLimitsBlock(newSettings),
+        });
+        this._logProtection('after write');
+      } catch (error) {
+        this.error('Error writing the minimum limits:', error.message || error);
+      }
+    }
+
     const PROTECTION = {
       current_protect_enabled: ['acCurrentMaxOverloadEnable', v => (v ? 1 : 0)],
       max_current_protect: ['acCurrentMaxOverload', v => Math.round(v * 1000)],
@@ -444,3 +480,4 @@ class SonoffBasicZB1GSP extends SonoffBase {
 }
 
 module.exports = SonoffBasicZB1GSP;
+module.exports.buildLimitsBlock = buildLimitsBlock;
