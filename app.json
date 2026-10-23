@@ -652,7 +652,7 @@
               "max": 32,
               "step": 0.1,
               "hint": {
-                "en": "TEST: written to the hub's limits block (0x7003). The device cuts the output when the reading falls below the minimum."
+                "en": "The device cuts the output when the reading falls below the minimum."
               }
             },
             {
@@ -674,7 +674,7 @@
               "max": 277,
               "step": 1,
               "hint": {
-                "en": "TEST: written to the hub's limits block (0x7003). The device cuts the output when the reading falls below the minimum."
+                "en": "The device cuts the output when the reading falls below the minimum."
               }
             }
           ]

@@ -82,7 +82,7 @@ Anote: a notificação chegou nas 3 vezes? O alarme apagou ao religar? Quanto a 
 **Fora deste roteiro:** limites **mínimos** de corrente e tensão. O app ainda não tem essas opções;
 falta descobrir o formato com uma captura do hub da Sonoff.
 
-### 2c. BASIC-ZB1GSP: limites mínimos (versão de teste)
+### 2c. BASIC-ZB1GSP: limites mínimos
 
 Mesma carga de antes (uns 1,3 A e 210 V). Não precisa parear de novo. Nas configurações do BASIC, grupo
 "Overload protection", há quatro campos novos: "Enable minimum current", "Min current (A)",

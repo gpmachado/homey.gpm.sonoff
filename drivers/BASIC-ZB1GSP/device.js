@@ -258,9 +258,12 @@ class SonoffBasicZB1GSP extends SonoffBase {
         const { current = 0, voltage = 0, power = 0 } = this._readings ?? {};
         // The fault code is the same for every limit: infer the cause from the enabled ones.
         const s = this.getSettings();
+        // "current"/"voltage" cover both a crossed maximum and a reading under the minimum.
         const causes = [
-          s.current_protect_enabled && current > s.max_current_protect && 'current',
-          s.voltage_protect_enabled && voltage > s.max_voltage_protect && 'voltage',
+          ((s.current_protect_enabled && current > s.max_current_protect)
+            || (s.min_current_enabled && current < s.min_current_protect)) && 'current',
+          ((s.voltage_protect_enabled && voltage > s.max_voltage_protect)
+            || (s.min_voltage_enabled && voltage < s.min_voltage_protect)) && 'voltage',
           s.power_protect_enabled && power > s.max_power_protect && 'power',
         ].filter(Boolean);
         this.log(`[Protection] tripped: ${current} A, ${voltage} V, ${power} W (${causes.join(', ') || 'cause unknown'})`);

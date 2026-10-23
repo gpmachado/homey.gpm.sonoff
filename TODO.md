@@ -18,10 +18,11 @@ the Time cluster (`localTime`, `time`, `timeStatus`...), so the Time bind stays.
 1. **Fault bits 0 and 1 dropped.** Overheat (bit 0) and metering error (bit 1) of the MINI-ZB1GSP map were
    never seen and the Sonoff app shows neither alarm for this model (2026-10-16): only overload protection
    (`alarm_generic`) is kept. Map them again if a log ever shows them.
-2. **Hub features not mapped:** minimum power limit and "Remote Unlock". Minimum current and voltage are
-   in a test build (2026-10-16): written to the `0x7003` block in the z2m layout, which matches the unit's
-   read-back `04 0b | 01 00 01 | 32000 mA | 7680000 mW` (the hub defaults). Waiting for the trip test
-   (TESTE-REMOTO 2c). Max current/power in the block stay at the defaults (shortcut in device.js).
+2. **Hub features not mapped:** minimum power limit and "Remote Unlock". Minimum current and voltage work
+   (log 2026-10-21): written to the `0x7003` block in the z2m layout, read back as written, tripped at
+   1.41 A under a 1.5 A minimum and at 223 V under a 230 V minimum; disabling clears the flag. The trip
+   card counts them as "current"/"voltage". Max current/power in the block stay at the defaults (shortcut
+   in device.js).
    Remote Unlock: candidate `outlet_control_protect` (`0x7007`, reads 0); confirm with a capture first.
 3. **Maximum current and power are always on in the hub** ("default protection is enabled", no switch; only
    the voltage has one). Remove the two "Enable" checkboxes and write enable `1` with the value.
@@ -67,9 +68,11 @@ the Time cluster (`localTime`, `time`, `timeStatus`...), so the Time bind stays.
 
 ## MINI-ZB2GS and MINI-ZBD (the friend owns both)
 
-- **MINI-ZB2GS has never run on hardware since the 2026-10-05 edit** (the secondary gang no longer mirrors
-  the main gang's stored reason at boot; checked by syntax and build only). First do the test of
-  `docs/TESTE-REMOTO.md` as a baseline: both gangs, wall buttons, a power cut, a settings write, inching.
+- **MINI-ZB2GS baseline done (log 2026-10-22):** both gangs start; Homey commands answered (16/16, 12/12);
+  wall buttons on both; switch mode and power-on behaviour written on each gang's own endpoint; gang 2 reads
+  its settings from EP2; detach toggles only its own bit (0x1 / 0x2) and the clicks arrive; inching sent;
+  never unavailable. Still to do: **a power cut** (rejoin card on both gangs, Rejoins +1), **the power-on
+  delay** (never written) and whether inching really switches the relay off.
 - **Then:** move its hand-made frame hook onto `installRejoinDetection` plus the ACK-suppress handler of
   `relaySwitchBase.js`. It needs the write guard as a node-scoped option (the two gangs share the node) and
   keeps the 30 s cooldown (both gangs dump on boot within milliseconds). The hook keeps `this` of the first
