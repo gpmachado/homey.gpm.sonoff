@@ -71,8 +71,11 @@ the Time cluster (`localTime`, `time`, `timeStatus`...), so the Time bind stays.
 - **MINI-ZB2GS baseline done (log 2026-10-22):** both gangs start; Homey commands answered (16/16, 12/12);
   wall buttons on both; switch mode and power-on behaviour written on each gang's own endpoint; gang 2 reads
   its settings from EP2; detach toggles only its own bit (0x1 / 0x2) and the clicks arrive; inching sent;
-  never unavailable. Still to do: **a power cut** (rejoin card on both gangs, Rejoins +1), **the power-on
-  delay** (never written) and whether inching really switches the relay off.
+  never unavailable. **Power cut:** the old detection (0xFC11 within 200 ms of an onOff report) never
+  matched: this unit dumps every 500 ms and sends no End Device Announce (11 power-ups in the logs of
+  2026-10-22/23, zero triggers). Now detected by its boot signature, onOff 0x4003 reported by EP1 with
+  seq 0x02 then EP2 with seq 0x04 (no false hit among 45 0x4003 reports); confirm on the device. Still
+  to do: **the power-on delay** (never written) and whether inching really switches the relay off.
 - **Then:** move its hand-made frame hook onto `installRejoinDetection` plus the ACK-suppress handler of
   `relaySwitchBase.js`. It needs the write guard as a node-scoped option (the two gangs share the node) and
   keeps the 30 s cooldown (both gangs dump on boot within milliseconds). The hook keeps `this` of the first

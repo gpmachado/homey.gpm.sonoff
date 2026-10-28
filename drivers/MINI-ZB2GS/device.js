@@ -157,13 +157,16 @@ class SonoffMINIZB2GS extends SonoffBase {
      * Node-level handleFrame hook (main device only - the node is shared):
      *   1. Drop Sonoff manufacturer ACK frames (cmdId 0x0B) that zigbee-clusters
      *      can't route via BoundCluster (inching ACK, stray defaultResponse on onOff).
-     *   2. Rejoin detection: 0xFC11 Report Attributes + 0x0006 Report Attributes
-     *      within 200ms - the boot-dump pattern of the MINI family (ZBMINIR2,
-     *      MINI-ZBD). Both endpoints dump on boot; the 30s cooldown in
-     *      _notifyRejoin collapses them into one event.
+     *   2. Rejoin detection: on power-up both endpoints report onOff 0x4003
+     *      (startUpOnOff) with the ZCL sequence restarted - EP1 seq 0x02, then
+     *      EP2 seq 0x04 within ~80 ms (field logs 2026-10-22/23: 11 power cuts,
+     *      no false hit among 45 0x4003 reports; a settings write reports one
+     *      endpoint with a high seq). The ZBMINIR2 pattern (0xFC11 within 200 ms
+     *      of an onOff report) never matches here: this unit dumps every 500 ms.
+     *      No End Device Announce is sent.
      */
     _installFrameHook() {
-        this._onOffReportTs = 0;
+        this._bootEp1At = -Infinity;
         if (this.node._zb2gsFrameHookInstalled) {
             this.log('[MINI-ZB2GS] handleFrame hook already installed (shared node)');
             return;
@@ -171,20 +174,15 @@ class SonoffMINIZB2GS extends SonoffBase {
         this.node._zb2gsFrameHookInstalled = true;
         const _hook = this.node.handleFrame.bind(this.node);
         this.node.handleFrame = (...args) => {
-            const [, clusterId, frame] = args;
-            const _now = Date.now();
+            const [endpointId, clusterId, frame] = args;
             if (Buffer.isBuffer(frame) && frame.length >= 3) {
                 const mfrSpecific = frame[0] & 0x04;
                 const cmdId = mfrSpecific ? (frame.length >= 5 ? frame[4] : -1) : frame[2];
                 if (cmdId === 0x0B && (clusterId === SonoffCluster.ID || clusterId === 6)) return Promise.resolve();
-                if (cmdId === 0x0A && !mfrSpecific) {
-                    if (clusterId === 6) {
-                        this._onOffReportTs = _now;
-                    } else if (clusterId === SonoffCluster.ID) {
-                        if ((_now - this._onOffReportTs) < 200 && _now - (this.node._zb2gsLastSonoffWriteAt ?? 0) >= 30_000) {
-                            this._notifyRejoin();
-                        }
-                    }
+                if (clusterId === 6 && cmdId === 0x0A && !mfrSpecific && frame.length >= 5 && frame.readUInt16LE(3) === 0x4003) {
+                    const seq = frame[1];
+                    if (endpointId === 1 && seq === 0x02) this._bootEp1At = Date.now();
+                    else if (endpointId === 2 && seq === 0x04 && Date.now() - this._bootEp1At < 500) this._notifyRejoin();
                 }
             }
             return _hook(...args);
@@ -210,7 +208,6 @@ class SonoffMINIZB2GS extends SonoffBase {
         if (changedKeys.includes('power_on_delay_time')) gangWrite.power_on_delay_time = Math.round(newSettings.power_on_delay_time * 2);
         if (changedKeys.includes('switch_mode')) gangWrite.switch_mode = Number(newSettings.switch_mode);
         if (Object.keys(gangWrite).length) {
-            this.node._zb2gsLastSonoffWriteAt = Date.now();
             this.writeAttributes(SonoffCluster, gangWrite).catch(this.error);
         }
 
@@ -220,7 +217,6 @@ class SonoffMINIZB2GS extends SonoffBase {
         if (changedKeys.includes('TurboMode')) mainWrite.TurboMode = newSettings.TurboMode ? 20 : 9;
         if (changedKeys.includes('network_led')) mainWrite.network_led = Boolean(newSettings.network_led);
         if (Object.keys(mainWrite).length) {
-            this.node._zb2gsLastSonoffWriteAt = Date.now();
             this.writeAttributes(SonoffCluster, mainWrite).catch(this.error);
             // onSettings runs before the new values are stored.
             setImmediate(() => this._propagateGlobalLabels(newSettings));
@@ -274,7 +270,6 @@ class SonoffMINIZB2GS extends SonoffBase {
         }
         const value = enabled ? (current | myBit) : (current & ~myBit);
         this.log(`[detach_mode] gang ${this._endpointId} -> ${enabled} (bitmap 0x${current.toString(16)} -> 0x${value.toString(16)})`);
-        this.node._zb2gsLastSonoffWriteAt = Date.now();
         await writeAttributesVerbose(this, cluster, { detach_relay_mode2: value });
     }
 
@@ -332,11 +327,13 @@ class SonoffMINIZB2GS extends SonoffBase {
     /**
      * Fires the device_rejoined flow trigger (main device; RejoinManager
      * cascades the card to the second gang).
-     * Guard: 30s cooldown deduplicates burst reports from the same rejoin event.
+     * Guard: 5 s cooldown. The signature matches once per boot (the second dump
+     * ~11 s later has other sequence numbers); the field test cut power twice
+     * within 13 s, which a longer cooldown would merge.
      */
     _notifyRejoin() {
         const now = Date.now();
-        if ((now - (this._lastRejoinTs ?? 0)) < 30_000) return;  // burst cooldown
+        if ((now - (this._lastRejoinTs ?? 0)) < 5_000) return;
         this._lastRejoinTs = now;
         this.onDeviceRejoin();
     }

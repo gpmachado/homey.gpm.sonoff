@@ -187,13 +187,25 @@ if (!zb2.length) {
   }
 
   const rejoins = has(/Firing flow: MINI-ZB2GS_device_rejoined/).map(l => l.t);
-  const twice = rejoins.some((t, i) => i && t - rejoins[i - 1] < 30000);
-  add(twice ? 'FAIL' : rejoins.length ? 'PASS' : 'WARN', 'ZB2GS power-cut trigger',
-    twice ? 'two triggers within 30 s for one power cut' : rejoins.length ? `${rejoins.length} trigger(s) at ${rejoins.map(hhmmss).join(' ')}` : 'none: unplug and plug the device once');
+  // boots seen in the frames: EP1 reports onOff 0x4003 with seq 0x02, then EP2 with seq 0x04 (< 500 ms)
+  const boots = [];
+  let ep1At = -Infinity;
+  for (const l of zb2) {
+    const m = l.msg.match(/frame ep(\d) cl:0x6 ([0-9a-f]{10,})/);
+    if (!m || m[2].slice(4, 10) !== '0a0340') continue;
+    const seq = m[2].slice(2, 4);
+    if (m[1] === '1' && seq === '02') ep1At = l.t;
+    else if (m[1] === '2' && seq === '04' && l.t - ep1At < 500) boots.push(l.t);
+  }
+  const twice = rejoins.some((t, i) => i && t - rejoins[i - 1] < 5000);
+  const level = twice || rejoins.length < boots.length ? 'FAIL' : rejoins.length ? 'PASS' : 'WARN';
+  add(level, 'ZB2GS power-cut trigger', twice ? 'two triggers within 5 s for one power cut'
+    : rejoins.length || boots.length ? `${rejoins.length} trigger(s) for ${boots.length} power-up(s) seen in the frames${rejoins.length ? ` at ${rejoins.map(hhmmss).join(' ')}` : ''}`
+    : 'none: unplug and plug the device once');
 
   const writes = has(/Write OK on SonoffCluster ep\d/).map(l => l.t);
-  const falseRejoin = rejoins.filter(r => writes.some(w => r > w && r - w < 30000));
-  if (writes.length) add(falseRejoin.length ? 'FAIL' : 'PASS', 'ZB2GS settings write is not a rejoin', falseRejoin.length ? `trigger within 30 s of a write at ${falseRejoin.map(hhmmss).join(' ')} (or a power cut right after a write)` : `${writes.length} writes, no trigger`);
+  const falseRejoin = rejoins.filter(r => writes.some(w => r > w && r - w < 5000) && !boots.some(b => Math.abs(b - r) < 1000));
+  if (writes.length) add(falseRejoin.length ? 'FAIL' : 'PASS', 'ZB2GS settings write is not a rejoin', falseRejoin.length ? `trigger within 5 s of a write, without a power-up, at ${falseRejoin.map(hhmmss).join(' ')}` : `${writes.length} writes, no trigger`);
   else add('WARN', 'ZB2GS settings write is not a rejoin', 'no write seen: change a setting of gang 1 (switch mode or turbo)');
 
   const inchFail = zb2.filter(l => /Failed to set inching/.test(l.msg));
